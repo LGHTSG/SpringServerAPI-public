@@ -1,0 +1,22 @@
+server:
+  port: 8090  #??? ??
+
+spring:
+  application:
+    name: demo
+
+  datasource:
+    platform: mysql
+    url: jdbc:mysql://lghtsg-database-2.cdmd2i19acxv.ap-northeast-2.rds.amazonaws.com/test?serverTimezone=UTC
+
+    #    url: jdbc:mysql://localhost:3306/Local?serverTimezone=UTC
+
+    # url ??? jdbc:mysql://RDS? EndPoint/?? DB ???? ???.
+    username: admin # ?? ?? ???? ????? ???? admin ???
+    password: password # ????? ??????!
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+    redis:
+      host:localhost
+      port:6379
+
