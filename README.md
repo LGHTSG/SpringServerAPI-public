@@ -57,3 +57,7 @@ main branch는 저희 배포 branch입니다. 따라서 파일을 받은 후 새
 >git branch -r   : 원격저장소(깃허브) 브랜치 상태 확인
 
 >git branch -a   : 로컬저장소(내 컴퓨터) 브랜치 상태 확인 
+
+>git branch -d newBranch1(브랜치이름)    : 로컬 브랜치삭제
+
+>git push origin --delete newBranch1(깃헙브랜치이름)     : 깃헙 브랜치삭제
