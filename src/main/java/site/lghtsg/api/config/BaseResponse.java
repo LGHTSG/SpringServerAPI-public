@@ -20,23 +20,23 @@ public class BaseResponse<T> {//BaseResponse 객체를 사용할때 성공, 실�
     // 요청에 성공한 경우
     public BaseResponse(T result) {
         header = new Header();
-        header.setCode(SUCCESS.getCode());
-        header.setMessage(SUCCESS.getMessage());
+        header.setResultCode(SUCCESS.getCode());
+        header.setResultMsg(SUCCESS.getMessage());
         this.body = result;
     }
 
     // 요청에 실패한 경우
     public BaseResponse(BaseResponseStatus status) {
         header = new Header();
-        header.setCode(status.getCode());
-        header.setMessage(status.getMessage());
+        header.setResultCode(status.getCode());
+        header.setResultMsg(status.getMessage());
     }
 
     @Getter
     @Setter
     public class Header{
-        private String message;
-        private int code;
+        private String resultMsg;
+        private int resultCode;
     }
 }
 
