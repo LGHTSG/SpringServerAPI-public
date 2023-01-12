@@ -1,4 +1,4 @@
-package site.lghtsg.api.member;
+package site.lghtsg.api.users;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;

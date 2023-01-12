@@ -1,4 +1,4 @@
-package site.lghtsg.api.member.model;
+package site.lghtsg.api.users.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
