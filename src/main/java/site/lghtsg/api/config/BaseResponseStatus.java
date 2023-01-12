@@ -25,21 +25,20 @@ public enum BaseResponseStatus {
      */
 
     // Common
-    REQUEST_ERROR(2000, "입력값을 확인해주세요."),
-    EMPTY_JWT( 2001, "JWT를 입력해주세요."),
-    INVALID_JWT( 2002, "유효하지 않은 JWT입니다."),
-    INVALID_USER_JWT(2003,"권한이 없는 유저의 접근입니다."),
-    INVALID_OWNER_JWT(2004,"권한이 없는 유저의 접근입니다.(개인의 가게만 생성, 수정 삭제 가능)"),
-
-    // users
-    USERS_EMPTY_USER_ID( 2010, "유저 아이디 값을 확인해주세요."),
+    EMPTY_JWT(2000, "JWT 토큰을 입력해주세요."),
 
     // [POST] /users
-    POST_USERS_EMPTY_EMAIL(2015, "이메일을 입력해주세요."),
-    POST_USERS_INVALID_EMAIL( 2016, "이메일 형식을 확인해주세요."),
-    POST_USERS_EXISTS_EMAIL(2017,"중복된 이메일입니다."),
-    POST_USERS_EMPTY_PASSWORD( 2020, "비밀번호를 입력해주세요."),
-    POST_USERS_INVALID_PASSWORD( 2021, "비밀번호 형식을 확인해주세요."),
+    // 회원가입
+    EMPTY_NAME( 2001, "이름을 입력해주세요."),
+    EMPTY_EMAIL( 2002, "이메일을 입력해주세요."),
+    INVALID_EMAIL( 2003, "이메일 형식을 확인해주세요."),
+    EXISTS_EMAIL(2004,"중복된 이메일입니다."),
+    FAIL_VERIFICATION_EMAIL(2005,"이메일 인증이 되지 않았습니다."),
+    EMPTY_PASSWORD( 2006, "비밀번호를 입력해주세요."),
+    INVALID_PASSWORD( 2007, "비밀번호 형식을 확인해주세요."),
+    NOT_AGREE_TERMS(2008,"약관 동의를 하지 않았습니다."),
+
+    // 로그인
 
     POST_USERS_EMPTY_PHONENUM( 2025, "전화번호를 입력해주세요."),
     POST_USERS_INVALID_PHONENUM( 2026, "전화번호 형식을 확인해주세요."),
