@@ -1,4 +1,4 @@
-package site.lghtsg.api.member;
+package site.lghtsg.api.users;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
-import site.lghtsg.api.member.model.*;
+import site.lghtsg.api.users.model.*;
 import site.lghtsg.api.utils.JwtService;
 
 import static site.lghtsg.api.config.BaseResponseStatus.EMPTY_EMAIL;
