@@ -31,11 +31,11 @@ public enum BaseResponseStatus {
     // 회원가입
     EMPTY_NAME( 2001, "이름을 입력해주세요."),
     EMPTY_EMAIL( 2002, "이메일을 입력해주세요."),
-    POST_USERS_INVALID_EMAIL( 2003, "이메일 형식을 확인해주세요."),
-    POST_USERS_EXISTS_EMAIL(2004,"중복된 이메일입니다."),
+    INVALID_EMAIL( 2003, "이메일 형식을 확인해주세요."),
+    EXISTS_EMAIL(2004,"중복된 이메일입니다."),
     FAIL_VERIFICATION_EMAIL(2005,"이메일 인증이 되지 않았습니다."),
-    POST_USERS_EMPTY_PASSWORD( 2006, "비밀번호를 입력해주세요."),
-    POST_USERS_INVALID_PASSWORD( 2007, "비밀번호 형식을 확인해주세요."),
+    EMPTY_PASSWORD( 2006, "비밀번호를 입력해주세요."),
+    INVALID_PASSWORD( 2007, "비밀번호 형식을 확인해주세요."),
     NOT_AGREE_TERMS(2008,"약관 동의를 하지 않았습니다."),
 
     // 로그인

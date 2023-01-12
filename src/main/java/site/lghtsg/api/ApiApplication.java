@@ -1,4 +1,4 @@
-package com.lghtsg.api;
+package site.lghtsg.api;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -7,5 +7,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class GetUserRes {
+public class GetAssetRes {
+
 }
