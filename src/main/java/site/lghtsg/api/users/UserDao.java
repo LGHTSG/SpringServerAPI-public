@@ -3,7 +3,7 @@ package site.lghtsg.api.users;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import site.lghtsg.api.users.model.PostUserReq;
+import site.lghtsg.api.users.model.*;
 
 import javax.sql.DataSource;
 
@@ -31,6 +31,24 @@ public class UserDao {
         return this.jdbcTemplate.queryForObject(checkEmailQuery,
                 int.class,
                 checkEmailParams);
+    }
+
+    // 로그인
+    public User getPassword(PostLoginReq postLoginReq) {
+        String getPasswordQuery = "select userIdx, password, email, withdrawCheck" +
+                " from User where email = ? AND withdrawCheck = 0";
+        // withdraw 가 1인 회원은 회원 탈퇴를 진행한 회원입니다.
+        String getPasswordParams = postLoginReq.getEmail();
+
+        return this.jdbcTemplate.queryForObject(getPasswordQuery,
+                (rs, rowNum) -> new User(
+                        rs.getInt("userIdx"),
+                        rs.getString("email"),
+                        rs.getString("password"),
+                        rs.getInt("withdrawCheck")
+                ),
+                getPasswordParams
+        );
     }
 
 }

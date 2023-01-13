@@ -55,4 +55,18 @@ public class UserController {
         }
     }
 
+    /**
+     * 로그인 API
+     * [POST] /users/log-in
+     */
+    @ResponseBody
+    @PostMapping("log-in")
+    public BaseResponse<PostLoginRes> logIn(@RequestBody PostLoginReq postLoginReq) {
+        try {
+            PostLoginRes postLoginRes = userProvider.logIn(postLoginReq);
+            return new BaseResponse<>(postLoginRes);
+        } catch (BaseException exception) {
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
 }
