@@ -9,8 +9,7 @@ import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.users.model.*;
 import site.lghtsg.api.utils.JwtService;
 
-import static site.lghtsg.api.config.BaseResponseStatus.EMPTY_EMAIL;
-import static site.lghtsg.api.config.BaseResponseStatus.INVALID_EMAIL;
+import static site.lghtsg.api.config.BaseResponseStatus.*;
 import static site.lghtsg.api.utils.ValidationRegex.isRegexEmail;
 
 @RestController
@@ -23,13 +22,13 @@ public class UserController {
     @Autowired
     private final UserService userService;
     @Autowired
-    private final JwtService jwtService; // JWT부분은 7주차에 다루므로 모르셔도 됩니다!
+    private final JwtService jwtService;
 
 
     public UserController(UserProvider userProvider, UserService userService, JwtService jwtService) {
         this.userProvider = userProvider;
         this.userService = userService;
-        this.jwtService = jwtService; // JWT부분은 7주차에 다루므로 모르셔도 됩니다!
+        this.jwtService = jwtService;
     }
 
     /**
@@ -39,13 +38,15 @@ public class UserController {
     @ResponseBody
     @PostMapping("/sign-up")
     public BaseResponse<PostUserRes> createUser(@RequestBody PostUserReq postUserReq) {
-       if (postUserReq.getEmail() == null) {
+        // 이메일 빈칸 확인
+        if (postUserReq.getEmail() == null) {
             return new BaseResponse<>(EMPTY_EMAIL);
         }
-        //이메일 정규표현: 입력받은 이메일이 email@domain.xxx와 같은 형식인지 검사합니다. 형식이 올바르지 않다면 에러 메시지를 보냅니다.
+        // 이메일 정규표현식 확인 ( email@~.~ )
         if (!isRegexEmail(postUserReq.getEmail())) {
             return new BaseResponse<>(INVALID_EMAIL);
         }
+        // 이메일 중복 확인은 [Service - Provider - Dao] 에서 합니다.
         try {
             PostUserRes postUserRes = userService.createUser(postUserReq);
             return new BaseResponse<>(postUserRes);
