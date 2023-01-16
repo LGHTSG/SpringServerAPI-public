@@ -1,5 +1,6 @@
 package site.lghtsg.api.users;
 
+import com.fasterxml.jackson.databind.ser.Serializers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -50,7 +51,7 @@ public class UserService {
     // 회원정보 수정 (비밀번호)
     public void modifyUserPassword(PatchUserPasswordReq patchUserPasswordReq) throws BaseException {
         String password;
-        String pastPassword;
+        // 비밀번호 암호화
         try {
             password = new AES128(Secret.USER_INFO_PASSWORD_KEY).encrypt(patchUserPasswordReq.getPassword());
             patchUserPasswordReq.setPassword(password);
@@ -59,16 +60,42 @@ public class UserService {
         }
         try {
             // 비밀번호 변경 전, 비밀번호가 일치하는지 확인한다.
-            if (patchUserPasswordReq.getPassword().equals(userDao.getOnlyPwd(patchUserPasswordReq.getUserIdxByJwt()))) {
+            if (patchUserPasswordReq.getPassword().equals(userDao.getOnlyPwd(patchUserPasswordReq.getUserIdx()))) {
                 int result = userDao.modifyUserPassword(patchUserPasswordReq);
+                // 변경 실패
                 if (result == 0) {
                     throw new BaseException(MODIFY_FAIL_PASSWORD);
-                } else {
-                    throw new BaseException(NOT_MATCH_PASSWORD);
                 }
+
+            } else {
+                throw new BaseException(NOT_MATCH_PASSWORD);
             }
         } catch (Exception exception) {
-            throw new BaseException((DATABASE_ERROR));
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    // 회원정보 수정 (프로필 사진)
+    public void modifyUserProfileImg(PatchUserProfileImgReq patchUserProfileImgReq) throws BaseException {
+        try {
+            int result = userDao.modifyUserProfileImg(patchUserProfileImgReq);
+            if(result == 0) {
+                throw new BaseException(MODIFY_FAIL_PROFILEIMAGE);
+            }
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    // 회원 탈퇴
+    public void deleteUser(PatchUserDeleteReq patchUserDeleteReq) throws BaseException {
+        try {
+            int result = userDao.withdrawUser(patchUserDeleteReq);
+            if(result == 0) {
+                throw new BaseException(DELETE_FAIL_USER);
+            }
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
         }
     }
 

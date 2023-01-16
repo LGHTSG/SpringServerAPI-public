@@ -5,7 +5,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import site.lghtsg.api.users.model.*;
 
-import javax.sound.midi.Patch;
 import javax.sql.DataSource;
 
 @Repository
@@ -20,8 +19,8 @@ public class UserDao {
         String createUserQuery = "insert into User" +
                 "(userName, email, emailCheck, password, profileImg, termsCheck)" +
                 "values (?,?,?,?,?,?)";
-        Object[] createUserParams = new Object[]{postUserReq.getUserName(), postUserReq.getEmail(), postUserReq.getEmailCheck(),
-        postUserReq.getPassword(), postUserReq.getProfileImg(), postUserReq.getTermsCheck()};
+        Object[] createUserParams = new Object[]{postUserReq.getUserName(), postUserReq.getEmail(),
+                postUserReq.getEmailCheck(), postUserReq.getPassword(), postUserReq.getProfileImg()};
         return this.jdbcTemplate.update(createUserQuery, createUserParams);
     }
 
@@ -65,9 +64,25 @@ public class UserDao {
     // 회원정보 수정 (비밀번호)
     public int modifyUserPassword(PatchUserPasswordReq patchUserPasswordReq) {
         String modifyUserPasswordQuery = "update User set password = ? where userIdx = ?";
-        Object[] modifyUserPasswordParams = new Object[]{patchUserPasswordReq.getPassword(), patchUserPasswordReq.getUserIdxByJwt()};
+        Object[] modifyUserPasswordParams = new Object[]{patchUserPasswordReq.getPassword(), patchUserPasswordReq.getUserIdx()};
 
         return this.jdbcTemplate.update(modifyUserPasswordQuery, modifyUserPasswordParams);
+    }
+
+    // 회원정보 수정 (프로필 사진)
+    public int modifyUserProfileImg(PatchUserProfileImgReq patchUserProfileImgReq) {
+        String modifyUserProfileImgQuery = "update User set profileImg = ? where userIdx = ?";
+        Object[] modifyUserProfileImgParams = new Object[]{patchUserProfileImgReq.getProfileImg(), patchUserProfileImgReq.getUserIdx()};
+
+        return this.jdbcTemplate.update(modifyUserProfileImgQuery, modifyUserProfileImgParams);
+    }
+
+    // 회원 탈퇴
+    public int withdrawUser(PatchUserDeleteReq patchUserDeleteReq) {
+        String withdrawUserQuery = "update User set withdrawCheck = 1 where userIdx =?";
+        Object[] withdrawUserParams = new Object[]{patchUserDeleteReq.getUserIdx()};
+
+        return this.jdbcTemplate.update(withdrawUserQuery, withdrawUserParams);
     }
 
 }

@@ -78,12 +78,57 @@ public class UserController {
     @PatchMapping("changeInfo/pw")
     public BaseResponse<String> modifyUserPassword(@RequestBody User user) {
         try {
-            int userIdxByJwt = jwtService.getUserIdx();
+            int userIdx = jwtService.getUserIdx();
 
-            PatchUserPasswordReq patchUserPasswordReq = new PatchUserPasswordReq(userIdxByJwt, user.getPassword());
+            PatchUserPasswordReq patchUserPasswordReq = new PatchUserPasswordReq(userIdx, user.getPassword());
             userService.modifyUserPassword(patchUserPasswordReq);
 
             String result = "비밀번호 변경 완료!";
+            return new BaseResponse<>(result);
+        } catch (BaseException exception) {
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+    /**
+     * 회원정보 수정 (프로필 이미지) API
+     * [PATCH] /users/changeInfo/proImg
+     */
+    @ResponseBody
+    @PatchMapping("changeInfo/proImg")
+    public BaseResponse<String> modifyUserProfileImg(@RequestBody PatchUserProfileImgReq patchUserProfileImgReq) {
+        try {
+            int userIdx = jwtService.getUserIdx();
+
+            patchUserProfileImgReq.setUserIdx(userIdx);
+            userService.modifyUserProfileImg(patchUserProfileImgReq);
+
+            String result = "프로필 사진 변경 완료!";
+            return new BaseResponse<>(result);
+        } catch (BaseException exception) {
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+    /**
+     * 로그아웃 API
+     * [POST] /users/log-out
+     */
+
+    /**
+     * 회원탈퇴 API
+     * [PATCH] /users/delete-user
+     */
+    @ResponseBody
+    @PatchMapping("changeInfo/delete-user")
+    public BaseResponse<String> deleteUser(@RequestBody PatchUserDeleteReq patchUserDeleteReq) {
+        try {
+            int userIdx = jwtService.getUserIdx();
+
+            patchUserDeleteReq.setUserIdx(userIdx);
+            userService.deleteUser(patchUserDeleteReq);
+
+            String result = "회원 탈퇴가 정상적으로 처리되었습니다.";
             return new BaseResponse<>(result);
         } catch (BaseException exception) {
             return new BaseResponse<>(exception.getStatus());
