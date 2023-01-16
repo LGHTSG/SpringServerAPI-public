@@ -7,6 +7,7 @@ import site.lghtsg.api.users.model.*;
 
 import javax.sql.DataSource;
 
+
 @Repository
 public class UserDao {
     private JdbcTemplate jdbcTemplate;
@@ -17,8 +18,8 @@ public class UserDao {
     // 회원가입
     public int createUser(PostUserReq postUserReq) {
         String createUserQuery = "insert into User" +
-                "(userName, email, emailCheck, password, profileImg, termsCheck)" +
-                "values (?,?,?,?,?,?)";
+                "(userName, email, emailCheck, password, profileImg)" +
+                "values (?,?,?,?,?)";
         Object[] createUserParams = new Object[]{postUserReq.getUserName(), postUserReq.getEmail(),
                 postUserReq.getEmailCheck(), postUserReq.getPassword(), postUserReq.getProfileImg()};
         return this.jdbcTemplate.update(createUserQuery, createUserParams);
