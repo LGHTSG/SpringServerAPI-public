@@ -46,4 +46,30 @@ public class UserService {
             throw new BaseException(DATABASE_ERROR);
         }
     }
+
+    // 회원정보 수정 (비밀번호)
+    public void modifyUserPassword(PatchUserPasswordReq patchUserPasswordReq) throws BaseException {
+        String password;
+        String pastPassword;
+        try {
+            password = new AES128(Secret.USER_INFO_PASSWORD_KEY).encrypt(patchUserPasswordReq.getPassword());
+            patchUserPasswordReq.setPassword(password);
+        } catch (Exception ignored) { // 암호화가 실패하였을 경우 에러 발생
+            throw new BaseException(PASSWORD_ENCRYPTION_ERROR);
+        }
+        try {
+            // 비밀번호 변경 전, 비밀번호가 일치하는지 확인한다.
+            if (patchUserPasswordReq.getPassword().equals(userDao.getOnlyPwd(patchUserPasswordReq.getUserIdxByJwt()))) {
+                int result = userDao.modifyUserPassword(patchUserPasswordReq);
+                if (result == 0) {
+                    throw new BaseException(MODIFY_FAIL_PASSWORD);
+                } else {
+                    throw new BaseException(NOT_MATCH_PASSWORD);
+                }
+            }
+        } catch (Exception exception) {
+            throw new BaseException((DATABASE_ERROR));
+        }
+    }
+
 }

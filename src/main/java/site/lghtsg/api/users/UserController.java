@@ -69,4 +69,24 @@ public class UserController {
             return new BaseResponse<>(exception.getStatus());
         }
     }
+
+    /**
+     * 회원정보 수정 (비밀번호) API
+     * [PATCH] /users/changeInfo/pw
+     */
+    @ResponseBody
+    @PatchMapping("changeInfo/pw")
+    public BaseResponse<String> modifyUserPassword(@RequestBody User user) {
+        try {
+            int userIdxByJwt = jwtService.getUserIdx();
+
+            PatchUserPasswordReq patchUserPasswordReq = new PatchUserPasswordReq(userIdxByJwt, user.getPassword());
+            userService.modifyUserPassword(patchUserPasswordReq);
+
+            String result = "비밀번호 변경 완료!";
+            return new BaseResponse<>(result);
+        } catch (BaseException exception) {
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
 }

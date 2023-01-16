@@ -5,6 +5,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import site.lghtsg.api.users.model.*;
 
+import javax.sound.midi.Patch;
 import javax.sql.DataSource;
 
 @Repository
@@ -33,7 +34,7 @@ public class UserDao {
                 checkEmailParams);
     }
 
-    // 로그인
+    // 로그인 : email에 해당되는 user의 암호와 탈퇴 여부 체크
     public User getPassword(PostLoginReq postLoginReq) {
         String getPasswordQuery = "select userIdx, password, email, withdrawCheck" +
                 " from User where email = ? AND withdrawCheck = 0";
@@ -49,6 +50,24 @@ public class UserDao {
                 ),
                 getPasswordParams
         );
+    }
+
+    // 암호화 된 비밀번호 확인
+    public String getOnlyPwd(int userIdxByJwt) {
+        String getOnlyPwdQuery = "select password from User where userIdx = ?";
+        int getOnlyPwdParams = userIdxByJwt;
+
+        return this.jdbcTemplate.queryForObject(getOnlyPwdQuery,
+                String.class,
+                getOnlyPwdParams);
+    }
+
+    // 회원정보 수정 (비밀번호)
+    public int modifyUserPassword(PatchUserPasswordReq patchUserPasswordReq) {
+        String modifyUserPasswordQuery = "update User set password = ? where userIdx = ?";
+        Object[] modifyUserPasswordParams = new Object[]{patchUserPasswordReq.getPassword(), patchUserPasswordReq.getUserIdxByJwt()};
+
+        return this.jdbcTemplate.update(modifyUserPasswordQuery, modifyUserPasswordParams);
     }
 
 }
