@@ -48,6 +48,7 @@ public class RealEstateDao {
 //    }
 
     // realEstate 에 저장된 모든 부동산 리스트를 가져온다.
+    //
     public List<GetRealEstateBox> getAllRealEstateBox() {
         String getRealEstateBoxQuery = "select re.realEstateIdx, re.name, re.iconImage, ret.price\n" +
                 "from RealEstate as re\n" +
