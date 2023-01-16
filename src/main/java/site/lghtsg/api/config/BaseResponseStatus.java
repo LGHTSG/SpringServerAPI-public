@@ -38,11 +38,9 @@ public enum BaseResponseStatus {
     INVALID_PASSWORD( 2007, "비밀번호 형식을 확인해주세요."),
     NOT_AGREE_TERMS(2008,"약관 동의를 하지 않았습니다."),
 
-    // 로그인
-
-    POST_USERS_EMPTY_PHONENUM( 2025, "전화번호를 입력해주세요."),
-    POST_USERS_INVALID_PHONENUM( 2026, "전화번호 형식을 확인해주세요."),
-    POST_USERS_EXISTS_PHONENUM(2027,"중복된 전화번호입니다."),
+    // [PATCH] /users/changeInfo
+    // 회원정보 수정
+    NOT_MATCH_PASSWORD(2020,"이전 비밀번호가 일치하지 않습니다."),
 
 
     /**
@@ -62,15 +60,12 @@ public enum BaseResponseStatus {
     DATABASE_ERROR( 4000, "데이터베이스 연결에 실패하였습니다."),
     SERVER_ERROR( 4001, "서버와의 연결에 실패하였습니다."),
 
-    //[PATCH] /users/{userIdx}
-    MODIFY_FAIL_USERNAME(4014,"유저네임 수정 실패"),
-    MODIFY_FAIL_USERPHONENUM(4015,"유저 전화번호 수정 실패"),
-    MODIFY_FAIL_MENU(4020,"메뉴 수정 실패"),
-    MODIFY_FAIL_RESTAURANT(4022,"가게 수정 실패"),
+    //[PATCH] /users/changeInfo
+    MODIFY_FAIL_PASSWORD(4002,"비밀번호 변경 실패"),
+    MODIFY_FAIL_PROFILEIMAGE(4003,"프로필 사진 변경 실패"),
+    DELETE_FAIL_USER(4004,"회원 탈퇴 실패"),
 
     // 삭제
-    DELETE_FAIL_MENU(4030,"메뉴 삭제 실패"),
-    DELETE_FAIL_RESTAURANT(4032,"가게 삭제 실패"),
 
     PASSWORD_ENCRYPTION_ERROR( 4011, "비밀번호 암호화에 실패하였습니다."),
     PASSWORD_DECRYPTION_ERROR( 4012, "비밀번호 복호화에 실패하였습니다.");
