@@ -1,4 +1,4 @@
-package com.lghtsg.api.member.model;
+package site.lghtsg.api.users.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,6 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class GetAssetRes {
-
+public class PostLoginRes {
+    private int userIdx;
+    private String jwt;
 }

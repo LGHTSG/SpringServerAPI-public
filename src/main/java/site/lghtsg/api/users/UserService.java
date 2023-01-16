@@ -1,5 +1,6 @@
 package site.lghtsg.api.users;
 
+import com.fasterxml.jackson.databind.ser.Serializers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,7 +29,7 @@ public class UserService {
 
     // 회원가입 [POST]
     public PostUserRes createUser(PostUserReq postUserReq) throws BaseException {
-        // 중복 확인
+        // 이메일 중복 확인
         if (userProvider.checkEmail(postUserReq.getEmail()) == 1) {
             throw new BaseException(EXISTS_EMAIL);
         }
@@ -42,14 +43,60 @@ public class UserService {
         try {
             int userIdx = userDao.createUser(postUserReq);
             return new PostUserRes(userIdx);
-
-//  *********** 해당 부분은 7주차 수업 후 주석해제하서 대체해서 사용해주세요! ***********
-//            //jwt 발급.
-//            String jwt = jwtService.createJwt(userIdx);
-//            return new PostUserRes(jwt,userIdx);
-//  *********************************************************************
-        } catch (Exception exception) { // DB에 이상이 있는 경우 에러 메시지를 보냅니다.
+        } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
     }
+
+    // 회원정보 수정 (비밀번호)
+    public void modifyUserPassword(PatchUserPasswordReq patchUserPasswordReq) throws BaseException {
+        String password;
+        // 비밀번호 암호화
+        try {
+            password = new AES128(Secret.USER_INFO_PASSWORD_KEY).encrypt(patchUserPasswordReq.getPassword());
+            patchUserPasswordReq.setPassword(password);
+        } catch (Exception ignored) { // 암호화가 실패하였을 경우 에러 발생
+            throw new BaseException(PASSWORD_ENCRYPTION_ERROR);
+        }
+        try {
+            // 비밀번호 변경 전, 비밀번호가 일치하는지 확인한다.
+            if (patchUserPasswordReq.getPassword().equals(userDao.getOnlyPwd(patchUserPasswordReq.getUserIdx()))) {
+                int result = userDao.modifyUserPassword(patchUserPasswordReq);
+                // 변경 실패
+                if (result == 0) {
+                    throw new BaseException(MODIFY_FAIL_PASSWORD);
+                }
+
+            } else {
+                throw new BaseException(NOT_MATCH_PASSWORD);
+            }
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    // 회원정보 수정 (프로필 사진)
+    public void modifyUserProfileImg(PatchUserProfileImgReq patchUserProfileImgReq) throws BaseException {
+        try {
+            int result = userDao.modifyUserProfileImg(patchUserProfileImgReq);
+            if(result == 0) {
+                throw new BaseException(MODIFY_FAIL_PROFILEIMAGE);
+            }
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    // 회원 탈퇴
+    public void deleteUser(PatchUserDeleteReq patchUserDeleteReq) throws BaseException {
+        try {
+            int result = userDao.withdrawUser(patchUserDeleteReq);
+            if(result == 0) {
+                throw new BaseException(DELETE_FAIL_USER);
+            }
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
 }
