@@ -46,7 +46,7 @@ public class StockDao {
                         rs.getInt("stockTransactionIdx"),
                         rs.getString("name"),
                         rs.getInt("price"),
-                        //calculateRateOfChange(),
+                        //calculateRateOfChange(rs.getInt("stockIdx")),
                         "어제",
                         rs.getString("iconImage")
                 ));
@@ -73,7 +73,7 @@ public class StockDao {
                         rs.getInt("stockTransactionIdx"),
                         rs.getString("name"),
                         rs.getInt("price"),
-                        //calculateRateOfChange(),
+                        //calculateRateOfChange(stockIdx),
                         "어제",
                         rs.getString("iconImage")
                 ));
