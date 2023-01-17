@@ -6,10 +6,7 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-public class PostUserReq {
-    private String userName;
-    private String email;
-    private int emailCheck;
+public class PatchUserPasswordReq {
+    private int userIdx;
     private String password;
-    private String profileImg;
 }
