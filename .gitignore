@@ -217,6 +217,10 @@ $RECYCLE.BIN/
 
 ### Gradle ###
 .gradle
+<<<<<<< HEAD
+=======
+.gradle/*
+>>>>>>> 73f9c84 ([FIX] resell branch merge issue hot fix process#1)
 build/
 
 # Ignore Gradle GUI config

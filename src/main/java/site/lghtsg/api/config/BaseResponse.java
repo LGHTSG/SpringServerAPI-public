@@ -20,23 +20,38 @@ public class BaseResponse<T> {//BaseResponse 객체를 사용할때 성공, 실�
     // 요청에 성공한 경우
     public BaseResponse(T result) {
         header = new Header();
+<<<<<<< HEAD
         header.setResultCode(SUCCESS.getCode());
         header.setResultMsg(SUCCESS.getMessage());
+=======
+        header.setCode(SUCCESS.getCode());
+        header.setMessage(SUCCESS.getMessage());
+>>>>>>> 73f9c84 ([FIX] resell branch merge issue hot fix process#1)
         this.body = result;
     }
 
     // 요청에 실패한 경우
     public BaseResponse(BaseResponseStatus status) {
         header = new Header();
+<<<<<<< HEAD
         header.setResultCode(status.getCode());
         header.setResultMsg(status.getMessage());
+=======
+        header.setCode(status.getCode());
+        header.setMessage(status.getMessage());
+>>>>>>> 73f9c84 ([FIX] resell branch merge issue hot fix process#1)
     }
 
     @Getter
     @Setter
     public class Header{
+<<<<<<< HEAD
         private String resultMsg;
         private int resultCode;
+=======
+        private String message;
+        private int code;
+>>>>>>> 73f9c84 ([FIX] resell branch merge issue hot fix process#1)
     }
 }
 
