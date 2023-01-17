@@ -26,6 +26,10 @@ public class BaseResponse<T> {//BaseResponse 객체를 사용할때 성공, 실�
 =======
         header.setCode(SUCCESS.getCode());
         header.setMessage(SUCCESS.getMessage());
+<<<<<<< HEAD
+>>>>>>> resellMerge
+=======
+>>>>>>> 73f9c84 ([FIX] resell branch merge issue hot fix process#1)
 >>>>>>> resellMerge
         this.body = result;
     }
@@ -39,6 +43,10 @@ public class BaseResponse<T> {//BaseResponse 객체를 사용할때 성공, 실�
 =======
         header.setCode(status.getCode());
         header.setMessage(status.getMessage());
+<<<<<<< HEAD
+>>>>>>> resellMerge
+=======
+>>>>>>> 73f9c84 ([FIX] resell branch merge issue hot fix process#1)
 >>>>>>> resellMerge
     }
 
@@ -51,6 +59,10 @@ public class BaseResponse<T> {//BaseResponse 객체를 사용할때 성공, 실�
 =======
         private String message;
         private int code;
+<<<<<<< HEAD
+>>>>>>> resellMerge
+=======
+>>>>>>> 73f9c84 ([FIX] resell branch merge issue hot fix process#1)
 >>>>>>> resellMerge
     }
 }
