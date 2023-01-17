@@ -9,6 +9,8 @@ import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.users.model.*;
 import site.lghtsg.api.utils.JwtService;
 
+import javax.sound.midi.Patch;
+
 import static site.lghtsg.api.config.BaseResponseStatus.*;
 import static site.lghtsg.api.utils.ValidationRegex.isRegexEmail;
 
@@ -76,11 +78,10 @@ public class UserController {
      */
     @ResponseBody
     @PatchMapping("changeInfo/pw")
-    public BaseResponse<String> modifyUserPassword(@RequestBody User user) {
+    public BaseResponse<String> modifyUserPassword(@RequestBody PatchUserPasswordReq patchUserPasswordReq) {
         try {
             int userIdx = jwtService.getUserIdx();
-
-            PatchUserPasswordReq patchUserPasswordReq = new PatchUserPasswordReq(userIdx, user.getPassword());
+            patchUserPasswordReq.setUserIdx(userIdx);
             userService.modifyUserPassword(patchUserPasswordReq);
 
             String result = "비밀번호 변경 완료!";
@@ -134,4 +135,9 @@ public class UserController {
             return new BaseResponse<>(exception.getStatus());
         }
     }
+
+    /**
+     *
+     *
+     */
 }

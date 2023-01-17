@@ -53,9 +53,9 @@ public class UserDao {
     }
 
     // 암호화 된 비밀번호 확인
-    public String getOnlyPwd(int userIdxByJwt) {
+    public String getOnlyPwd(int userIdx) {
         String getOnlyPwdQuery = "select password from User where userIdx = ?";
-        int getOnlyPwdParams = userIdxByJwt;
+        int getOnlyPwdParams = userIdx;
 
         return this.jdbcTemplate.queryForObject(getOnlyPwdQuery,
                 String.class,
@@ -65,7 +65,8 @@ public class UserDao {
     // 회원정보 수정 (비밀번호)
     public int modifyUserPassword(PatchUserPasswordReq patchUserPasswordReq) {
         String modifyUserPasswordQuery = "update User set password = ? where userIdx = ?";
-        Object[] modifyUserPasswordParams = new Object[]{patchUserPasswordReq.getPassword(), patchUserPasswordReq.getUserIdx()};
+        Object[] modifyUserPasswordParams =
+                new Object[]{patchUserPasswordReq.getPassword(), patchUserPasswordReq.getUserIdx()};
 
         return this.jdbcTemplate.update(modifyUserPasswordQuery, modifyUserPasswordParams);
     }
