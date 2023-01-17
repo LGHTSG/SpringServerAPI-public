@@ -71,7 +71,7 @@ public class UserService {
         }
         // 비밀번호 변경 전, 이전 비밀번호가 일치하는지 확인한다.
         if (!patchUserPasswordReq.getPastPassword().equals(userProvider.checkPassword(patchUserPasswordReq.getUserIdx()))) {
-            throw new BaseException(NOT_MATCH_PASSWORD);
+            throw new BaseException(NOT_MATCH_PASTPASSWORD);
         }
         try {
             int result = userDao.modifyUserPassword(patchUserPasswordReq);
