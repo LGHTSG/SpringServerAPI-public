@@ -73,9 +73,11 @@ public enum BaseResponseStatus {
     DELETE_FAIL_RESTAURANT(4032,"가게 삭제 실패"),
 
     PASSWORD_ENCRYPTION_ERROR( 4011, "비밀번호 암호화에 실패하였습니다."),
-    PASSWORD_DECRYPTION_ERROR( 4012, "비밀번호 복호화에 실패하였습니다.");
+    PASSWORD_DECRYPTION_ERROR( 4012, "비밀번호 복호화에 실패하였습니다."),
 
+    REALESTATE_SORTING_ERROR(4201, "데이터 정렬 과정에서 오류가 발생했습니다.");
 
+    // 42XX
     // 5000 : 필요시 만들어서 쓰세요
     // 6000 : 필요시 만들어서 쓰세요
 

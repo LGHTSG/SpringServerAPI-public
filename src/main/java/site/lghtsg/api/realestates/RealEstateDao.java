@@ -5,8 +5,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import site.lghtsg.api.config.BaseException;
-import site.lghtsg.api.realestates.model.GetRealEstateBox;
-import site.lghtsg.api.realestates.model.RealEstateData;
+import site.lghtsg.api.config.BaseResponse;
+import site.lghtsg.api.realestates.model.RealEstateBox;
+import site.lghtsg.api.realestates.model.RealEstateInfo;
+import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
@@ -23,108 +25,176 @@ public class RealEstateDao {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
-    // 이메일 확인
-//    public int checkEmail(String email) {
-//        String checkEmailQuery = "select exists(select email from User where email = ?)"; // User Table에 해당 email 값을 갖는 유저 정보가 존재하는가?
-//        String checkEmailParams = email; // 해당(확인할) 이메일 값
-//        return this.jdbcTemplate.queryForObject(checkEmailQuery,
-//                int.class,
-//                checkEmailParams); // checkEmailQuery, checkEmailParams를 통해 가져온 값(intgud)을 반환한다. -> 쿼리문의 결과(존재하지 않음(False,0),존재함(True, 1))를 int형(0,1)으로 반환됩니다.
-//    }
-//
-//    // 회원정보 변경
-//    public int modifyUserName(PatchUserReq patchUserReq) {
-//        String modifyUserNameQuery = "update User set nickname = ? where userIdx = ? "; // 해당 userIdx를 만족하는 User를 해당 nickname으로 변경한다.
-//        Object[] modifyUserNameParams = new Object[]{patchUserReq.getNickname(), patchUserReq.getUserIdx()}; // 주입될 값들(nickname, userIdx) 순
-//
-//        return this.jdbcTemplate.update(modifyUserNameQuery, modifyUserNameParams); // 대응시켜 매핑시켜 쿼리 요청(생성했으면 1, 실패했으면 0)
-//    }
-//
-//    public int modifyUserPhoneNum(PatchUserReq patchUserReq) {
-//        String modifyUserNameQuery = "update User set phoneNum = ? where userIdx = ? "; // 해당 userIdx를 만족하는 User의 해당 phoneNum 변경한다.
-//        Object[] modifyUserNameParams = new Object[]{patchUserReq.getPhoneNum(), patchUserReq.getUserIdx()}; // 주입될 값들(phoneNum, userIdx) 순
-//
-//        return this.jdbcTemplate.update(modifyUserNameQuery, modifyUserNameParams); // 대응시켜 매핑시켜 쿼리 요청(생성했으면 1, 실패했으면 0)
-//    }
-
-    // realEstate 에 저장된 모든 부동산 리스트를 가져온다.
-    //
-    public List<GetRealEstateBox> getAllRealEstateBox() {
-        String getRealEstateBoxQuery = "select re.realEstateIdx, re.name, re.iconImage, ret.price\n" +
+    /**
+     * 모든 부동산의 box 반환
+     * @return
+     */
+    // 부동산 증감폭 계산하여 리스트 반환하는 로직이 필수는 아니지만, 다른 파트에서는 어떻게 구현?
+    // 리스트가 길어지면 안되므로 짤라서 계산 -> dao 안에서 모든 계산이 이루어져야 함
+    public List<RealEstateBox> getAllRealEstateBox(String sort, String order) {
+        String getRealEstateBoxesQuery =
+                "select re.realEstateIdx, re.name, ret.price, ret.transactionTime, II.iconImage\n" +
                 "from RealEstate as re\n" +
-                "join (select realEstateIdx, price, max(transactionTime) as transactionTime\n" +
-                "      from RealEstateTransaction\n" +
-                "      group by realEstateIdx) as ret\n" +
-                "on ret.realEstateIdx = re.realEstateIdx;";
+                "INNER JOIN RealEstateTransaction as ret\n" +
+                "ON re.realEstateIdx = ret.realEstateIdx and ret.transactionTime = (\n" +
+                "    select max(transactionTime) from RealEstateTransaction where realEstateIdx = ret.realEstateIdx\n" +
+                "    )\n" +
+                "INNER JOIN IconImage II on re.iconImageIdx = II.iconImageIdx\n" +
+                "group by re.realEstateIdx\n" +
+                "order by re.realEstateIdx asc\n" +
+                "LIMIT 100;";
 
-        return this.jdbcTemplate.query(getRealEstateBoxQuery,
-                (rs, rowNum) -> new GetRealEstateBox(
-                        rs.getInt("realEstateIdx"),
-                        rs.getString("name"),
-                        rs.getString("iconImage"),
-                        rs.getString("rateOfChange"), //
-                        rs.getString("rateCalDiff"), //
-                        rs.getInt("price")
-                )
-        );
+        return this.jdbcTemplate.query(getRealEstateBoxesQuery, realEstateBoxRowMapper());
     }
 
-    public int getLatestPrice(int realEstateIdx) {
-        // 굳이 이렇게 따로 해야할까
-        // sql 쿼리로 그냥 지금 join해서 가장 최신 prices 도 가져올 수 있고
-        // 그러면 유일하게 안들어가는게 rateOfChange / rateCal... -> privider에서 그냥 lamda로 추가하면 될 문제.
-        // 고로 이 함수는 필요 x
-        String getLatestPriceQuery =
-                "select price " +
-                "from RealEstateTransaction " +
-                "where (price, transactionTime) in (" +
-                    "select price, max(transactionTime) as transactionTime " +
-                    "from RealEstate group by price" +
-                ")" +
-                "order by transactionTime desc";
+    /**
+     * @brief
+     * 특정 지역 포함되는 부동산 box 반환
+     * @param area String
+     */
+    public List<RealEstateBox> getRealEstateBoxesInArea(String area, String sort, String order){
+        String findAreaQuery;
+        String[] area_split = area.split(" ");
+        if(area_split.length == 3){
+            findAreaQuery =
+                    "    select rn.legaltowncodeidx, rn.name\n" +
+                    "    from RegionName as rn\n" +
+                    "    where rn.name = '?'\n";
+        }
+        else if(area_split.length == 2){
+            findAreaQuery =
+                    "    select rn.legaltowncodeidx, rn.name\n" +
+                    "    from RegionName as rn\n" +
+                    "    inner join RegionName as rn2\n" +
+                    "    on rn2.legalTownCodeIdx = rn.parentIdx and rn2.name = '?'\n" +
+                    "    group by rn.legalTownCodeIdx\n";
+        }
+        else {
+            findAreaQuery =
+                    "    select rn.legalTownCodeIdx, rn.name\n" +
+                    "    from RegionName as rn\n" +
+                    "    inner join RegionName as rn2\n" +
+                    "    on rn2.legalTownCodeIdx = rn.parentIdx\n" +
+                    "    inner join RegionName as rn3\n" +
+                    "    on rn3.legalTownCodeIdx = rn2.parentIdx and rn3.name = '?'\n" +
+                    "    group by rn.legalTownCodeIdx\n";
+        }
+        String getRealEstateBoxesInAreaQuery =
+                "select re.realEstateIdx, re.name, ret.price, ret.transactionTime, II.iconImage\n" +
+                "from RealEstate as re\n" +
+                "INNER JOIN RegionName as rn\n" +
+                "ON re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
+                "INNER JOIN RealEstateTransaction as ret\n" +
+                "ON re.realEstateIdx = ret.realEstateIdx and ret.transactionTime = (\n" +
+                "    select max(transactionTime) from RealEstateTransaction where realEstateIdx = ret.realEstateIdx\n" +
+                "    )\n" +
+                "INNER JOIN IconImage II on re.iconImageIdx = II.iconImageIdx\n" +
+                "INNER JOIN (\n" +
+                findAreaQuery +
+                ") as rnn\n" +
+                "on re.legalTownCodeIdx = rnn.legalTownCodeIdx\n" +
+                "group by re.realEstateIdx\n" +
+                "order by re.realEstateIdx asc\n" +
+                "LIMIT 100;";
 
-
-
+        Object[] getRealEstateBoxParams = new Object[]{area}; // 주입될 값들
+        return this.jdbcTemplate.query(getRealEstateBoxesInAreaQuery, getRealEstateBoxParams, realEstateBoxRowMapper());
     }
 
-    // User 테이블에 존재하는 전체 유저들의 정보 조회
-    public List<GetUserRes> getUsers() {
-        System.out.println("dao");
-        String getUsersQuery = "select * from User"; //User 테이블에 존재하는 모든 회원들의 정보를 조회하는 쿼리
-        return this.jdbcTemplate.query(getUsersQuery,
-                getUserResRowMapper()  // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
-        ); // 복수개의 회원정보들을 얻기 위해 jdbcTemplate 함수(Query, 객체 매핑 정보)의 결과 반환(동적쿼리가 아니므로 Parmas부분이 없음)
+    /**
+     * TODO : FOR USER API
+     * @brief
+     * 단일 부동산의 box 반환 - 리스트에 들어가야 하는 데이터 + 정렬용 데이터
+     * RealEstateBox(realEstateIdx, name, rateOfChange, rateCalDateDiff, iconImage, price)
+     * @param realEstateIdx long
+     * @return RealEstateBox
+     */
+    public RealEstateBox getRealEstateBox(long realEstateIdx) {
+        String getRealEstateBoxQuery =
+                "select re.realEstateIdx, re.name, ret.price, ret.transactionTime, II.iconImage\n" +
+                "from RealEstate as re\n" +
+                "INNER JOIN RealEstateTransaction as ret\n" +
+                "ON re.realEstateIdx = ret.realEstateIdx and re.realEstateIdx = ? and ret.transactionTime = (\n" +
+                "    select max(transactionTime) from RealEstateTransaction where realEstateIdx = ?\n" +
+                "    )\n" +
+                "INNER JOIN IconImage II on re.iconImageIdx = II.iconImageIdx\n" +
+                "group by re.realEstateIdx;";
+        Object[] getRealEstateBoxParams = new Object[]{realEstateIdx, realEstateIdx}; // 주입될 값들
+
+        return this.jdbcTemplate.query(getRealEstateBoxQuery, getRealEstateBoxParams, realEstateBoxRowMapper()).get(0);
     }
 
-    // 해당 nickname을 갖는 유저들의 정보 조회
-    public List<GetUserRes> getUsersByNickname(String nickname) {
-        String getUsersByNicknameQuery = "select * from User where nickname =?"; // 해당 이메일을 만족하는 유저를 조회하는 쿼리문
-        String getUsersByNicknameParams = nickname;
-        return this.jdbcTemplate.query(getUsersByNicknameQuery,
-                getUserResRowMapper(), // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
-                getUsersByNicknameParams); // 해당 닉네임을 갖는 모든 User 정보를 얻기 위해 jdbcTemplate 함수(Query, 객체 매핑 정보, Params)의 결과 반환
+    /**
+     * @brief
+     * 지역 관계 리스트 전달
+     */
+    public List<String> getAreaRelationList(){
+        return null;
     }
 
-    // 해당 userIdx를 갖는 유저조회
-    public GetUserRes getUser(int userIdx) {
-        String getUserQuery = "select * from User where userIdx = ?"; // 해당 userIdx를 만족하는 유저를 조회하는 쿼리문
-        int getUserParams = userIdx;
-        return this.jdbcTemplate.queryForObject(getUserQuery,
-                getUserResRowMapper(), // RowMapper(위의 링크 참조): 원하는 결과값 형태로 받기
-                getUserParams); // 한 개의 회원정보를 얻기 위한 jdbcTemplate 함수(Query, 객체 매핑 정보, Params)의 결과 반환
+
+    /**
+     * @brief
+     * 특정 부동산 정보 전달 - api 명세서 작성되어 있는 반환 데이터
+     * RealEstateInfo(realEstateIdx, name, rateOfChange, rateCalDateDiff, iconImage, price)
+     * @return RealEstateInfo
+     */
+    public RealEstateInfo getAreaRelationInfo(long realEstateIdx){
+        return null;
     }
 
-    private RowMapper<GetUserRes> getUserResRowMapper(){
-        return new RowMapper<GetUserRes>() {
+    /**
+     * @brief
+     * 특정 부동산 누적 가격 정보 전달
+     * @param realEstateIdx long
+     * @return List<RealEstateTransactionData>
+     */
+    public List<RealEstateTransactionData> getRealEstatePrices(long realEstateIdx){
+        String getRealEstateBoxQuery =
+                "select re.realEstateIdx, re.name, ret.price, ret.transactionTime\n" +
+                "from RealEstate as re\n" +
+                "INNER JOIN RealEstateTransaction as ret\n" +
+                "ON re.realEstateIdx = ret.realEstateIdx and re.realEstateIdx = ?;";
+
+        Object[] getRealEstateBoxParams = new Object[]{realEstateIdx}; // 주입될 값들
+        return this.jdbcTemplate.query(getRealEstateBoxQuery, getRealEstateBoxParams, transactionRowMapper());
+    }
+
+    /**
+     * @brief
+     * 특정 지역 누적 가격 정보 전달
+     * @param area String
+     * @return List<RealEstateTransactionData>
+     */
+    public List<RealEstateTransactionData> getAreaPrices(String area){
+        return null;
+    }
+
+
+    private RowMapper<RealEstateTransactionData> transactionRowMapper() {
+        return new RowMapper<RealEstateTransactionData>() {
             @Override
-            public GetUserRes mapRow(ResultSet rs, int rowNum) throws SQLException {
-                GetUserRes getUserRes = new GetUserRes();
-                getUserRes.setUserIdx(rs.getInt("userIdx"));
-                getUserRes.setEmail(rs.getString("email"));
-                getUserRes.setNickname(rs.getString("nickname"));
-                getUserRes.setPassword(rs.getString("password"));
-                getUserRes.setPhoneNum(rs.getString("phoneNUm"));
-                return getUserRes;
+            public RealEstateTransactionData mapRow(ResultSet rs, int rowNum) throws SQLException {
+                RealEstateTransactionData realEstateTransactionData = new RealEstateTransactionData();
+                realEstateTransactionData.setDatetime(rs.getString("transactionTime"));
+                realEstateTransactionData.setPrice(rs.getLong("price"));
+                return realEstateTransactionData;
+            }
+        };
+    }
+
+    private RowMapper<RealEstateBox> realEstateBoxRowMapper(){
+        return new RowMapper<RealEstateBox>() {
+            @Override
+            public RealEstateBox mapRow(ResultSet rs, int rowNum) throws SQLException {
+                RealEstateBox getRealEstateBox = new RealEstateBox();
+                getRealEstateBox.setRealEstateIdx(rs.getLong("realEstateIdx"));
+                getRealEstateBox.setName(rs.getString("name"));
+//                getRealEstateBox.setRateOfChange(rs.getString("rateOfChange"));
+//                getRealEstateBox.setRateCalDateDiff(rs.getString("rateCalDateDiff"));
+                getRealEstateBox.setIconImage(rs.getString("iconImage"));
+                getRealEstateBox.setPrice(rs.getLong("price"));
+                return getRealEstateBox;
             }
         };
     }

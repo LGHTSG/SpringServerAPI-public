@@ -3,7 +3,9 @@ package site.lghtsg.api.realestates;
 import org.springframework.web.bind.annotation.*;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
-import site.lghtsg.api.realestates.model.GetRealEstateBox;
+import site.lghtsg.api.realestates.model.RealEstateBox;
+import site.lghtsg.api.realestates.model.RealEstateInfo;
+import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
 import java.util.List;
 
@@ -25,18 +27,10 @@ public class RealEstateController {
      * @return
      */
     @GetMapping("")
-    public BaseResponse<List<GetRealEstateBox>> realEstateList(@RequestParam(required = false) String sort, @RequestParam(required = false) String order, @RequestParam(required = false) String area){
-        // sort(정렬기준), order 기준에 따라 반환하는 리스트가 형성되어야 함.
-
-        // realEstate(realEstateIdx, name, price, rateOfChange, rateCalDiff, iconImage) 반환
-        // rateCalDiff는 데이터에 따라 결정
-        // area 변수 들어오면 해당 지역에 포함되는 위치 반환
-        // 1. area 변수 없는 경우
-        //
-        // 2. sort, order
-
+    public BaseResponse<List<RealEstateBox>> realEstateList(@RequestParam(required = false) String sort, @RequestParam(required = false) String order, @RequestParam(required = false) String area){
         try{
-
+            List<RealEstateBox> realEstateBoxes = realEstateProvider.getRealEstateBoxes(sort, order, area);
+            return new BaseResponse<>(realEstateBoxes);
         }
         catch(BaseException e){
              return new BaseResponse<>((e.getStatus()));
@@ -49,13 +43,14 @@ public class RealEstateController {
      * @return
      */
     @GetMapping("/prices")
-    public BaseResponse<> realEstateAreaPrices(@RequestParam String area){
-        try{
-
-        }
-        catch(BaseException e){
-             return new BaseResponse<>((e.getStatus()));
-        }
+    public BaseResponse<List<RealEstateTransactionData>> realEstateAreaPrices(@RequestParam String area){
+//        try{
+//
+//        }
+//        catch(BaseException e){
+//             return new BaseResponse<>((e.getStatus()));
+//        }
+        return null;
     }
 
     /**
@@ -63,14 +58,14 @@ public class RealEstateController {
      * @return
      */
     @GetMapping("/area-relation-list")
-    public BaseResponse<> areaRelationList(){
-        try{
-
-        }
-        catch(BaseException e){
-             return new BaseResponse<>((e.getStatus()));
-        }
-
+    public BaseResponse<List<String>> areaRelationList(){
+//        try{
+//
+//        }
+//        catch(BaseException e){
+//             return new BaseResponse<>((e.getStatus()));
+//        }
+        return null;
     }
 
     /**
@@ -79,13 +74,14 @@ public class RealEstateController {
      * @return
      */
     @GetMapping("/{realestateIdx}/info")
-    public BaseResponse<> realEstateInfo(@PathVariable int realestateIdx){
-        try{
-
-        }
-        catch(BaseException e){
-             return new BaseResponse<>((e.getStatus()));
-        }
+    public BaseResponse<RealEstateInfo> realEstateInfo(@PathVariable int realestateIdx){
+//        try{
+//
+//        }
+//        catch(BaseException e){
+//             return new BaseResponse<>((e.getStatus()));
+//        }
+        return null;
     }
 
     /**
@@ -94,16 +90,14 @@ public class RealEstateController {
      * @return
      */
     @GetMapping("/{realestateIdx}/prices")
-    public BaseResponse<> realEstatePrices(@PathVariable int realestateIdx){
-        try{
-
-        }
-        catch(BaseException e){
-             return new BaseResponse<>((e.getStatus()));
-        }
+    public BaseResponse<List<RealEstateTransactionData>> realEstatePrices(@PathVariable int realestateIdx){
+//        try{
+//
+//        }
+//        catch(BaseException e){
+//             return new BaseResponse<>((e.getStatus()));
+//        }
+        return null;
     }
-
-
-
 
 }
