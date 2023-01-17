@@ -11,4 +11,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class PatchUserDeleteReq {
     private int userIdx;
+    private String password;
 }

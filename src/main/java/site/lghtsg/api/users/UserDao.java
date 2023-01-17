@@ -84,7 +84,7 @@ public class UserDao {
 
     // 회원 탈퇴
     public int withdrawUser(PatchUserDeleteReq patchUserDeleteReq) {
-        String withdrawUserQuery = "update User set withdrawCheck = 1 where userIdx =?";
+        String withdrawUserQuery = "update User set withdrawCheck = 1, updatedAt = default where userIdx =?";
         Object[] withdrawUserParams = new Object[]{patchUserDeleteReq.getUserIdx()};
 
         return this.jdbcTemplate.update(withdrawUserQuery, withdrawUserParams);

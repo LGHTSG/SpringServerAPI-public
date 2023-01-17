@@ -62,7 +62,7 @@ public class UserController {
      * [POST] /users/log-in
      */
     @ResponseBody
-    @PostMapping("log-in")
+    @PostMapping("/log-in")
     public BaseResponse<PostLoginRes> logIn(@RequestBody PostLoginReq postLoginReq) {
         try {
             PostLoginRes postLoginRes = userProvider.logIn(postLoginReq);
@@ -77,7 +77,7 @@ public class UserController {
      * [PATCH] /users/changeInfo/pw
      */
     @ResponseBody
-    @PatchMapping("changeInfo/pw")
+    @PatchMapping("/changeInfo/pw")
     public BaseResponse<String> modifyUserPassword(@RequestBody PatchUserPasswordReq patchUserPasswordReq) {
         try {
             int userIdx = jwtService.getUserIdx();
@@ -96,7 +96,7 @@ public class UserController {
      * [PATCH] /users/changeInfo/proImg
      */
     @ResponseBody
-    @PatchMapping("changeInfo/proImg")
+    @PatchMapping("/changeInfo/proImg")
     public BaseResponse<String> modifyUserProfileImg(@RequestBody PatchUserProfileImgReq patchUserProfileImgReq) {
         try {
             int userIdx = jwtService.getUserIdx();
@@ -121,7 +121,7 @@ public class UserController {
      * [PATCH] /users/delete-user
      */
     @ResponseBody
-    @PatchMapping("changeInfo/delete-user")
+    @PatchMapping("/delete-user")
     public BaseResponse<String> deleteUser(@RequestBody PatchUserDeleteReq patchUserDeleteReq) {
         try {
             int userIdx = jwtService.getUserIdx();
@@ -137,7 +137,7 @@ public class UserController {
     }
 
     /**
-     *
-     *
+     * 나의 자산 조회 API
+     * [GET] /users/my-asset
      */
 }

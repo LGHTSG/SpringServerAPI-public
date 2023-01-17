@@ -98,6 +98,17 @@ public class UserService {
 
     // 회원 탈퇴
     public void deleteUser(PatchUserDeleteReq patchUserDeleteReq) throws BaseException {
+        String password;
+        try {
+            password = new AES128(Secret.USER_INFO_PASSWORD_KEY).encrypt(patchUserDeleteReq.getPassword());
+            patchUserDeleteReq.setPassword(password);
+        } catch (Exception ignored) { // 암호화가 실패하였을 경우 에러 발생
+            throw new BaseException(PASSWORD_ENCRYPTION_ERROR);
+        }
+        // 회원 탈퇴하기 전, 비밀번호가 일치하는지 확인한다.
+        if (!patchUserDeleteReq.getPassword().equals(userProvider.checkPassword(patchUserDeleteReq.getUserIdx()))) {
+            throw new BaseException(NOT_MATCH_PASSWORD);
+        }
         try {
             int result = userDao.withdrawUser(patchUserDeleteReq);
             if(result == 0) {
