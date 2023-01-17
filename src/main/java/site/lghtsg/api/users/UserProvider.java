@@ -46,7 +46,7 @@ public class UserProvider {
         }
 
         // 탈퇴한 회원인지 확인 (테스트 X)
-        if (user.getWithdrawCheck() != 0) throw new BaseException(EMPTY_EMAIL);
+        if (user.getWithdrawCheck() != 0) throw new BaseException(WITHDRAW_USER);
 
         // 여기서부터 본격적인 로그인입니다.
         if (postLoginReq.getPassword().equals(password)) {  // password가 일치하는 지 확인 (encryption된 password)

@@ -13,7 +13,7 @@ import static site.lghtsg.api.config.BaseResponseStatus.*;
 import static site.lghtsg.api.utils.ValidationRegex.isRegexEmail;
 
 @RestController
-@RequestMapping("app/users")
+@RequestMapping("/users")
 public class UserController {
     final Logger logger = LoggerFactory.getLogger(this.getClass()); // Log를 남기기: 일단은 모르고 넘어가셔도 무방합니다.
 

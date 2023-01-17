@@ -42,6 +42,8 @@ public enum BaseResponseStatus {
     // 회원정보 수정
     NOT_MATCH_PASSWORD(2020,"이전 비밀번호가 일치하지 않습니다."),
 
+    // [POST] /users/log-in
+    WITHDRAW_USER(2030,"존재하지 않거나 탈퇴한 유저입니다."),
 
     /**
      * 3000 : Response 오류
