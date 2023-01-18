@@ -53,9 +53,9 @@ public class UserDao {
     }
 
     // 암호화 된 비밀번호 확인
-    public String getOnlyPwd(int userIdxByJwt) {
+    public String getOnlyPwd(int userIdx) {
         String getOnlyPwdQuery = "select password from User where userIdx = ?";
-        int getOnlyPwdParams = userIdxByJwt;
+        int getOnlyPwdParams = userIdx;
 
         return this.jdbcTemplate.queryForObject(getOnlyPwdQuery,
                 String.class,
@@ -64,23 +64,27 @@ public class UserDao {
 
     // 회원정보 수정 (비밀번호)
     public int modifyUserPassword(PatchUserPasswordReq patchUserPasswordReq) {
-        String modifyUserPasswordQuery = "update User set password = ? where userIdx = ?";
-        Object[] modifyUserPasswordParams = new Object[]{patchUserPasswordReq.getPassword(), patchUserPasswordReq.getUserIdx()};
+        String modifyUserPasswordQuery =
+                "update User set password = ?, updatedAt = default where userIdx = ?";
+        Object[] modifyUserPasswordParams =
+                new Object[]{patchUserPasswordReq.getPassword(), patchUserPasswordReq.getUserIdx()};
 
         return this.jdbcTemplate.update(modifyUserPasswordQuery, modifyUserPasswordParams);
     }
 
     // 회원정보 수정 (프로필 사진)
     public int modifyUserProfileImg(PatchUserProfileImgReq patchUserProfileImgReq) {
-        String modifyUserProfileImgQuery = "update User set profileImg = ? where userIdx = ?";
-        Object[] modifyUserProfileImgParams = new Object[]{patchUserProfileImgReq.getProfileImg(), patchUserProfileImgReq.getUserIdx()};
+        String modifyUserProfileImgQuery =
+                "update User set profileImg = ?, updatedAt = default where userIdx = ?";
+        Object[] modifyUserProfileImgParams =
+                new Object[]{patchUserProfileImgReq.getProfileImg(), patchUserProfileImgReq.getUserIdx()};
 
         return this.jdbcTemplate.update(modifyUserProfileImgQuery, modifyUserProfileImgParams);
     }
 
     // 회원 탈퇴
     public int withdrawUser(PatchUserDeleteReq patchUserDeleteReq) {
-        String withdrawUserQuery = "update User set withdrawCheck = 1 where userIdx =?";
+        String withdrawUserQuery = "update User set withdrawCheck = 1, updatedAt = default where userIdx =?";
         Object[] withdrawUserParams = new Object[]{patchUserDeleteReq.getUserIdx()};
 
         return this.jdbcTemplate.update(withdrawUserQuery, withdrawUserParams);

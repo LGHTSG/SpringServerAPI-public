@@ -9,11 +9,13 @@ import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.users.model.*;
 import site.lghtsg.api.utils.JwtService;
 
+import javax.sound.midi.Patch;
+
 import static site.lghtsg.api.config.BaseResponseStatus.*;
 import static site.lghtsg.api.utils.ValidationRegex.isRegexEmail;
 
 @RestController
-@RequestMapping("app/users")
+@RequestMapping("/users")
 public class UserController {
     final Logger logger = LoggerFactory.getLogger(this.getClass()); // Log를 남기기: 일단은 모르고 넘어가셔도 무방합니다.
 
@@ -60,7 +62,7 @@ public class UserController {
      * [POST] /users/log-in
      */
     @ResponseBody
-    @PostMapping("log-in")
+    @PostMapping("/log-in")
     public BaseResponse<PostLoginRes> logIn(@RequestBody PostLoginReq postLoginReq) {
         try {
             PostLoginRes postLoginRes = userProvider.logIn(postLoginReq);
@@ -75,12 +77,11 @@ public class UserController {
      * [PATCH] /users/changeInfo/pw
      */
     @ResponseBody
-    @PatchMapping("changeInfo/pw")
-    public BaseResponse<String> modifyUserPassword(@RequestBody User user) {
+    @PatchMapping("/changeInfo/pw")
+    public BaseResponse<String> modifyUserPassword(@RequestBody PatchUserPasswordReq patchUserPasswordReq) {
         try {
             int userIdx = jwtService.getUserIdx();
-
-            PatchUserPasswordReq patchUserPasswordReq = new PatchUserPasswordReq(userIdx, user.getPassword());
+            patchUserPasswordReq.setUserIdx(userIdx);
             userService.modifyUserPassword(patchUserPasswordReq);
 
             String result = "비밀번호 변경 완료!";
@@ -95,7 +96,7 @@ public class UserController {
      * [PATCH] /users/changeInfo/proImg
      */
     @ResponseBody
-    @PatchMapping("changeInfo/proImg")
+    @PatchMapping("/changeInfo/proImg")
     public BaseResponse<String> modifyUserProfileImg(@RequestBody PatchUserProfileImgReq patchUserProfileImgReq) {
         try {
             int userIdx = jwtService.getUserIdx();
@@ -120,7 +121,7 @@ public class UserController {
      * [PATCH] /users/delete-user
      */
     @ResponseBody
-    @PatchMapping("changeInfo/delete-user")
+    @PatchMapping("/delete-user")
     public BaseResponse<String> deleteUser(@RequestBody PatchUserDeleteReq patchUserDeleteReq) {
         try {
             int userIdx = jwtService.getUserIdx();
@@ -134,4 +135,9 @@ public class UserController {
             return new BaseResponse<>(exception.getStatus());
         }
     }
+
+    /**
+     * 나의 자산 조회 API
+     * [GET] /users/my-asset
+     */
 }
