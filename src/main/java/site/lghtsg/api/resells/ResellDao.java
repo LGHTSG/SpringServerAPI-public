@@ -105,7 +105,7 @@ public class ResellDao {
     }
 
     public List<GetResellTransactionRes> getResellTransactionHistory(int resellIdx){
-        String getResellTransactionHistoryQuery = "select * from ResellTransaction where resellIdx = ? order by transactionTime desc LIMIT 2";
+        String getResellTransactionHistoryQuery = "select * from ResellTransaction where resellIdx = ? order by createdAt desc LIMIT 2";
         int getResellTransactionHistory = resellIdx;
         return this.jdbcTemplate.query(getResellTransactionHistoryQuery,
                 (rs, rowNum) -> new GetResellTransactionRes(
@@ -118,8 +118,8 @@ public class ResellDao {
     public List<String> calculateChangeOfRate(int resellIdx){
         List<GetResellTransactionRes> resellTransactionHistory = getResellTransactionHistory(resellIdx);
         List<String> result = new ArrayList<>();
-        int currentPrice = resellTransactionHistory.get(1).getPrice();
-        int latestPrice = resellTransactionHistory.get(0).getPrice();
+        int currentPrice = resellTransactionHistory.get(0).getPrice();
+        int latestPrice = resellTransactionHistory.get(1).getPrice();
 
         double changeOfRate = (double) (currentPrice - latestPrice) / latestPrice * 100;
         String changeOfRateS = String.format("%.1f",changeOfRate);
