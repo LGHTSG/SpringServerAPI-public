@@ -4,8 +4,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import site.lghtsg.api.config.BaseException;
-import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
@@ -53,33 +51,7 @@ public class RealEstateDao {
      * @param area String
      */
     public List<RealEstateBox> getRealEstateBoxesInArea(String area, String sort, String order){
-        String findAreaQuery;
-        area.replace('+', ' ');
-        String[] area_split = area.split(" ");
-        if(area_split.length == 3){
-            findAreaQuery =
-                    "    select rn.legaltowncodeidx, rn.name\n" +
-                    "    from RegionName as rn\n" +
-                    "    where rn.name = ?\n";
-        }
-        else if(area_split.length == 2){
-            findAreaQuery =
-                    "    select rn.legaltowncodeidx, rn.name\n" +
-                    "    from RegionName as rn\n" +
-                    "    inner join RegionName as rn2\n" +
-                    "    on rn2.legalTownCodeIdx = rn.parentIdx and rn2.name = ?\n" +
-                    "    group by rn.legalTownCodeIdx\n";
-        }
-        else {
-            findAreaQuery =
-                    "    select rn.legalTownCodeIdx, rn.name\n" +
-                    "    from RegionName as rn\n" +
-                    "    inner join RegionName as rn2\n" +
-                    "    on rn2.legalTownCodeIdx = rn.parentIdx\n" +
-                    "    inner join RegionName as rn3\n" +
-                    "    on rn3.legalTownCodeIdx = rn2.parentIdx and rn3.name = ?\n" +
-                    "    group by rn.legalTownCodeIdx\n";
-        }
+        String findAreaQuery = getFindAreaQuery(area);
         String getRealEstateBoxesInAreaQuery =
                 "select re.realEstateIdx, re.name, ret.price, ret.transactionTime, II.iconImage\n" +
                 "from RealEstate as re\n" +
@@ -134,40 +106,63 @@ public class RealEstateDao {
 
 
     /**
+     * TODO : RealEstateBox와 RealEstateInfo 상호간 관계를 명확히해야 중복되는 코드 제거하는 리팩토링
      * @brief
      * 특정 부동산 정보 전달 - api 명세서 작성되어 있는 반환 데이터
      * RealEstateInfo(realEstateIdx, name, rateOfChange, rateCalDateDiff, iconImage, price)
      * @return RealEstateInfo
      */
-    public RealEstateInfo getAreaRelationInfo(long realEstateIdx){
-        return null;
+    public RealEstateInfo getRealEstateInfo(long realEstateIdx) {
+        String getRealEstateBoxQuery =
+                "select re.realEstateIdx, re.name, ret.price, ret.transactionTime, II.iconImage\n" +
+                        "from RealEstate as re\n" +
+                        "INNER JOIN RealEstateTransaction as ret\n" +
+                        "ON re.realEstateIdx = ret.realEstateIdx and re.realEstateIdx = ? and ret.transactionTime = (\n" +
+                        "    select max(transactionTime) from RealEstateTransaction where realEstateIdx = ?\n" +
+                        "    )\n" +
+                        "INNER JOIN IconImage II on re.iconImageIdx = II.iconImageIdx\n" +
+                        "group by re.realEstateIdx;";
+        Object[] getRealEstateInfoParams = new Object[]{realEstateIdx, realEstateIdx}; // 주입될 값들
+
+        return this.jdbcTemplate.query(getRealEstateBoxQuery, getRealEstateInfoParams, realEstateInfoRowMapper()).get(0);
     }
 
     /**
+     * TODO : 1. 같은 날 2번 이상의 거래 있는 경우 이는 어떻게 처리할지
      * @brief
      * 특정 부동산 누적 가격 정보 전달
      * @param realEstateIdx long
      * @return List<RealEstateTransactionData>
      */
     public List<RealEstateTransactionData> getRealEstatePrices(long realEstateIdx){
-        String getRealEstateBoxQuery =
+        String getRealEstatePricesQuery =
                 "select re.realEstateIdx, re.name, ret.price, ret.transactionTime\n" +
                 "from RealEstate as re\n" +
                 "INNER JOIN RealEstateTransaction as ret\n" +
                 "ON re.realEstateIdx = ret.realEstateIdx and re.realEstateIdx = ?;";
 
-        Object[] getRealEstateBoxParams = new Object[]{realEstateIdx}; // 주입될 값들
-        return this.jdbcTemplate.query(getRealEstateBoxQuery, getRealEstateBoxParams, transactionRowMapper());
+        Object[] getRealEstatePricesParams = new Object[]{realEstateIdx}; // 주입될 값들
+        return this.jdbcTemplate.query(getRealEstatePricesQuery, getRealEstatePricesParams, transactionRowMapper());
     }
 
     /**
+     * TODO : 1. 같은 날 2번 이상의 거래 있는 경우 이는 어떻게 처리할지
+     * TODO : 2. 아파트가 다르면 가격 기준 자체가 다르다. 그 동네 가격의 추세를 표현하려고 하는 데이터가, 각 아파트마다 다른 기준가로 들쭉날쭉하게 보일 것.
      * @brief
-     * 특정 지역 누적 가격 정보 전달
+     * 특정 지역 누적 가격 정보 전달 - 전달은 가능,
      * @param area String
      * @return List<RealEstateTransactionData>
      */
-    public List<RealEstateTransactionData> getAreaPrices(String area){
-        return null;
+    public List<RealEstateTransactionData> getRealEstatePricesInArea(String area){
+        String findAreaQuery = getFindAreaQuery(area);
+        String getRealEstatesAreaPrices = "select re.realEstateIdx, re.name, ret.price, ret.transactionTime\n" +
+                "from RealEstate as re\n" +
+                "         INNER JOIN ("+findAreaQuery+") as rn\n" +
+                "                    on re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
+                "         INNER JOIN RealEstateTransaction as ret\n" +
+                "                    ON re.realEstateIdx = ret.realEstateIdx;";
+        Object[] getRealEstateAreaPricesParams = new Object[]{area}; // 주입될 값들
+        return this.jdbcTemplate.query(getRealEstatesAreaPrices, getRealEstateAreaPricesParams, transactionRowMapper());
     }
 
 
@@ -182,6 +177,7 @@ public class RealEstateDao {
             }
         };
     }
+
 
     private RowMapper<RealEstateBox> realEstateBoxRowMapper(){
         return new RowMapper<RealEstateBox>() {
@@ -198,4 +194,51 @@ public class RealEstateDao {
             }
         };
     }
+
+    private RowMapper<RealEstateInfo> realEstateInfoRowMapper(){
+        return new RowMapper<RealEstateInfo>() {
+            @Override
+            public RealEstateInfo mapRow(ResultSet rs, int rowNum) throws SQLException {
+                RealEstateInfo getRealEstateInfo = new RealEstateInfo();
+                getRealEstateInfo.setRealEstateIdx(rs.getLong("realEstateIdx"));
+                getRealEstateInfo.setName(rs.getString("name"));
+//                getRealEstateBox.setRateOfChange(rs.getString("rateOfChange"));
+//                getRealEstateBox.setRateCalDateDiff(rs.getString("rateCalDateDiff"));
+                getRealEstateInfo.setIconImage(rs.getString("iconImage"));
+                getRealEstateInfo.setPrice(rs.getLong("price"));
+                return getRealEstateInfo;
+            }
+        };
+    }
+    private String getFindAreaQuery(String area){
+        String findAreaQuery;
+        area.replace('+', ' ');
+        String[] area_split = area.split(" ");
+        if(area_split.length == 3){
+            findAreaQuery =
+                    "    select rn.legalTownCodeIdx, rn.name\n" +
+                            "    from RegionName as rn\n" +
+                            "    where rn.name = ?\n";
+        }
+        else if(area_split.length == 2){
+            findAreaQuery =
+                    "    select rn.legalTownCodeIdx, rn.name\n" +
+                            "    from RegionName as rn\n" +
+                            "    inner join RegionName as rn2\n" +
+                            "    on rn2.legalTownCodeIdx = rn.parentIdx and rn2.name = ?\n" +
+                            "    group by rn.legalTownCodeIdx\n";
+        }
+        else {
+            findAreaQuery =
+                    "    select rn.legalTownCodeIdx, rn.name\n" +
+                            "    from RegionName as rn\n" +
+                            "    inner join RegionName as rn2\n" +
+                            "    on rn2.legalTownCodeIdx = rn.parentIdx\n" +
+                            "    inner join RegionName as rn3\n" +
+                            "    on rn3.legalTownCodeIdx = rn2.parentIdx and rn3.name = ?\n" +
+                            "    group by rn.legalTownCodeIdx\n";
+        }
+        return findAreaQuery;
+    }
+
 }

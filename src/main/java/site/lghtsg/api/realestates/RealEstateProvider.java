@@ -4,13 +4,11 @@ import org.springframework.stereotype.Service;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
+import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
-import java.util.Collections;
 import java.util.List;
 
 import static site.lghtsg.api.config.BaseResponseStatus.DATABASE_ERROR;
-import static site.lghtsg.api.config.BaseResponseStatus.REALESTATE_SORTING_ERROR;
-import static site.lghtsg.api.config.Constant.ASCENDING_PARAM;
 
 @Service
 public class RealEstateProvider {
@@ -47,7 +45,7 @@ public class RealEstateProvider {
     }
 
     // 하나의 box 반환 - 리스트 구성 인자
-    public RealEstateBox getRealEstateBox(int realEstateIdx) throws BaseException {
+    public RealEstateBox getRealEstateBox(long realEstateIdx) throws BaseException {
         // 가지고 있는 realEstateIdx인지 validation 필요
         RealEstateBox realEstateBox;
         try {
@@ -56,14 +54,46 @@ public class RealEstateProvider {
         catch(Exception ignored){
             throw new BaseException(DATABASE_ERROR);
         }
-
         return realEstateBox;
     }
 
     // 하나의 info를 반환 - 테이블 원소 그대로
-    public RealEstateInfo getRealEstateInfo(int realEstateIdx) throws BaseException {
-        return null;
+    public RealEstateInfo getRealEstateInfo(long realEstateIdx) throws BaseException {
+        RealEstateInfo realEstateInfo;
+        try {
+            realEstateInfo = realEstateDao.getRealEstateInfo(realEstateIdx);
+        }
+        catch(Exception ignored){
+            throw new BaseException(DATABASE_ERROR);
+        }
+        return realEstateInfo;
     }
 
+    /**
+     * 특정 지역 내 부동산 누적 거래 데이터 전체 반환
+     * @param area
+     * @return
+     */
+    public List<RealEstateTransactionData> getRealEstatePricesInArea(String area) throws BaseException{
+        List<RealEstateTransactionData> realEstateTransactionData;
+        try {
+            realEstateTransactionData = realEstateDao.getRealEstatePricesInArea(area);
+        }
+        catch(Exception e){
+            throw new BaseException(DATABASE_ERROR);
+        }
+        return realEstateTransactionData;
+    }
+
+    public List<RealEstateTransactionData> getRealEstatePrices(long realEstateIdx) throws BaseException{
+        List<RealEstateTransactionData> realEstateTransactionData;
+        try {
+            realEstateTransactionData = realEstateDao.getRealEstatePrices(realEstateIdx);
+        }
+        catch(Exception e){
+            throw new BaseException(DATABASE_ERROR);
+        }
+        return realEstateTransactionData;
+    }
 
 }
