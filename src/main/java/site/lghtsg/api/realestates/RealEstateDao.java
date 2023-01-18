@@ -54,19 +54,20 @@ public class RealEstateDao {
      */
     public List<RealEstateBox> getRealEstateBoxesInArea(String area, String sort, String order){
         String findAreaQuery;
+        area.replace('+', ' ');
         String[] area_split = area.split(" ");
         if(area_split.length == 3){
             findAreaQuery =
                     "    select rn.legaltowncodeidx, rn.name\n" +
                     "    from RegionName as rn\n" +
-                    "    where rn.name = '?'\n";
+                    "    where rn.name = ?\n";
         }
         else if(area_split.length == 2){
             findAreaQuery =
                     "    select rn.legaltowncodeidx, rn.name\n" +
                     "    from RegionName as rn\n" +
                     "    inner join RegionName as rn2\n" +
-                    "    on rn2.legalTownCodeIdx = rn.parentIdx and rn2.name = '?'\n" +
+                    "    on rn2.legalTownCodeIdx = rn.parentIdx and rn2.name = ?\n" +
                     "    group by rn.legalTownCodeIdx\n";
         }
         else {
@@ -76,7 +77,7 @@ public class RealEstateDao {
                     "    inner join RegionName as rn2\n" +
                     "    on rn2.legalTownCodeIdx = rn.parentIdx\n" +
                     "    inner join RegionName as rn3\n" +
-                    "    on rn3.legalTownCodeIdx = rn2.parentIdx and rn3.name = '?'\n" +
+                    "    on rn3.legalTownCodeIdx = rn2.parentIdx and rn3.name = ?\n" +
                     "    group by rn.legalTownCodeIdx\n";
         }
         String getRealEstateBoxesInAreaQuery =
@@ -96,7 +97,6 @@ public class RealEstateDao {
                 "group by re.realEstateIdx\n" +
                 "order by re.realEstateIdx asc\n" +
                 "LIMIT 100;";
-
         Object[] getRealEstateBoxParams = new Object[]{area}; // 주입될 값들
         return this.jdbcTemplate.query(getRealEstateBoxesInAreaQuery, getRealEstateBoxParams, realEstateBoxRowMapper());
     }

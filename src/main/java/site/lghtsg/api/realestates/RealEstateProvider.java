@@ -42,15 +42,22 @@ public class RealEstateProvider {
         catch(Exception ignored){
             throw new BaseException(DATABASE_ERROR);
         }
-        realEstateBoxes.stream().forEach(realEstateBox -> realEstateBox.setRateCalDateDiff("3달전"));
-        realEstateBoxes.stream().forEach(realEstateBox -> realEstateBox.setRateOfChange("dummy"));
 
         return realEstateBoxes;
     }
 
     // 하나의 box 반환 - 리스트 구성 인자
     public RealEstateBox getRealEstateBox(int realEstateIdx) throws BaseException {
-        return null;
+        // 가지고 있는 realEstateIdx인지 validation 필요
+        RealEstateBox realEstateBox;
+        try {
+            realEstateBox = realEstateDao.getRealEstateBox(realEstateIdx);
+        }
+        catch(Exception ignored){
+            throw new BaseException(DATABASE_ERROR);
+        }
+
+        return realEstateBox;
     }
 
     // 하나의 info를 반환 - 테이블 원소 그대로
