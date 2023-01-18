@@ -22,6 +22,7 @@ public class BaseResponse<T> {//BaseResponse 객체를 사용할때 성공, 실�
         header = new Header();
         header.setResultCode(SUCCESS.getCode());
         header.setResultMsg(SUCCESS.getMessage());
+        this.body = result;
     }
 
     // 요청에 실패한 경우

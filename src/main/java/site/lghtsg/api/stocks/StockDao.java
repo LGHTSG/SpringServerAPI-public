@@ -26,30 +26,83 @@ public class StockDao {
     public List<GetStockRes> getStocks(String sort, String order) {
 
         String getStocksQuery = "select S.stockIdx, ST.stockTransactionIdx, S.name, ST.price, I.iconImage, ";
+
+        //거래량
         if(sort.equals("trading-volume") && order.equals("ascending")){
             getStocksQuery += "ST.tradingVolume from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
                     "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
-                    "inner join (select S.name, max(ST.transactionTime) as maxtime from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) " +
-                    "dt on S.name = dt.name and ST.transactionTime = dt.maxtime order by ST.tradingVolume ASC limit 100";
+                    "inner join (select S.name, max(ST.transactionTime) as maxtime from Stock as S join StockTransaction ST " +
+                    "on S.stockIdx = ST.stockIdx group by S.name) " +
+                    "dt on S.name = dt.name and ST.transactionTime = dt.maxtime order by ST.tradingVolume asc limit 100";
         }
         if(sort.equals("trading-volume") && order.equals("descending")){
             getStocksQuery += "ST.tradingVolume from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
                     "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
-                    "inner join (select S.name, max(ST.transactionTime) as maxtime from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) " +
-                    "dt on S.name = dt.name and ST.transactionTime = dt.maxtime order by ST.tradingVolume DESC limit 100";
+                    "inner join (select S.name, max(ST.transactionTime) as maxtime from Stock as S join StockTransaction ST " +
+                    "on S.stockIdx = ST.stockIdx group by S.name) " +
+                    "dt on S.name = dt.name and ST.transactionTime = dt.maxtime order by ST.tradingVolume desc limit 100";
+        }
+
+        //시가 총액
+        if(sort.equals("market-cap") && order.equals("ascending")){
+            getStocksQuery += "S.issuedShares * ST.price as marketCap " +
+                    "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx left join StockTransaction ST " +
+                    "on S.stockIdx = ST.stockIdx " +
+                    "inner join (select S.name, max(ST.transactionTime) as maxtime " +
+                    "from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) dt " +
+                    "on S.name = dt.name and ST.transactionTime = dt.maxtime order by marketCap asc limit 100";
+        }
+        if(sort.equals("market-cap") && order.equals("descending")){
+            getStocksQuery += "S.issuedShares * ST.price as marketCap " +
+                    "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx left join StockTransaction ST " +
+                    "on S.stockIdx = ST.stockIdx " +
+                    "inner join (select S.name, max(ST.transactionTime) as maxtime " +
+                    "from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) dt " +
+                    "on S.name = dt.name and ST.transactionTime = dt.maxtime order by marketCap desc limit 100";
+        }
+
+        //등락폭
+        if(sort.equals("fluctuation") && order.equals("ascending")){
+            getStocksQuery += "((ST.price-F.price)/F.price*100) as fluctuation " +
+                    "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
+                    "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
+                    "inner join (select S.name, max(ST.transactionTime) as maxtime " +
+                    "from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) dt " +
+                    "on S.name = dt.name and ST.transactionTime = dt.maxtime " +
+                    "left join (select * from " +
+                    "(select stockTransactionIdx, stockIdx, price from StockTransaction " +
+                    "where date(transactionTime) = curdate() - 1 order by stockTransactionIdx desc limit 18446744073709551615) " +
+                    "res group by stockIdx) as F on ST.stockIdx = F.stockIdx order by fluctuation asc limit 100";
+        }
+        if(sort.equals("fluctuation") && order.equals("descending")){
+            getStocksQuery += "((ST.price-F.price)/F.price*100) as fluctuation " +
+                    "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
+                    "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
+                    "inner join (select S.name, max(ST.transactionTime) as maxtime " +
+                    "from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) dt " +
+                    "on S.name = dt.name and ST.transactionTime = dt.maxtime " +
+                    "left join (select * from " +
+                    "(select stockTransactionIdx, stockIdx, price from StockTransaction " +
+                    "where date(transactionTime) = curdate() - 1 order by stockTransactionIdx desc limit 18446744073709551615) " +
+                    "res group by stockIdx) as F on ST.stockIdx = F.stockIdx order by fluctuation desc limit 100";
         }
 
 
-        return this.jdbcTemplate.query(getStocksQuery,
-                (rs, rowNum) -> new GetStockRes(
-                        rs.getInt("stockIdx"),
-                        rs.getInt("stockTransactionIdx"),
-                        rs.getString("name"),
-                        rs.getInt("price"),
-                        //calculateRateOfChange(rs.getInt("stockIdx")),
-                        "어제",
-                        rs.getString("iconImage")
-                ));
+        try{
+            return this.jdbcTemplate.query(getStocksQuery,
+                    (rs, rowNum) -> new GetStockRes(
+                            rs.getInt("stockIdx"),
+                            rs.getInt("stockTransactionIdx"),
+                            rs.getString("name"),
+                            rs.getInt("price"),
+                            calculateRateOfChange(rs.getInt("stockIdx")),
+                            "어제",
+                            rs.getString("iconImage")
+                    ));
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+
     }
 
     //stockIdx 기준 오름차순, 내림차순 조회
@@ -67,16 +120,21 @@ public class StockDao {
             getStocksByIdxQuery += "DESC limit 100";
         }
 
-        return this.jdbcTemplate.query(getStocksByIdxQuery,
-                (rs, rowNum) -> new GetStockRes(
-                        rs.getInt("stockIdx"),
-                        rs.getInt("stockTransactionIdx"),
-                        rs.getString("name"),
-                        rs.getInt("price"),
-                        //calculateRateOfChange(stockIdx),
-                        "어제",
-                        rs.getString("iconImage")
-                ));
+        try {
+            return this.jdbcTemplate.query(getStocksByIdxQuery,
+                    (rs, rowNum) -> new GetStockRes(
+                            rs.getInt("stockIdx"),
+                            rs.getInt("stockTransactionIdx"),
+                            rs.getString("name"),
+                            rs.getInt("price"),
+                            calculateRateOfChange(rs.getInt("stockIdx")),
+                            "어제",
+                            rs.getString("iconImage")
+                    ));
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+
     }
 
     //특정 주식 정보 조회
@@ -110,7 +168,7 @@ public class StockDao {
     //오늘 종가
     public int getClosingPriceToday(int stockIdx) {
         try {
-            String getClosingPriceTodayQuery = "select price from StockTransaction where stockIdx = ? order by stockTransactionIdx DESC limit 1;";
+            String getClosingPriceTodayQuery = "select price from StockTransaction where stockIdx = ? order by stockTransactionIdx DESC limit 1";
             int getClosingPriceTodayParam = stockIdx;
             return this.jdbcTemplate.queryForObject(getClosingPriceTodayQuery, int.class, getClosingPriceTodayParam);
         }catch (NullPointerException e) { // 쿼리문에 해당하는 결과가 없을 때
@@ -121,8 +179,8 @@ public class StockDao {
     //어제 종가
     public int getClosingPriceYesterday(int stockIdx) {
         try {
-            String getClosingPriceYesterdayQuery = "select price from StockTransaction where date(transactionTime)" +
-                    " = curdate() - interval 1 day and stockIdx = ? order by stockTransactionIdx DESC limit 1;";
+            String getClosingPriceYesterdayQuery = "select price from StockTransaction where date(transactionTime) = curdate() - 1 " +
+                    "and stockIdx = ? order by stockTransactionIdx DESC limit 1";
             int getClosingPriceYesterdayParam = stockIdx;
             return this.jdbcTemplate.queryForObject(getClosingPriceYesterdayQuery, int.class, getClosingPriceYesterdayParam);
         }catch (NullPointerException e) { // 쿼리문에 해당하는 결과가 없을 때
