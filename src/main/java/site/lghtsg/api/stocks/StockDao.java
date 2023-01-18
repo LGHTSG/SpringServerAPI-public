@@ -28,6 +28,7 @@ public class StockDao {
         String getStocksQuery = "select S.stockIdx, ST.stockTransactionIdx, S.name, ST.price, I.iconImage, ";
 
         //거래량
+        /*
         if(sort.equals("trading-volume") && order.equals("ascending")){
             getStocksQuery += "ST.tradingVolume from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
                     "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
@@ -42,8 +43,34 @@ public class StockDao {
                     "on S.stockIdx = ST.stockIdx group by S.name) " +
                     "dt on S.name = dt.name and ST.transactionTime = dt.maxtime order by ST.tradingVolume desc limit 100";
         }
+         */
+        if(sort.equals("trading-volume") && order.equals("ascending")){
+            getStocksQuery += "cast(((ST.price-F.price)/F.price*100) as decimal(10,1)) as rateOfChange, ST.tradingVolume " +
+                    "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
+                    "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
+                    "inner join (select S.name, max(ST.transactionTime) as maxtime " +
+                    "from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) dt " +
+                    "on S.name = dt.name and ST.transactionTime = dt.maxtime " +
+                    "left join (select * from (select stockIdx, price " +
+                    "from StockTransaction where date(transactionTime) = curdate() - 1 " +
+                    "order by stockTransactionIdx desc limit 18446744073709551615) res group by stockIdx) as F " +
+                    "on ST.stockIdx = F.stockIdx order by tradingVolume asc limit 100";
+        }
+        if(sort.equals("trading-volume") && order.equals("descending")){
+            getStocksQuery += "cast(((ST.price-F.price)/F.price*100) as decimal(10,1)) as rateOfChange, ST.tradingVolume " +
+                    "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
+                    "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
+                    "inner join (select S.name, max(ST.transactionTime) as maxtime " +
+                    "from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) dt " +
+                    "on S.name = dt.name and ST.transactionTime = dt.maxtime " +
+                    "left join (select * from (select stockIdx, price " +
+                    "from StockTransaction where date(transactionTime) = curdate() - 1 " +
+                    "order by stockTransactionIdx desc limit 18446744073709551615) res group by stockIdx) as F " +
+                    "on ST.stockIdx = F.stockIdx order by tradingVolume desc limit 100";
+        }
 
         //시가 총액
+        /*
         if(sort.equals("market-cap") && order.equals("ascending")){
             getStocksQuery += "S.issuedShares * ST.price as marketCap " +
                     "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx left join StockTransaction ST " +
@@ -60,31 +87,59 @@ public class StockDao {
                     "from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) dt " +
                     "on S.name = dt.name and ST.transactionTime = dt.maxtime order by marketCap desc limit 100";
         }
+        */
+
+        if(sort.equals("market-cap") && order.equals("ascending")){
+            getStocksQuery += "cast(((ST.price-F.price)/F.price*100) as decimal(10,1)) as rateOfChange, " +
+                    "S.issuedShares * ST.price as marketCap " +
+                    "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
+                    "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
+                    "inner join (select S.name, max(ST.transactionTime) as maxtime " +
+                    "from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) dt " +
+                    "on S.name = dt.name and ST.transactionTime = dt.maxtime " +
+                    "left join (select * from (select stockIdx, price " +
+                    "from StockTransaction where date(transactionTime) = curdate() - 1 " +
+                    "order by stockTransactionIdx desc limit 18446744073709551615) res group by stockIdx) as F " +
+                    "on ST.stockIdx = F.stockIdx order by marketCap desc limit 100";
+        }
+        if(sort.equals("market-cap") && order.equals("descending")){
+            getStocksQuery += "cast(((ST.price-F.price)/F.price*100) as decimal(10,1)) as rateOfChange, " +
+                    "S.issuedShares * ST.price as marketCap " +
+                    "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
+                    "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
+                    "inner join (select S.name, max(ST.transactionTime) as maxtime " +
+                    "from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) dt " +
+                    "on S.name = dt.name and ST.transactionTime = dt.maxtime " +
+                    "left join (select * from (select stockIdx, price " +
+                    "from StockTransaction where date(transactionTime) = curdate() - 1 " +
+                    "order by stockTransactionIdx desc limit 18446744073709551615) res group by stockIdx) as F " +
+                    "on ST.stockIdx = F.stockIdx order by marketCap asc limit 100";
+        }
 
         //등락폭
         if(sort.equals("fluctuation") && order.equals("ascending")){
-            getStocksQuery += "((ST.price-F.price)/F.price*100) as fluctuation " +
+            getStocksQuery += "cast(((ST.price-F.price)/F.price*100) as decimal(10,1)) as rateOfChange " +
                     "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
                     "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
                     "inner join (select S.name, max(ST.transactionTime) as maxtime " +
                     "from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) dt " +
                     "on S.name = dt.name and ST.transactionTime = dt.maxtime " +
                     "left join (select * from " +
-                    "(select stockTransactionIdx, stockIdx, price from StockTransaction " +
+                    "(select stockIdx, price from StockTransaction " +
                     "where date(transactionTime) = curdate() - 1 order by stockTransactionIdx desc limit 18446744073709551615) " +
-                    "res group by stockIdx) as F on ST.stockIdx = F.stockIdx order by fluctuation asc limit 100";
+                    "res group by stockIdx) as F on ST.stockIdx = F.stockIdx order by rateOfChange asc limit 100";
         }
         if(sort.equals("fluctuation") && order.equals("descending")){
-            getStocksQuery += "((ST.price-F.price)/F.price*100) as fluctuation " +
+            getStocksQuery += "cast(((ST.price-F.price)/F.price*100) as decimal(10,1)) as rateOfChange " +
                     "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
                     "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
                     "inner join (select S.name, max(ST.transactionTime) as maxtime " +
                     "from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) dt " +
                     "on S.name = dt.name and ST.transactionTime = dt.maxtime " +
                     "left join (select * from " +
-                    "(select stockTransactionIdx, stockIdx, price from StockTransaction " +
+                    "(select stockIdx, price from StockTransaction " +
                     "where date(transactionTime) = curdate() - 1 order by stockTransactionIdx desc limit 18446744073709551615) " +
-                    "res group by stockIdx) as F on ST.stockIdx = F.stockIdx order by fluctuation desc limit 100";
+                    "res group by stockIdx) as F on ST.stockIdx = F.stockIdx order by rateOfChange desc limit 100";
         }
 
 
@@ -95,7 +150,8 @@ public class StockDao {
                             rs.getInt("stockTransactionIdx"),
                             rs.getString("name"),
                             rs.getInt("price"),
-                            calculateRateOfChange(rs.getInt("stockIdx")),
+                            //calculateRateOfChange(rs.getInt("stockIdx")),
+                            rs.getFloat("rateOfChange"),
                             "어제",
                             rs.getString("iconImage")
                     ));
@@ -107,10 +163,25 @@ public class StockDao {
 
     //stockIdx 기준 오름차순, 내림차순 조회
     public List<GetStockRes> getStocksByIdx(String order) {
+        /*
         String getStocksByIdxQuery = "select S.stockIdx, ST.stockTransactionIdx, S.name, ST.price, I.iconImage " +
                 "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
                 "inner join (select S.name, max(ST.transactionTime) as maxtime from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx " +
                 "group by S.name) dt on S.name = dt.name and ST.transactionTime = dt.maxtime order by S.stockIdx ";
+
+         */
+        String getStocksByIdxQuery = "select S.stockIdx, ST.stockTransactionIdx, S.name, ST.price, I.iconImage, " +
+                "cast(((ST.price-F.price)/F.price*100) as decimal(10,1)) as rateOfChange " +
+                "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
+                "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
+                "inner join (select S.name, max(ST.transactionTime) as maxtime " +
+                "from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) dt " +
+                "on S.name = dt.name and ST.transactionTime = dt.maxtime " +
+                "left join (select * from (select stockIdx, price " +
+                "from StockTransaction where date(transactionTime) = curdate() - 1 " +
+                "order by stockTransactionIdx desc limit 18446744073709551615) res group by stockIdx) as F " +
+                "on ST.stockIdx = F.stockIdx order by stockIdx ";
+
 
         if(order.equals("ascending")){
             getStocksByIdxQuery += "ASC limit 100";
@@ -127,7 +198,8 @@ public class StockDao {
                             rs.getInt("stockTransactionIdx"),
                             rs.getString("name"),
                             rs.getInt("price"),
-                            calculateRateOfChange(rs.getInt("stockIdx")),
+                            //calculateRateOfChange(rs.getInt("stockIdx")),
+                            rs.getFloat("rateOfChange"),
                             "어제",
                             rs.getString("iconImage")
                     ));
@@ -140,11 +212,27 @@ public class StockDao {
     //특정 주식 정보 조회
     public GetStockInfoRes getStockInfo(int stockIdx) {
 
+        /*
         String getStockInfoQuery = "select S.stockIdx, ST.stockTransactionIdx, S.name, ST.price, S.issuedShares, ST.tradingVolume, I.iconImage, ST.transactionTime " +
                 "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
                 "left join StockTransaction ST on S.stockIdx = ST.stockIdx inner join (select S.name, max(ST.transactionTime) as maxtime " +
                 "from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) " +
                 "dt on S.name = dt.name and ST.transactionTime = dt.maxtime where S.stockIdx = ?";
+
+         */
+
+        String getStockInfoQuery = "select S.stockIdx, ST.stockTransactionIdx, S.name, ST.price, S.issuedShares, ST.tradingVolume, ST.transactionTime, I.iconImage, " +
+                "cast(((ST.price-F.price)/F.price*100) as decimal(10,1)) as rateOfChange " +
+                "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
+                "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
+                "inner join (select S.name, max(ST.transactionTime) as maxtime " +
+                "from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) dt " +
+                "on S.name = dt.name and ST.transactionTime = dt.maxtime " +
+                "left join (select * from (select stockIdx, price " +
+                "from StockTransaction where date(transactionTime) = curdate() - 1 " +
+                "order by stockTransactionIdx desc limit 18446744073709551615) res group by stockIdx) as F " +
+                "on ST.stockIdx = F.stockIdx where ST.stockIdx = ?";
+
         int getStockInfoParams = stockIdx;
         try {
             return this.jdbcTemplate.queryForObject(getStockInfoQuery,
@@ -155,7 +243,8 @@ public class StockDao {
                             rs.getInt("price"),
                             rs.getLong("issuedShares"),
                             rs.getInt("tradingVolume"),
-                            calculateRateOfChange(stockIdx),
+                            //calculateRateOfChange(stockIdx),
+                            rs.getFloat("rateOfChange"),
                             "어제",
                             rs.getString("iconImage"),
                             rs.getString("transactionTime")),
