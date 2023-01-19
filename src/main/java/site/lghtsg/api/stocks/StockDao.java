@@ -7,7 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import site.lghtsg.api.stocks.model.GetStockInfoRes;
 import site.lghtsg.api.stocks.model.GetStockPricesRes;
-import site.lghtsg.api.stocks.model.GetStockRes;
+import site.lghtsg.api.stocks.model.StockBox;
 
 import javax.sql.DataSource;
 import java.util.List;
@@ -23,7 +23,7 @@ public class StockDao {
 
 
     // sort 기준 오름차순, 내림차순 조회
-    public List<GetStockRes> getStocks(String sort, String order) {
+    public List<StockBox> getStockBoxes(String sort, String order) {
 
         String getStocksQuery = "select S.stockIdx, ST.stockTransactionIdx, S.name, ST.price, I.iconImage, ";
 
@@ -145,9 +145,8 @@ public class StockDao {
 
         try{
             return this.jdbcTemplate.query(getStocksQuery,
-                    (rs, rowNum) -> new GetStockRes(
-                            rs.getInt("stockIdx"),
-                            rs.getInt("stockTransactionIdx"),
+                    (rs, rowNum) -> new StockBox(
+                            rs.getLong("stockIdx"),
                             rs.getString("name"),
                             rs.getInt("price"),
                             //calculateRateOfChange(rs.getInt("stockIdx")),
@@ -162,7 +161,7 @@ public class StockDao {
     }
 
     //stockIdx 기준 오름차순, 내림차순 조회
-    public List<GetStockRes> getStocksByIdx(String order) {
+    public List<StockBox> getStockBoxesByIdx(String order) {
         /*
         String getStocksByIdxQuery = "select S.stockIdx, ST.stockTransactionIdx, S.name, ST.price, I.iconImage " +
                 "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
@@ -193,9 +192,8 @@ public class StockDao {
 
         try {
             return this.jdbcTemplate.query(getStocksByIdxQuery,
-                    (rs, rowNum) -> new GetStockRes(
-                            rs.getInt("stockIdx"),
-                            rs.getInt("stockTransactionIdx"),
+                    (rs, rowNum) -> new StockBox(
+                            rs.getLong("stockIdx"),
                             rs.getString("name"),
                             rs.getInt("price"),
                             //calculateRateOfChange(rs.getInt("stockIdx")),
@@ -237,8 +235,8 @@ public class StockDao {
         try {
             return this.jdbcTemplate.queryForObject(getStockInfoQuery,
                     (rs, rowNum) -> new GetStockInfoRes(
-                            rs.getInt("stockIdx"),
-                            rs.getInt("stockTransactionIdx"),
+                            rs.getLong("stockIdx"),
+                            rs.getLong("stockTransactionIdx"),
                             rs.getString("name"),
                             rs.getInt("price"),
                             rs.getLong("issuedShares"),

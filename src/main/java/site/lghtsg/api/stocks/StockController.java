@@ -23,14 +23,14 @@ public class StockController {
 
     @ResponseBody
     @GetMapping("") //주식 리스트 조회 /stocks?sort=trading-volume&order=ascending or descending
-    public BaseResponse<List<GetStockRes>> getStocks(@RequestParam(required = false) String sort, @RequestParam String order) {
+    public BaseResponse<List<StockBox>> getStockBoxes(@RequestParam(required = false) String sort, @RequestParam String order) {
         try {
             if (sort == null) { // sort가 null 이면 stockIdx 기준
-                List<GetStockRes> getStockRes = stockProvider.getStocksByIdx(order);
-                return new BaseResponse<>(getStockRes);
+                List<StockBox> stockBox = stockProvider.getStockBoxesByIdx(order);
+                return new BaseResponse<>(stockBox);
             }
-            List<GetStockRes> getStockRes = stockProvider.getStocks(sort, order);
-            return new BaseResponse<>(getStockRes);
+            List<StockBox> stockBox = stockProvider.getStockBoxes(sort, order);
+            return new BaseResponse<>(stockBox);
         } catch (
     BaseException exception) {
             return new BaseResponse<>((exception.getStatus()));
