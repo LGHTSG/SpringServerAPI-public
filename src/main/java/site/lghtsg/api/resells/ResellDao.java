@@ -1,6 +1,5 @@
 package site.lghtsg.api.resells;
 
-
 import org.openqa.selenium.By;
 import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.WebDriver;
@@ -13,6 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import site.lghtsg.api.resells.model.GetResellRes;
 import site.lghtsg.api.resells.model.GetResellTransactionRes;
+import site.lghtsg.api.resells.model.ResellBox;
 
 import javax.sql.DataSource;
 import java.time.Duration;
@@ -28,13 +28,13 @@ public class ResellDao {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
-    public List<GetResellRes> getResells(String order){
+    public List<GetResellRes> getResells(String order) {
         String getResellsQuery = "select * from Resell order by resellIdx ";
-        if(order.equals("ascending")){
+        if (order.equals("ascending")) {
             getResellsQuery += "ASC";
         }
 
-        if (order.equals("descending")){
+        if (order.equals("descending")) {
             getResellsQuery += "DESC";
         }
 
@@ -43,7 +43,7 @@ public class ResellDao {
                         rs.getInt("resellIdx"),
                         rs.getString("name"),
                         calculateChangeOfRate(rs.getInt("resellIdx")).get(0),
-                        rs.getInt("releasedPrice"),
+                        rs.getString("releasedPrice"),
                         rs.getString("releasedDate"),
                         rs.getString("color"),
                         rs.getString("brand"),
@@ -52,12 +52,11 @@ public class ResellDao {
                         "최근 거래가 기준",
                         rs.getString("image1"),
                         rs.getString("image2"),
-                        rs.getString("image3")
-                )
-        );
+                        rs.getString("image3"),
+                        rs.getInt("iconImageIdx")));
     }
 
-    public List<GetResellRes> getResellsByRate(){
+    public List<GetResellRes> getResellsByRate() {
         String getResellsQuery = "select * from Resell";
 
         return this.jdbcTemplate.query(getResellsQuery,
@@ -65,21 +64,18 @@ public class ResellDao {
                         rs.getInt("resellIdx"),
                         rs.getString("name"),
                         calculateChangeOfRate(rs.getInt("resellIdx")).get(0),
-                        rs.getInt("releasedPrice"),
+                        rs.getString("releasedPrice"),
                         rs.getString("releasedDate"),
                         rs.getString("color"),
                         rs.getString("brand"),
                         rs.getString("productNum"),
                         calculateChangeOfRate(rs.getInt("resellIdx")).get(1),
-                        "최근 거래가 기준",
-                        rs.getString("image1"),
-                        rs.getString("image2"),
-                        rs.getString("image3")
-                )
-        );
+                        "최근 거래가 기준", rs.getString("image1"),
+                        rs.getString("image2"), rs.getString("image3"),
+                        rs.getInt("iconImageIdx")));
     }
 
-    public GetResellRes getResell(int resellIdx){
+    public GetResellRes getResell(int resellIdx) {
         String getResellQuery = "select * from Resell where resellIdx = ?";
         int getResellParams = resellIdx;
 
@@ -88,51 +84,66 @@ public class ResellDao {
                         rs.getInt("resellIdx"),
                         rs.getString("name"),
                         calculateChangeOfRate(rs.getInt("resellIdx")).get(0),
-                        rs.getInt("releasedPrice"),
+                        rs.getString("releasedPrice"),
                         rs.getString("releasedDate"),
                         rs.getString("color"),
                         rs.getString("brand"),
                         rs.getString("productNum"),
                         calculateChangeOfRate(rs.getInt("resellIdx")).get(1),
-                        "최근 거래가 기준",
-                        rs.getString("image1"),
+                        "최근 거래가 기준", rs.getString("image1"),
                         rs.getString("image2"),
-                        rs.getString("image3")),
+                        rs.getString("image3"),
+                        rs.getInt("iconImageIdx")),
                 getResellParams);
     }
 
-    public List<GetResellTransactionRes> getResellTransaction(int resellIdx){
+    public ResellBox getResellBoxes(int resellIdx) {
+        String getResellQuery = "select * from Resell where resellIdx = ?";
+        int getResellParams = resellIdx;
+
+        return this.jdbcTemplate.queryForObject(getResellQuery,
+                (rs, rowNum) -> new ResellBox(
+                        rs.getInt("resellIdx"),
+                        rs.getString("name"),
+                        calculateChangeOfRate(rs.getInt("resellIdx")).get(1),
+                        "최근 거래가 기준",
+                        rs.getString("iconImageIdx"),
+                        calculateChangeOfRate(rs.getInt("resellIdx")).get(0)),
+                getResellParams);
+    }
+
+    public List<GetResellTransactionRes> getResellTransaction(int resellIdx) {
         String getResellTransactionQuery = "select * from ResellTransaction where resellIdx = ?";
         int getResellTransactionParams = resellIdx;
         return this.jdbcTemplate.query(getResellTransactionQuery,
                 (rs, rowNum) -> new GetResellTransactionRes(
                         rs.getInt("resellIdx"),
                         rs.getInt("price"),
-                        rs.getTimestamp("transactionTime")),
+                        rs.getString("transactionTime")),
                 getResellTransactionParams);
     }
 
-    public List<GetResellTransactionRes> getResellTransactionHistory(int resellIdx){
-        String getResellTransactionHistoryQuery = "select * from ResellTransaction where resellIdx = ? order by transactionTime desc LIMIT 2";
+    public List<GetResellTransactionRes> getResellTransactionHistory(int resellIdx) {
+        String getResellTransactionHistoryQuery = "select * from ResellTransaction where resellIdx = ? order by createdAt desc LIMIT 2";
         int getResellTransactionHistory = resellIdx;
         return this.jdbcTemplate.query(getResellTransactionHistoryQuery,
                 (rs, rowNum) -> new GetResellTransactionRes(
                         rs.getInt("resellIdx"),
                         rs.getInt("price"),
-                        rs.getTimestamp("transactionTime")),
+                        rs.getString("transactionTime")),
                 getResellTransactionHistory);
     }
 
-    public List<String> calculateChangeOfRate(int resellIdx){
+    public List<String> calculateChangeOfRate(int resellIdx) {
         List<GetResellTransactionRes> resellTransactionHistory = getResellTransactionHistory(resellIdx);
         List<String> result = new ArrayList<>();
-        int currentPrice = resellTransactionHistory.get(1).getPrice();
-        int latestPrice = resellTransactionHistory.get(0).getPrice();
+        int currentPrice = resellTransactionHistory.get(0).getPrice();
+        int latestPrice = resellTransactionHistory.get(1).getPrice();
 
         double changeOfRate = (double) (currentPrice - latestPrice) / latestPrice * 100;
-        String changeOfRateS = String.format("%.1f",changeOfRate);
+        String changeOfRateS = String.format("%.1f", changeOfRate);
 
-        if(changeOfRate > 0){
+        if (changeOfRate > 0) {
             changeOfRateS = "+" + changeOfRateS;
         }
         result.add(String.valueOf(currentPrice));
@@ -171,8 +182,9 @@ public class ResellDao {
             driver.findElement(By.xpath("//*[@id=\"wrap\"]/div[2]/div/div[2]/div[2]/div[2]/div[1]/div[2]/ul/li[4]/a")).click();
             Thread.sleep(1000);
 
-            String createResellQuery = "insert into Resell (name, releasedPrice, releasedDate, color, brand, productNum, image1) VALUE (?,?,?,?,?,?,?)"; // 실행될 동적 쿼리문
-            String createResellTransactionQuery = "insert into ResellTransaction (resellIdx, price, transactionTime) VALUE (?,?,?)";
+
+            String createResellQuery = "insert into Resell (name, releasedPrice, releasedDate, color, brand, productNum, image1, iconImageIdx) VALUES (?,?,?,?,?,?,?,?)"; // 실행될 동적 쿼리문
+            String createResellTransactionQuery = "insert into ResellTransaction (resellIdx, price, transactionTime) VALUES(?,?,?)";
             List<WebElement> elements = driver.findElements(By.className("product_card"));
 
             List<String> urlList = new ArrayList<>();
@@ -196,25 +208,17 @@ public class ResellDao {
                 } else {
                     resellIdx++;
                     System.out.println(resellIdx + "번째");
-                    System.out.println(name.getText());
-                    System.out.println(brand.getText());
-                    System.out.println(productInfo.get(0).getText());
-                    System.out.println(productInfo.get(1).getText());
-                    System.out.println(productInfo.get(2).getText());
-                    System.out.println(productInfo.get(3).getText());
-                    System.out.println(imageUrl);
 
-                    Object[] createResellParams = new Object[7];
+                    Object[] createResellParams = new Object[]{
+                            name.getText(),
+                            productInfo.get(3).getText(),
+                            productInfo.get(1).getText(),
+                            productInfo.get(2).getText(),
+                            brand.getText(),
+                            productInfo.get(0).getText(),
+                            imageUrl,
+                            1};
 
-                    createResellParams[0] =name.getText();
-                    createResellParams[1] =productInfo.get(3).getText();
-                    createResellParams[2] =productInfo.get(1).getText();
-                    createResellParams[3] =productInfo.get(2).getText();
-                    createResellParams[4] =brand.getText();
-                    createResellParams[5] =productInfo.get(0).getText();
-                    createResellParams[6] = imageUrl;
-
-                    this.jdbcTemplate.update(createResellQuery, createResellParams);
                     Thread.sleep(3000);
 
                     try {
@@ -243,16 +247,17 @@ public class ResellDao {
                         urlList.remove(0);
                         continue;
                     }
-
+                    
+                    this.jdbcTemplate.update(createResellQuery, createResellParams);
 
                     for (List<String> list : priceList) {
                         String temp = list.get(0);
                         int price = Integer.parseInt(temp.replaceAll("[^0-9]", ""));
-                        System.out.println(resellIdx + " - " + price + " - " + list.get(1));
 
                         Object[] createResellTransactionParams = new Object[]{resellIdx, price, list.get(1)};
                         this.jdbcTemplate.update(createResellTransactionQuery, createResellTransactionParams);
                     }
+
                     System.out.println("------------------------");
                 }
                 urlList.remove(0);

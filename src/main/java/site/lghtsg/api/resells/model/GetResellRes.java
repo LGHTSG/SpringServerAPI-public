@@ -11,7 +11,7 @@ public class GetResellRes {
     private int resellIdx;
     private String name;
     private String price;
-    private int releasedPrice;
+    private String releasedPrice;
     private String releasedDate;
     private String color;
     private String brand;
@@ -21,4 +21,5 @@ public class GetResellRes {
     private String image1;
     private String image2;
     private String image3;
+    private int iconImageIdx;
 }

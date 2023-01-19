@@ -15,6 +15,7 @@ import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -219,19 +220,41 @@ public class RealEstateDao {
     /**
      * 부동산 정보 업로드
      * @param realEstateList
-     */
+    */
     public void uploadRealEstates(Set<RealEstate> realEstateList) { // 한 업로드 단위(파일, api응답) 안에서의 중복 방지
-//        String query = "insert into `RealEstate`(legalTownCodeIdx, name) " +
-//                "select ?, ? from dual " +
-//                "where not exists (select legalTownCodeIdx, name from `RealEstate` where legalTownCodeIdx = ? and name = ?)"; // 업로드 단위 사이에서의 중복 방지
-//
-//        String[] params = new String[4];
-//        for (RealEstate realEstate : realEstateList) {
-//            params[0] = params[2] = String.valueOf(realEstate.getRegionId());
-//            params[1] = params[3] = realEstate.getName();
-//
-//            jdbcTemplate.update(query, params);
-//        }
+
+        String createTempTable = "create temporary table RealEstate_temp select * from RealEstate limit 0, 0;\n";
+        StringBuilder insertQueryBuilder = new StringBuilder("insert into RealEstate_temp (legalTownCodeIdx, name) values ");
+
+        String insertOnlyNotDuplicated =
+            "insert into RealEstate (legalTownCodeIdx, name)\n" +
+            "select legalTownCodeIdx, name \n" +
+            "from (\n" +
+            "select temp.legalTownCodeIdx, temp.name\n" +
+            "from RealEstate as r right join RealEstate_temp as temp on (r.legalTownCodeIdx, r.name) = (temp.legalTownCodeIdx, temp.name)\n" +
+            "where r.legalTownCodeIdx is null\n" +
+            ") as newData;";
+
+        String dropTempTable = "drop table RealEstate_temp;";
+
+        Object[] params = new Object[realEstateList.size() * 2];
+        int paramsIndex = 0;
+
+        for (RealEstate realEstate : realEstateList) {
+            params[paramsIndex++] = realEstate.getRegionId();
+            params[paramsIndex++] = realEstate.getName();
+
+            insertQueryBuilder.append("(?, ?),");
+        }
+
+        String insertOnTempTable = insertQueryBuilder.substring(0, Math.max(insertQueryBuilder.length()-1, 0)) + ";\n";
+
+        // 쿼리 실행
+        this.jdbcTemplate.update(createTempTable);
+        this.jdbcTemplate.update(insertOnTempTable, params);
+        this.jdbcTemplate.update(insertOnlyNotDuplicated);
+        this.jdbcTemplate.update(dropTempTable);
+
     }
 
     /**
@@ -263,8 +286,9 @@ public class RealEstateDao {
      * @return
      */
     public String uploadRegionNames(List<RegionName> regionNameList) {
-        StringBuilder queryBuilder = new StringBuilder("insert into `RegionName`(legalTownCodeIdx, name, parentIdx) values");
-        Object[] params = new String[regionNameList.size() * 3];
+
+        StringBuilder queryBuilder = new StringBuilder("insert into RegionName(legalTownCodeIdx, name, parentIdx) values");
+        String[] params = new String[regionNameList.size() * 3];
 
         int paramsIndex = 0;
 
@@ -311,12 +335,12 @@ public class RealEstateDao {
     public List<RegionName> getRegionsForExcel() {
         String query = "(select legalTownCodeIdx, replace(name, '시 ', '') as name " +
                 "from (" +
-                "select legalTownCodeIdx, name from regionname " +
+                "select legalTownCodeIdx, name from RegionName " +
                 "union " +
-                "select legalTownCodeIdx, concat(name, '동') from regionname where name like '%상당구 북문로%'" +
+                "select legalTownCodeIdx, concat(name, '동') from RegionName where name like '%상당구 북문로%'" +
                 ") as regionname " +
                 "where substring_index(name, ' ', 3) like '%도 %시 %구') " +
-                "UNION (select legalTownCodeIdx, name from regionname)";
+                "UNION (select legalTownCodeIdx, name from RegionName)";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> { return RegionName.builder()
                 .legalCodeId(rs.getInt("legalTownCodeIdx"))

@@ -8,6 +8,7 @@ import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponseStatus;
 import site.lghtsg.api.resells.model.GetResellRes;
 import site.lghtsg.api.resells.model.GetResellTransactionRes;
+import site.lghtsg.api.resells.model.ResellBox;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -53,6 +54,16 @@ public class ResellProvider {
         try {
             GetResellRes getResellRes = resellDao.getResell(resellIdx);
             return getResellRes;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new BaseException(BaseResponseStatus.DATABASE_ERROR);
+        }
+    }
+
+    public ResellBox getResellBoxes(int resellIdx) throws BaseException {
+        try {
+            ResellBox resellBox = resellDao.getResellBoxes(resellIdx);
+            return resellBox;
         } catch (Exception e) {
             e.printStackTrace();
             throw new BaseException(BaseResponseStatus.DATABASE_ERROR);
