@@ -207,7 +207,7 @@ public class RealEstateDao {
      * 부동산 정보 업로드
      * @param realEstateList
      */
-//    public void uploadRealEstates(Set<RealEstate> realEstateList) { // 한 업로드 단위(파일, api응답) 안에서의 중복 방지
+    public void uploadRealEstates(Set<RealEstate> realEstateList) { // 한 업로드 단위(파일, api응답) 안에서의 중복 방지
 //        String query = "insert into `RealEstate`(legalTownCodeIdx, name) " +
 //                "select ?, ? from dual " +
 //                "where not exists (select legalTownCodeIdx, name from `RealEstate` where legalTownCodeIdx = ? and name = ?)"; // 업로드 단위 사이에서의 중복 방지
@@ -219,7 +219,7 @@ public class RealEstateDao {
 //
 //            jdbcTemplate.update(query, params);
 //        }
-//    }
+    }
 
     /**
      * 실거래가 정보 업로드

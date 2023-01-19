@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.jdbc.core.JdbcTemplate;
 import site.lghtsg.api.realestates.model.upload.RealEstate;
+import site.lghtsg.api.resells.ResellDao;
 
 import javax.sql.DataSource;
 import java.util.HashSet;
@@ -15,25 +16,27 @@ public class RealEstateListTest {
 
     @Autowired
     private RealEstateDao realEstateDao;
+    @Autowired
+    private ResellDao resellDao;
 
     @Test
     void 부동산_리스트_반환(){
-
+        resellDao.scraping();
     }
 
-    @Test
-    void uploadData(){
-        Set<RealEstate> realEstates = new HashSet<RealEstate>();
-
-        realEstates.add(RealEstate.builder()
-                .regionId(29170127)
-                .name("test")
-                .build());
-        realEstates.add(RealEstate.builder()
-                .regionId(29170127)
-                .name("test2")
-                .build());
-
-        realEstateDao.uploadRealEstates(realEstates);
-    }
+//    @Test
+//    void uploadData(){
+//        Set<RealEstate> realEstates = new HashSet<RealEstate>();
+//
+//        realEstates.add(RealEstate.builder()
+//                .regionId(29170127)
+//                .name("test")
+//                .build());
+//        realEstates.add(RealEstate.builder()
+//                .regionId(29170127)
+//                .name("test2")
+//                .build());
+//
+//        realEstateDao.uploadRealEstates(realEstates);
+//    }
 }
