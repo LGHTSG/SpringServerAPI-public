@@ -182,6 +182,7 @@ public class ResellDao {
             driver.findElement(By.xpath("//*[@id=\"wrap\"]/div[2]/div/div[2]/div[2]/div[2]/div[1]/div[2]/ul/li[4]/a")).click();
             Thread.sleep(1000);
 
+
             String createResellQuery = "insert into Resell (name, releasedPrice, releasedDate, color, brand, productNum, image1, iconImageIdx) VALUES (?,?,?,?,?,?,?,?)"; // 실행될 동적 쿼리문
             String createResellTransactionQuery = "insert into ResellTransaction (resellIdx, price, transactionTime) VALUES(?,?,?)";
             List<WebElement> elements = driver.findElements(By.className("product_card"));
@@ -246,12 +247,13 @@ public class ResellDao {
                         urlList.remove(0);
                         continue;
                     }
-
+                    
                     this.jdbcTemplate.update(createResellQuery, createResellParams);
 
                     for (List<String> list : priceList) {
                         String temp = list.get(0);
                         int price = Integer.parseInt(temp.replaceAll("[^0-9]", ""));
+
                         Object[] createResellTransactionParams = new Object[]{resellIdx, price, list.get(1)};
                         this.jdbcTemplate.update(createResellTransactionQuery, createResellTransactionParams);
                     }
