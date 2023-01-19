@@ -10,5 +10,5 @@ public class Constant {
     public static String SORT_FLUCTUATION_PARAM = "fluctuation";
     public static String SORT_TRADING_VOL_PARAM = "trading-volume";
     public static String SORT_MARKET_CAP_PARAM = "market-cap";
-    public static String LIST_LIMIT = "100";
+    public static String LIST_LIMIT_QUERY = "LIMIT 100";
 }

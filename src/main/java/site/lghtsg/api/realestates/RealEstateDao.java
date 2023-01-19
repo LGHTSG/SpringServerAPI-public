@@ -19,7 +19,7 @@ import java.util.List;
 import java.util.Set;
 
 import static site.lghtsg.api.config.Constant.ASCENDING_PARAM;
-import static site.lghtsg.api.config.Constant.LIST_LIMIT;
+import static site.lghtsg.api.config.Constant.LIST_LIMIT_QUERY;
 
 @Repository
 public class RealEstateDao {
@@ -32,14 +32,15 @@ public class RealEstateDao {
     }
 
     /**
+     * TODO : 정렬기준 변경에 대해 어떻게 처리해야하는지 작업 해야함.
      * 모든 부동산의 box 반환
      * @return
      */
-    // 부동산 증감폭 계산하여 리스트 반환하는 로직이 필수는 아니지만, 다른 파트에서는 어떻게 구현?
     // 리스트가 길어지면 안되므로 짤라서 계산 -> dao 안에서 모든 계산이 이루어져야 함
     public List<RealEstateBox> getAllRealEstateBox(String sort, String order) {
+        // 쿼리세팅
         String orderQuery = "";
-        if(order == ASCENDING_PARAM) orderQuery += "ASC\n";
+        if(order.equals(ASCENDING_PARAM)) orderQuery += "ASC\n";
         else orderQuery += "DESC\n";
 
         String getRealEstateBoxesQuery =
@@ -52,8 +53,9 @@ public class RealEstateDao {
                 "INNER JOIN IconImage II on re.iconImageIdx = II.iconImageIdx\n" +
                 "group by re.realEstateIdx\n" +
                 "order by re.realEstateIdx ";
-        getRealEstateBoxesQuery += orderQuery + LIST_LIMIT;
-        System.out.println(getRealEstateBoxesQuery);
+
+        getRealEstateBoxesQuery += orderQuery + LIST_LIMIT_QUERY;
+
         return this.jdbcTemplate.query(getRealEstateBoxesQuery, realEstateBoxRowMapper());
     }
 
@@ -63,6 +65,10 @@ public class RealEstateDao {
      * @param area String
      */
     public List<RealEstateBox> getRealEstateBoxesInArea(String area, String sort, String order){
+        String orderQuery = "";
+        if(order.equals(ASCENDING_PARAM)) orderQuery += "ASC\n";
+        else orderQuery += "DESC\n";
+
         String findAreaQuery = getFindAreaQuery(area);
         String getRealEstateBoxesInAreaQuery =
                 "select re.realEstateIdx, re.name, ret.price, ret.transactionTime, II.iconImage\n" +
@@ -79,9 +85,12 @@ public class RealEstateDao {
                 ") as rnn\n" +
                 "on re.legalTownCodeIdx = rnn.legalTownCodeIdx\n" +
                 "group by re.realEstateIdx\n" +
-                "order by re.realEstateIdx asc\n" +
-                "LIMIT 100;";
+                "order by re.realEstateIdx ";
+
+        getRealEstateBoxesInAreaQuery += orderQuery + LIST_LIMIT_QUERY;
+
         Object[] getRealEstateBoxParams = new Object[]{area}; // 주입될 값들
+
         return this.jdbcTemplate.query(getRealEstateBoxesInAreaQuery, getRealEstateBoxParams, realEstateBoxRowMapper());
     }
 
@@ -114,6 +123,7 @@ public class RealEstateDao {
      * @return regionNames
      */
     public List<String> getAllRegionNames(){
+        // 서울시부터 볼 수 있도록 법정동코드 기준
         String query = "select name from RegionName order by RegionName.legalTownCodeIdx";
         return this.jdbcTemplate.query(query, (rs, rowNum) -> rs.getString("name"));
     }
@@ -197,19 +207,19 @@ public class RealEstateDao {
      * 부동산 정보 업로드
      * @param realEstateList
      */
-    public void uploadRealEstates(Set<RealEstate> realEstateList) { // 한 업로드 단위(파일, api응답) 안에서의 중복 방지
-        String query = "insert into `RealEstate`(legalTownCodeIdx, name) " +
-                "select ?, ? from dual " +
-                "where not exists (select legalTownCodeIdx, name from `RealEstate` where legalTownCodeIdx = ? and name = ?)"; // 업로드 단위 사이에서의 중복 방지
-
-        String[] params = new String[4];
-        for (RealEstate realEstate : realEstateList) {
-            params[0] = params[2] = String.valueOf(realEstate.getRegionId());
-            params[1] = params[3] = realEstate.getName();
-
-            jdbcTemplate.update(query, params);
-        }
-    }
+//    public void uploadRealEstates(Set<RealEstate> realEstateList) { // 한 업로드 단위(파일, api응답) 안에서의 중복 방지
+//        String query = "insert into `RealEstate`(legalTownCodeIdx, name) " +
+//                "select ?, ? from dual " +
+//                "where not exists (select legalTownCodeIdx, name from `RealEstate` where legalTownCodeIdx = ? and name = ?)"; // 업로드 단위 사이에서의 중복 방지
+//
+//        String[] params = new String[4];
+//        for (RealEstate realEstate : realEstateList) {
+//            params[0] = params[2] = String.valueOf(realEstate.getRegionId());
+//            params[1] = params[3] = realEstate.getName();
+//
+//            jdbcTemplate.update(query, params);
+//        }
+//    }
 
     /**
      * 실거래가 정보 업로드
@@ -217,7 +227,7 @@ public class RealEstateDao {
      */
     public void uploadTransactions(List<RealEstateTransaction> transactionList) {
         StringBuilder queryBuilder = new StringBuilder("insert into `RealEstateTransaction`(price, transactionTime, realEstateIdx) values");
-        String[] params = new String[transactionList.size() * 3];
+        Object[] params = new String[transactionList.size() * 3];
 
         int paramsIndex = 0;
 
@@ -241,7 +251,7 @@ public class RealEstateDao {
      */
     public String uploadRegionNames(List<RegionName> regionNameList) {
         StringBuilder queryBuilder = new StringBuilder("insert into `RegionName`(legalTownCodeIdx, name, parentIdx) values");
-        String[] params = new String[regionNameList.size() * 3];
+        Object[] params = new String[regionNameList.size() * 3];
 
         int paramsIndex = 0;
 

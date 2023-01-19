@@ -32,10 +32,10 @@ public class RealEstateProvider {
     public List<RealEstateBox> getRealEstateBoxes(String sort, String order, String area) throws BaseException {
         List<RealEstateBox> realEstateBoxes;
 
-        // 1. 정렬된 데이터 받아오기
-        // 람다로 100개 데이터에 대해 기간 계산하여 추가
         try {
+             // 지역을 특정하지 않았을 경우
              if(area == null) realEstateBoxes = realEstateDao.getAllRealEstateBox(sort, order);
+             // 지역을 특정하였을 경우
              else realEstateBoxes = realEstateDao.getRealEstateBoxesInArea(area, sort, order);
         }
         catch(Exception ignored){
