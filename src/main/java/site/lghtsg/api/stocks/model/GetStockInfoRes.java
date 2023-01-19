@@ -17,7 +17,8 @@ public class GetStockInfoRes {
     private int price;
     private long issuedShares;
     private int tradingVolume;
-    private String rateOfChange;
+    //private String rateOfChange;
+    private float rateOfChange;
     private String rateCalDateDiff;
     private String iconImage;
     private String transactionTime;

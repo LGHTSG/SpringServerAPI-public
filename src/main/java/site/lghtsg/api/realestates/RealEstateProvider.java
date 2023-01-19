@@ -2,6 +2,7 @@ package site.lghtsg.api.realestates;
 
 import org.springframework.stereotype.Service;
 import site.lghtsg.api.config.BaseException;
+import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
 
@@ -56,6 +57,22 @@ public class RealEstateProvider {
     // 하나의 info를 반환 - 테이블 원소 그대로
     public RealEstateInfo getRealEstateInfo(int realEstateIdx) throws BaseException {
         return null;
+    }
+
+    /**
+     *
+     * @param keyword
+     * @return regionNames
+     * @throws BaseException
+     */
+    public BaseResponse<List<String>> getRegionNames(String keyword) throws BaseException {
+        try {
+            List<String> result = realEstateDao.getRegionNames(keyword);
+
+            return new BaseResponse<>(result);
+        } catch (Exception e) {
+            throw new BaseException(DATABASE_ERROR);
+        }
     }
 
 
