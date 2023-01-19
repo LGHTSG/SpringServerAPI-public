@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import site.lghtsg.api.resells.model.GetResellRes;
 import site.lghtsg.api.resells.model.GetResellTransactionRes;
+import site.lghtsg.api.resells.model.ResellBox;
 
 import javax.sql.DataSource;
 import java.time.Duration;
@@ -27,13 +28,13 @@ public class ResellDao {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
-    public List<GetResellRes> getResells(String order){
+    public List<GetResellRes> getResells(String order) {
         String getResellsQuery = "select * from Resell order by resellIdx ";
-        if(order.equals("ascending")){
+        if (order.equals("ascending")) {
             getResellsQuery += "ASC";
         }
 
-        if (order.equals("descending")){
+        if (order.equals("descending")) {
             getResellsQuery += "DESC";
         }
 
@@ -52,12 +53,10 @@ public class ResellDao {
                         rs.getString("image1"),
                         rs.getString("image2"),
                         rs.getString("image3"),
-                        rs.getInt("iconImageIdx")
-                )
-        );
+                        rs.getInt("iconImageIdx")));
     }
 
-    public List<GetResellRes> getResellsByRate(){
+    public List<GetResellRes> getResellsByRate() {
         String getResellsQuery = "select * from Resell";
 
         return this.jdbcTemplate.query(getResellsQuery,
@@ -71,16 +70,12 @@ public class ResellDao {
                         rs.getString("brand"),
                         rs.getString("productNum"),
                         calculateChangeOfRate(rs.getInt("resellIdx")).get(1),
-                        "최근 거래가 기준",
-                        rs.getString("image1"),
-                        rs.getString("image2"),
-                        rs.getString("image3"),
-                        rs.getInt("iconImageIdx")
-                )
-        );
+                        "최근 거래가 기준", rs.getString("image1"),
+                        rs.getString("image2"), rs.getString("image3"),
+                        rs.getInt("iconImageIdx")));
     }
 
-    public GetResellRes getResell(int resellIdx){
+    public GetResellRes getResell(int resellIdx) {
         String getResellQuery = "select * from Resell where resellIdx = ?";
         int getResellParams = resellIdx;
 
@@ -95,46 +90,60 @@ public class ResellDao {
                         rs.getString("brand"),
                         rs.getString("productNum"),
                         calculateChangeOfRate(rs.getInt("resellIdx")).get(1),
-                        "최근 거래가 기준",
-                        rs.getString("image1"),
+                        "최근 거래가 기준", rs.getString("image1"),
                         rs.getString("image2"),
                         rs.getString("image3"),
                         rs.getInt("iconImageIdx")),
                 getResellParams);
     }
 
-    public List<GetResellTransactionRes> getResellTransaction(int resellIdx){
+    public ResellBox getResellBoxes(int resellIdx) {
+        String getResellQuery = "select * from Resell where resellIdx = ?";
+        int getResellParams = resellIdx;
+
+        return this.jdbcTemplate.queryForObject(getResellQuery,
+                (rs, rowNum) -> new ResellBox(
+                        rs.getInt("resellIdx"),
+                        rs.getString("name"),
+                        calculateChangeOfRate(rs.getInt("resellIdx")).get(1),
+                        "최근 거래가 기준",
+                        rs.getString("iconImageIdx"),
+                        calculateChangeOfRate(rs.getInt("resellIdx")).get(0)),
+                getResellParams);
+    }
+
+    public List<GetResellTransactionRes> getResellTransaction(int resellIdx) {
         String getResellTransactionQuery = "select * from ResellTransaction where resellIdx = ?";
         int getResellTransactionParams = resellIdx;
         return this.jdbcTemplate.query(getResellTransactionQuery,
                 (rs, rowNum) -> new GetResellTransactionRes(
                         rs.getInt("resellIdx"),
                         rs.getInt("price"),
-                        rs.getTimestamp("transactionTime")),
+                        rs.getString("transactionTime")),
                 getResellTransactionParams);
     }
 
-    public List<GetResellTransactionRes> getResellTransactionHistory(int resellIdx){
+    public List<GetResellTransactionRes> getResellTransactionHistory(int resellIdx) {
         String getResellTransactionHistoryQuery = "select * from ResellTransaction where resellIdx = ? order by createdAt desc LIMIT 2";
         int getResellTransactionHistory = resellIdx;
         return this.jdbcTemplate.query(getResellTransactionHistoryQuery,
                 (rs, rowNum) -> new GetResellTransactionRes(
                         rs.getInt("resellIdx"),
                         rs.getInt("price"),
-                        rs.getTimestamp("transactionTime")),
+                        rs.getString("transactionTime")),
                 getResellTransactionHistory);
     }
 
-    public List<String> calculateChangeOfRate(int resellIdx){
+    public List<String> calculateChangeOfRate(int resellIdx) {
         List<GetResellTransactionRes> resellTransactionHistory = getResellTransactionHistory(resellIdx);
         List<String> result = new ArrayList<>();
         int currentPrice = resellTransactionHistory.get(0).getPrice();
         int latestPrice = resellTransactionHistory.get(1).getPrice();
 
         double changeOfRate = (double) (currentPrice - latestPrice) / latestPrice * 100;
-        String changeOfRateS = String.format("%.1f",changeOfRate);
+        String changeOfRateS = String.format("%.1f", changeOfRate);
 
-        if(changeOfRate > 0){
+        if (changeOfRate > 0) {
             changeOfRateS = "+" + changeOfRateS;
         }
         result.add(String.valueOf(currentPrice));
@@ -147,7 +156,7 @@ public class ResellDao {
         options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
 
         options.addArguments("--disable-popup-blocking");       //팝업안띄움
-        options.addArguments("headless");                       //브라우저 안띄움
+        //options.addArguments("headless");                       //브라우저 안띄움
         options.addArguments("--disable-gpu");            //gpu 비활성화
         options.addArguments("--blink-settings=imagesEnabled=false"); //이미지 다운 안받음
         options.addArguments("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
@@ -168,52 +177,86 @@ public class ResellDao {
             String url = "https://kream.co.kr/brands/nike";
             driver.navigate().to(url);
             Thread.sleep(1000);
+            driver.findElement(By.xpath("//*[@id=\"wrap\"]/div[2]/div/div[2]/div[2]/div[2]/div[1]/div[2]/button")).click();
+            Thread.sleep(1000);
+            driver.findElement(By.xpath("//*[@id=\"wrap\"]/div[2]/div/div[2]/div[2]/div[2]/div[1]/div[2]/ul/li[4]/a")).click();
+            Thread.sleep(1000);
 
-            String createUserQuery = "insert into Resell (name, releasedPrice, releasedDate, color, brand, productNum, image1) VALUES (?,?,?,?,?,?,?)"; // 실행될 동적 쿼리문
-
+            String createResellQuery = "insert into Resell (name, releasedPrice, releasedDate, color, brand, productNum, image1, iconImageIdx) VALUES (?,?,?,?,?,?,?,?)"; // 실행될 동적 쿼리문
+            String createResellTransactionQuery = "insert into ResellTransaction (resellIdx, price, transactionTime) VALUES(?,?,?)";
             List<WebElement> elements = driver.findElements(By.className("product_card"));
 
             List<String> urlList = new ArrayList<>();
 
-            for(int i = 0; i < elements.size(); i++){
+            for (int i = 0; i < elements.size(); i++) {
                 String productUrl = elements.get(i).findElement(By.tagName("a")).getAttribute("href");
                 urlList.add(productUrl);
             }
 
-            int size=0;
-            int max =0;
-            while (!urlList.isEmpty()){
+            int resellIdx = 0;
+            int max = 0;
+            while (!urlList.isEmpty()) {
                 driver.get(urlList.get(0));
                 WebElement name = driver.findElement(By.className("sub_title"));
                 WebElement brand = driver.findElement(By.className("brand"));
                 String imageUrl = driver.findElement(By.tagName("img")).getAttribute("src");
                 List<WebElement> productInfo = driver.findElements(By.tagName("dd"));
-                if(productInfo.size()==0){
+                if (productInfo.size() == 0) {
                     urlList.add(urlList.get(0));
                     max++;
-                }
-                else {
-                    size++;
-                    System.out.println(size + "번째");
-                    System.out.println(name.getText());
-                    System.out.println(brand.getText());
-                    System.out.println(productInfo.get(0).getText());
-                    System.out.println(productInfo.get(1).getText());
-                    System.out.println(productInfo.get(2).getText());
-                    System.out.println(productInfo.get(3).getText());
-                    System.out.println(imageUrl);
-                    System.out.println("------------------------");
+                } else {
+                    resellIdx++;
+                    System.out.println(resellIdx + "번째");
 
-                    Object[] createUserParams = new Object[]{
+                    Object[] createResellParams = new Object[]{
                             name.getText(),
                             productInfo.get(3).getText(),
                             productInfo.get(1).getText(),
                             productInfo.get(2).getText(),
                             brand.getText(),
                             productInfo.get(0).getText(),
-                            imageUrl};
+                            imageUrl,
+                            1};
 
-                    this.jdbcTemplate.update(createUserQuery, createUserParams);
+                    Thread.sleep(3000);
+
+                    try {
+                        driver.findElement(By.xpath("//*[@id=\"panel1\"]/a")).click();
+                    } catch (Exception e) {
+                        resellIdx--;
+                        urlList.remove(0);
+                        continue;
+                    }
+
+                    Thread.sleep(2000);
+                    List<WebElement> transaction = driver.findElements(By.className("list_txt"));
+
+                    //거래가격, 거래날짜 저장
+                    List<List<String>> priceList = new ArrayList<>();
+
+                    for (int i = transaction.size() - 2; i >= 1; i -= 3) {
+                        List<String> temp = new ArrayList<>();
+                        temp.add(transaction.get(i).getText());
+                        temp.add(transaction.get(i + 1).getText());
+                        priceList.add(temp);
+                    }
+
+                    if (priceList.size() <= 1) {
+                        resellIdx--;
+                        urlList.remove(0);
+                        continue;
+                    }
+
+                    this.jdbcTemplate.update(createResellQuery, createResellParams);
+
+                    for (List<String> list : priceList) {
+                        String temp = list.get(0);
+                        int price = Integer.parseInt(temp.replaceAll("[^0-9]", ""));
+                        Object[] createResellTransactionParams = new Object[]{resellIdx, price, list.get(1)};
+                        this.jdbcTemplate.update(createResellTransactionQuery, createResellTransactionParams);
+                    }
+
+                    System.out.println("------------------------");
                 }
                 urlList.remove(0);
             }
