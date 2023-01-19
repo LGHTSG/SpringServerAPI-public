@@ -4,6 +4,7 @@ import org.springframework.web.bind.annotation.*;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.realestates.dataUploader.ApiConnector;
+import site.lghtsg.api.realestates.dataUploader.ExcelFileReader;
 import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
@@ -18,11 +19,13 @@ public class RealEstateController {
     private final RealEstateProvider realEstateProvider;
     private final RealEstateDao realEstateDao;
     private final ApiConnector apiConnector;
+    private final ExcelFileReader excelFileReader;
 
-    public RealEstateController(RealEstateDao realEstateDao, RealEstateProvider realEstateProvider, ApiConnector apiConnector){
+    public RealEstateController(RealEstateDao realEstateDao, RealEstateProvider realEstateProvider, ApiConnector apiConnector, ExcelFileReader excelFileReader){
         this.realEstateProvider = realEstateProvider;
         this.realEstateDao = realEstateDao;
         this.apiConnector = apiConnector;
+        this.excelFileReader = excelFileReader;
     }
 
     /**
@@ -107,12 +110,21 @@ public class RealEstateController {
     }
 
     /**
-     * 부동산 거래 DB 업데이트
+     * 부동산 거래 DB 업데이트 - api
      * @return
      */
     @GetMapping("/connect_api")
     public BaseResponse<String> updateData() {
         return apiConnector.getData();
+    }
+
+    /**
+     * 부동산 거래 DB 업데이트 - 파일
+     * @return
+     */
+    @GetMapping("/upload_file_data")
+    public BaseResponse<String> uploadFileData() {
+        return excelFileReader.readData();
     }
 
 
