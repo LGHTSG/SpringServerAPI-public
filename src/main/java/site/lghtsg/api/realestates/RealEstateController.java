@@ -3,21 +3,26 @@ package site.lghtsg.api.realestates;
 import org.springframework.web.bind.annotation.*;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
+import site.lghtsg.api.realestates.dataUploader.ApiConnector;
 import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
 import java.util.List;
 
+import static site.lghtsg.api.config.BaseResponseStatus.GET_REGIONS_EMPTY_KEYWORD;
+
 @RestController
 @RequestMapping("/realestates")
 public class RealEstateController {
     private final RealEstateProvider realEstateProvider;
     private final RealEstateDao realEstateDao;
+    private final ApiConnector apiConnector;
 
-    public RealEstateController(RealEstateDao realEstateDao, RealEstateProvider realEstateProvider){
+    public RealEstateController(RealEstateDao realEstateDao, RealEstateProvider realEstateProvider, ApiConnector apiConnector){
         this.realEstateProvider = realEstateProvider;
         this.realEstateDao = realEstateDao;
+        this.apiConnector = apiConnector;
     }
 
     /**
@@ -54,18 +59,19 @@ public class RealEstateController {
     }
 
     /**
-     * 사용자가 선택할 수 있는 지역들의 리스트를 반환한다.
-     * @return
+     * 검색어를 포함하는 지역들의 리스트를 반환한다.
+     * @param keyword 검색어
+     * @return areas 지역 리스트
      */
     @GetMapping("/area-relation-list")
-    public BaseResponse<List<String>> areaRelationList(){
-//        try{
-//
-//        }
-//        catch(BaseException e){
-//             return new BaseResponse<>((e.getStatus()));
-//        }
-        return null;
+    public BaseResponse<List<String>> areaRelationList(String keyword){
+        if (keyword.isBlank()) return new BaseResponse<>(GET_REGIONS_EMPTY_KEYWORD);
+
+        try {
+            return realEstateProvider.getRegionNames(keyword);
+        } catch(BaseException e) {
+            return new BaseResponse<>((e.getStatus()));
+        }
     }
 
     /**
@@ -99,5 +105,18 @@ public class RealEstateController {
 //        }
         return null;
     }
+
+    /**
+     * 부동산 거래 DB 업데이트
+     * @return
+     */
+    @GetMapping("/connect_api")
+    public BaseResponse<String> updateData() {
+        return apiConnector.getData();
+    }
+
+
+
+
 
 }
