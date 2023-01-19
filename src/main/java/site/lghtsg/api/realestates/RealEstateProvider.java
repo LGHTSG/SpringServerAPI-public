@@ -45,7 +45,9 @@ public class RealEstateProvider {
     }
 
     // 하나의 box 반환 - 리스트 구성 인자
+    // TODO : updatedAt 추가
     public RealEstateBox getRealEstateBox(long realEstateIdx) throws BaseException {
+
         // 가지고 있는 realEstateIdx인지 validation 필요
         RealEstateBox realEstateBox;
         try {
