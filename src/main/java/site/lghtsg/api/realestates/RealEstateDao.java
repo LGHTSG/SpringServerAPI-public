@@ -117,6 +117,19 @@ public class RealEstateDao {
         return this.jdbcTemplate.query(getRealEstateBoxQuery, getRealEstateBoxParams, realEstateBoxRowMapper()).get(0);
     }
 
+    /**
+     * 이거 안되면 ㄹㅇ 앱 포기각
+     * @return
+     */
+    public List<RealEstateTransactionData> getAllTransactionData(){
+        long start = System.currentTimeMillis();
+        System.out.println(start);
+        String getTransactionData =
+                "select ret.realEstateTransactionIdx, ret.realEstateIdx, ret.price, ret.transactionTime\n" +
+                "from RealEstateTransaction as ret;";
+
+        return this.jdbcTemplate.query(getTransactionData, transactionRowMapper());
+    }
 
      /**
      * 검색어 없는 경우 전체 리스트 전달

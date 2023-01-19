@@ -1,5 +1,6 @@
 package site.lghtsg.api.realestates;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
@@ -8,6 +9,7 @@ import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
+import java.util.Collections;
 import java.util.List;
 
 import static site.lghtsg.api.config.BaseResponseStatus.GET_REGIONS_EMPTY_KEYWORD;
@@ -17,6 +19,8 @@ import static site.lghtsg.api.config.BaseResponseStatus.GET_REGIONS_EMPTY_KEYWOR
 public class RealEstateController {
     private final RealEstateProvider realEstateProvider;
     private final ApiConnector apiConnector;
+    @Autowired
+    private RealEstateDao realEstateDao;
 
     public RealEstateController(RealEstateProvider realEstateProvider, ApiConnector apiConnector){
         this.realEstateProvider = realEstateProvider;
@@ -40,6 +44,16 @@ public class RealEstateController {
         catch(BaseException e){
              return new BaseResponse<>((e.getStatus()));
         }
+    }
+    @GetMapping("test")
+    public void listsort(){
+        long start = System.currentTimeMillis();
+        System.out.println(start);
+        List<RealEstateTransactionData> realEstateTransactionData = realEstateDao.getAllTransactionData();
+//        Collections.sort(realEstateTransactionData);
+        long end = System.currentTimeMillis();
+        System.out.println(end);
+        System.out.println("duration : " + (end - start));
     }
 
     /**
