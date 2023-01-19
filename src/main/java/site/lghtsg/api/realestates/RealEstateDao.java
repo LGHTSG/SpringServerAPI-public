@@ -186,17 +186,38 @@ public class RealEstateDao {
      * @param realEstateList
      */
     public void uploadRealEstates(Set<RealEstate> realEstateList) { // 한 업로드 단위(파일, api응답) 안에서의 중복 방지
-        String query = "insert into `RealEstate`(legalTownCodeIdx, name) " +
-                "select ?, ? from dual " +
-                "where not exists (select legalTownCodeIdx, name from `RealEstate` where legalTownCodeIdx = ? and name = ?)"; // 업로드 단위 사이에서의 중복 방지
+//        String query = "insert into `RealEstate`(legalTownCodeIdx, name) " +
+//                "select ?, ? from dual " +
+//                "where not exists (select legalTownCodeIdx, name from `RealEstate` where legalTownCodeIdx = ? and name = ?)"; // 업로드 단위 사이에서의 중복 방지
 
-        String[] params = new String[4];
+        String createTempTable = "create temporary table RealEstate_temp select * from RealEstate limit 0, 0;\n";
+
+        StringBuilder insertQueryBuilder = new StringBuilder("insert into RealEstate_temp (legalTownCodeIdx, name) values");
+
+        String insertOnlyNotDuplicated = "insert into RealEstate (legalTownCodeIdx, name)\n" +
+                "select legalTownCodeIdx, name \n" +
+                "from (\n" +
+                "select temp.legalTownCodeIdx, temp.name\n" +
+                "from RealEstate as r right join RealEstate_temp as temp on (r.legalTownCodeIdx, r.name) = (temp.legalTownCodeIdx, temp.name)\n" +
+                "where r.legalTownCodeIdx is null\n" +
+                ") as newData;\n";
+
+        String dropTempTable = "drop table RealEstate_temp;";
+
+        String[] params = new String[realEstateList.size() * 2];
+        int paramsIndex = 0;
+
         for (RealEstate realEstate : realEstateList) {
-            params[0] = params[2] = String.valueOf(realEstate.getRegionId());
-            params[1] = params[3] = realEstate.getName();
+            params[paramsIndex++] = realEstate.getRegionId().toString();
+            params[paramsIndex++] = realEstate.getName();
 
-            jdbcTemplate.update(query, params);
+            insertQueryBuilder.append("(?, ?),");
         }
+        String insertOnTempTable = insertQueryBuilder.substring(0, insertQueryBuilder.length()-1) + ";\n";
+
+        String query = createTempTable + insertOnTempTable + insertOnlyNotDuplicated + dropTempTable;
+
+        this.jdbcTemplate.update(query, params);
     }
 
     /**
