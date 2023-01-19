@@ -106,14 +106,15 @@ public class RealEstateProvider {
      * @return regionNames
      * @throws BaseException
      */
-    public BaseResponse<List<String>> getRegionNames(String keyword) throws BaseException {
+    public List<String> getRegionNames(String keyword) throws BaseException {
+        List<String> result;
         try {
-            List<String> result = realEstateDao.getRegionNames(keyword);
-
-            return new BaseResponse<>(result);
+            if(keyword == null) result = realEstateDao.getAllRegionNames();
+            else result = realEstateDao.getRegionNamesWithKeyword(keyword);
         } catch (Exception e) {
             throw new BaseException(DATABASE_ERROR);
         }
+        return result;
     }
 
 }

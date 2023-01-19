@@ -67,11 +67,10 @@ public class RealEstateController {
      * @return areas 지역 리스트
      */
     @GetMapping("/area-relation-list")
-    public BaseResponse<List<String>> areaRelationList(String keyword){
-        if (keyword.isBlank()) return new BaseResponse<>(GET_REGIONS_EMPTY_KEYWORD);
-
+    public BaseResponse<List<String>> areaRelationList(@RequestParam(required = false) String keyword){
         try {
-            return realEstateProvider.getRegionNames(keyword);
+            List<String> areaRelationList = realEstateProvider.getRegionNames(keyword);
+            return new BaseResponse<>(areaRelationList);
         } catch(BaseException e) {
             return new BaseResponse<>((e.getStatus()));
         }

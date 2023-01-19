@@ -18,6 +18,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Set;
 
+import static site.lghtsg.api.config.Constant.ASCENDING_PARAM;
+import static site.lghtsg.api.config.Constant.LIST_LIMIT;
+
 @Repository
 public class RealEstateDao {
 
@@ -35,6 +38,10 @@ public class RealEstateDao {
     // 부동산 증감폭 계산하여 리스트 반환하는 로직이 필수는 아니지만, 다른 파트에서는 어떻게 구현?
     // 리스트가 길어지면 안되므로 짤라서 계산 -> dao 안에서 모든 계산이 이루어져야 함
     public List<RealEstateBox> getAllRealEstateBox(String sort, String order) {
+        String orderQuery = "";
+        if(order == ASCENDING_PARAM) orderQuery += "ASC\n";
+        else orderQuery += "DESC\n";
+
         String getRealEstateBoxesQuery =
                 "select re.realEstateIdx, re.name, ret.price, ret.transactionTime, II.iconImage\n" +
                 "from RealEstate as re\n" +
@@ -44,9 +51,9 @@ public class RealEstateDao {
                 "    )\n" +
                 "INNER JOIN IconImage II on re.iconImageIdx = II.iconImageIdx\n" +
                 "group by re.realEstateIdx\n" +
-                "order by re.realEstateIdx asc\n" +
-                "LIMIT 100;";
-
+                "order by re.realEstateIdx ";
+        getRealEstateBoxesQuery += orderQuery + LIST_LIMIT;
+        System.out.println(getRealEstateBoxesQuery);
         return this.jdbcTemplate.query(getRealEstateBoxesQuery, realEstateBoxRowMapper());
     }
 
@@ -101,12 +108,22 @@ public class RealEstateDao {
         return this.jdbcTemplate.query(getRealEstateBoxQuery, getRealEstateBoxParams, realEstateBoxRowMapper()).get(0);
     }
 
+
+     /**
+     * 검색어 없는 경우 전체 리스트 전달
+     * @return regionNames
+     */
+    public List<String> getAllRegionNames(){
+        String query = "select name from RegionName order by RegionName.legalTownCodeIdx";
+        return this.jdbcTemplate.query(query, (rs, rowNum) -> rs.getString("name"));
+    }
+
     /**
-     * 지역 리스트 전달
+     * 검색어에 따른 지역 리스트 전달
      * @param keyword
      * @return regionNames
      */
-    public List<String> getRegionNames(String keyword) {
+    public List<String> getRegionNamesWithKeyword(String keyword) {
         String query = "Select name from RegionName where name like '%" + keyword + "%'";
 
         return this.jdbcTemplate.query(query, (rs, rowNum) -> rs.getString("name"));
@@ -322,7 +339,6 @@ public class RealEstateDao {
         };
     }
 
-<<<<<<< HEAD
     private RowMapper<RealEstateInfo> realEstateInfoRowMapper(){
         return new RowMapper<RealEstateInfo>() {
             @Override
