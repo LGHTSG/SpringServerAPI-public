@@ -64,8 +64,7 @@ public class UserController {
     @ResponseBody
     @PostMapping("/sign-up/emailCheck")
     public String emailCheck(@RequestParam String email) throws Exception {
-        String check = userService.emailCheck(email);
-
+        String check = new UserService.sendSimpleMessage(email);
         return check;
     }
 
