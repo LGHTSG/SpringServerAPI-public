@@ -33,7 +33,7 @@ dependencies {
 	// [데옹] : 로그인 서비스 구현 중 jwt에 대한 오류가 발생 -> 구글링 후 임시 추가
 	implementation group: 'org.glassfish.jaxb', name: 'jaxb-runtime', version: '2.3.2'
 
-	// [준] : 스크래핑을 위한 Selenium
+	// [준] : 스크래핑을 위한 Selenium Dependency
 	// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
 	implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '4.7.2'
 
