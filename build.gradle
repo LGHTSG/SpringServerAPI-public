@@ -32,6 +32,9 @@ dependencies {
 
 	// [데옹] : 로그인 서비스 구현 중 jwt에 대한 오류가 발생 -> 구글링 후 임시 추가
 	implementation group: 'org.glassfish.jaxb', name: 'jaxb-runtime', version: '2.3.2'
+
+	// email 인증 관련
+	implementation 'org.springframework.boot:spring-boot-starter-mail'
 }
 
 tasks.named('test') {

@@ -58,6 +58,18 @@ public class UserController {
     }
 
     /**
+     * 이메일 인증 API
+     * [POST] /users/sign-up/emailCheck
+     */
+    @ResponseBody
+    @PostMapping("/sign-up/emailCheck")
+    public String emailCheck(@RequestParam String email) throws Exception {
+        String check = userService.emailCheck(email);
+
+        return check;
+    }
+
+    /**
      * 로그인 API
      * [POST] /users/log-in
      */
@@ -141,3 +153,5 @@ public class UserController {
      * [GET] /users/my-asset
      */
 }
+
+
