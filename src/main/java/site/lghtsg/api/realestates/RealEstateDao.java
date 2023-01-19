@@ -250,7 +250,7 @@ public class RealEstateDao {
      * @return
      */
     public String uploadRegionNames(List<RegionName> regionNameList) {
-        StringBuilder queryBuilder = new StringBuilder("insert into `RegionName`(legalTownCodeIdx, name, parentIdx) values");
+        StringBuilder queryBuilder = new StringBuilder("insert into RegionName(legalTownCodeIdx, name, parentIdx) values");
         String[] params = new String[regionNameList.size() * 3];
 
         int paramsIndex = 0;
@@ -298,12 +298,12 @@ public class RealEstateDao {
     public List<RegionName> getRegionsForExcel() {
         String query = "(select legalTownCodeIdx, replace(name, '시 ', '') as name " +
                 "from (" +
-                "select legalTownCodeIdx, name from regionname " +
+                "select legalTownCodeIdx, name from RegionName " +
                 "union " +
-                "select legalTownCodeIdx, concat(name, '동') from regionname where name like '%상당구 북문로%'" +
+                "select legalTownCodeIdx, concat(name, '동') from RegionName where name like '%상당구 북문로%'" +
                 ") as regionname " +
                 "where substring_index(name, ' ', 3) like '%도 %시 %구') " +
-                "UNION (select legalTownCodeIdx, name from regionname)";
+                "UNION (select legalTownCodeIdx, name from RegionName)";
 
         return jdbcTemplate.query(query, (rs, rowNum) -> { return RegionName.builder()
                 .legalCodeId(rs.getInt("legalTownCodeIdx"))
