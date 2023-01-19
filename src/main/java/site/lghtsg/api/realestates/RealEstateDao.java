@@ -182,47 +182,6 @@ public class RealEstateDao {
 
     // 데이터 업로드용
 
-//    /**
-//     * 부동산 정보 업로드
-//     * @param realEstateList
-//     */
-//    public void uploadRealEstates(Set<RealEstate> realEstateList) { // 한 업로드 단위(파일, api응답) 안에서의 중복 방지
-//
-//        String createTempTable = "create temporary table RealEstate_temp select * from RealEstate limit 0, 0;";
-//
-////        StringBuilder insertQueryBuilder = new StringBuilder("insert into RealEstate_temp (legalTownCodeIdx, name) values");
-//        String insertOnTempTable = "insert into RealEstate_temp (legalTownCodeIdx, name) values ";
-//
-//        String insertOnlyNotDuplicated = "insert into RealEstate (legalTownCodeIdx, name)\n" +
-//                "select legalTownCodeIdx, name \n" +
-//                "from (\n" +
-//                "select temp.legalTownCodeIdx, temp.name\n" +
-//                "from RealEstate as r right join RealEstate_temp as temp on (r.legalTownCodeIdx, r.name) = (temp.legalTownCodeIdx, temp.name)\n" +
-//                "where r.legalTownCodeIdx is null\n" +
-//                ") as newData;";
-//
-//        String dropTempTable = "drop table RealEstate_temp;";
-//
-//        String[] params = new String[realEstateList.size() * 2];
-//        int paramsIndex = 0;
-//
-//        for (RealEstate realEstate : realEstateList) {
-//            params[paramsIndex++] = realEstate.getRegionId().toString();
-//            params[paramsIndex++] = realEstate.getName();
-//
-//            insertOnTempTable += "(?, ?),";
-//        }
-//        insertOnTempTable = insertOnTempTable.substring(0, insertOnTempTable.length()-1) + ";";
-////        String insertOnTempTable = insertQueryBuilder.substring(0, insertQueryBuilder.length()-1);
-//
-////        String query = createTempTable + insertOnTempTable + insertOnlyNotDuplicated + dropTempTable;
-//
-//        this.jdbcTemplate.update(createTempTable);
-//        this.jdbcTemplate.update(insertOnTempTable);
-//        this.jdbcTemplate.update(insertOnlyNotDuplicated);
-//        this.jdbcTemplate.update(dropTempTable);
-//    }
-
     /**
      * 부동산 정보 업로드
      * @param realEstateList
