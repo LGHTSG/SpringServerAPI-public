@@ -2,6 +2,7 @@ package site.lghtsg.api.realestates;
 
 import org.springframework.stereotype.Service;
 import site.lghtsg.api.config.BaseException;
+import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
@@ -72,6 +73,7 @@ public class RealEstateProvider {
     }
 
     /**
+<<<<<<< HEAD
      * 특정 지역 내 부동산 누적 거래 데이터 전체 반환
      * @param area
      * @return
@@ -96,6 +98,22 @@ public class RealEstateProvider {
             throw new BaseException(DATABASE_ERROR);
         }
         return realEstateTransactionData;
+    }
+
+    /**
+     *
+     * @param keyword
+     * @return regionNames
+     * @throws BaseException
+     */
+    public BaseResponse<List<String>> getRegionNames(String keyword) throws BaseException {
+        try {
+            List<String> result = realEstateDao.getRegionNames(keyword);
+
+            return new BaseResponse<>(result);
+        } catch (Exception e) {
+            throw new BaseException(DATABASE_ERROR);
+        }
     }
 
 }

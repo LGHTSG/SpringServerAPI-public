@@ -7,11 +7,16 @@ import org.springframework.stereotype.Repository;
 import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
+import site.lghtsg.api.realestates.model.upload.RealEstate;
+import site.lghtsg.api.realestates.model.upload.RealEstateTransaction;
+import site.lghtsg.api.realestates.model.upload.RegionName;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public class RealEstateDao {
@@ -97,11 +102,14 @@ public class RealEstateDao {
     }
 
     /**
-     * @brief
-     * 지역 관계 리스트 전달
+     * 지역 리스트 전달
+     * @param keyword
+     * @return regionNames
      */
-    public List<String> getAreaRelationList(){
-        return null;
+    public List<String> getRegionNames(String keyword) {
+        String query = "Select name from RegionName where name like '%" + keyword + "%'";
+
+        return this.jdbcTemplate.query(query, (rs, rowNum) -> rs.getString("name"));
     }
 
 
@@ -166,6 +174,125 @@ public class RealEstateDao {
     }
 
 
+    // 데이터 업로드용
+
+    /**
+     * 부동산 정보 업로드
+     * @param realEstateList
+     */
+    public void uploadRealEstates(Set<RealEstate> realEstateList) { // 한 업로드 단위(파일, api응답) 안에서의 중복 방지
+        String query = "insert into `RealEstate`(legalTownCodeIdx, name) " +
+                "select ?, ? from dual " +
+                "where not exists (select legalTownCodeIdx, name from `RealEstate` where legalTownCodeIdx = ? and name = ?)"; // 업로드 단위 사이에서의 중복 방지
+
+        String[] params = new String[4];
+        for (RealEstate realEstate : realEstateList) {
+            params[0] = params[2] = String.valueOf(realEstate.getRegionId());
+            params[1] = params[3] = realEstate.getName();
+
+            jdbcTemplate.update(query, params);
+        }
+    }
+
+    /**
+     * 실거래가 정보 업로드
+     * @param transactionList
+     */
+    public void uploadTransactions(List<RealEstateTransaction> transactionList) {
+        StringBuilder queryBuilder = new StringBuilder("insert into `RealEstateTransaction`(price, transactionTime, realEstateIdx) values");
+        String[] params = new String[transactionList.size() * 3];
+
+        int paramsIndex = 0;
+
+        for (RealEstateTransaction transaction : transactionList) {
+            params[paramsIndex++] = String.valueOf(transaction.getPrice());
+            params[paramsIndex++] = transaction.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            params[paramsIndex++] = String.valueOf(transaction.getRealEstateId());
+
+            queryBuilder.append("(?, ?, ?),");
+        }
+
+        String query = queryBuilder.substring(0, queryBuilder.length() - 1); // 끝에 , 제거
+
+        jdbcTemplate.update(query, params);
+    }
+
+    /**
+     * 지역정보 업로드
+     * @param regionNameList
+     * @return
+     */
+    public String uploadRegionNames(List<RegionName> regionNameList) {
+        StringBuilder queryBuilder = new StringBuilder("insert into `RegionName`(legalTownCodeIdx, name, parentIdx) values");
+        String[] params = new String[regionNameList.size() * 3];
+
+        int paramsIndex = 0;
+
+        for (RegionName regionName : regionNameList) {
+            Integer parentRegionId = regionName.getParentId();
+
+            params[paramsIndex++] = regionName.getLegalCodeId().toString();
+            params[paramsIndex++] = regionName.getName();
+            params[paramsIndex++] = parentRegionId == null ? null : parentRegionId.toString(); // 최상위 지역일 때
+
+            queryBuilder.append("(?, ?, ?),");
+        }
+
+        String query = queryBuilder.substring(0, queryBuilder.length() - 1); // 끝에 , 제거
+
+        jdbcTemplate.update(query, params);
+
+        return "success";
+    }
+
+    /**
+     * 부동산 정보(id, 건물명) 가져오기
+     * @return realEstateList
+     */
+    public List<RealEstate> getRealEstates() {
+        String query = "select realEstateIdx, name from `RealEstate`";
+
+        return jdbcTemplate.query(query, (rs, rowNum) -> RealEstate.builder()
+                .id(rs.getInt("realEstateIdx"))
+                .name(rs.getString("name"))
+                .build());
+    }
+
+    public List<RegionName> getRegions() {
+        String query = "select parentIdx, name, legalTownCodeIdx from `RegionName`";
+
+        return jdbcTemplate.query(query, regionNameRowMapper());
+    }
+
+    /**
+     * 엑셀 데이터 업로드용
+     * @return
+     */
+    public List<RegionName> getRegionsForExcel() {
+        String query = "(select legalTownCodeIdx, replace(name, '시 ', '') as name " +
+                "from (" +
+                "select legalTownCodeIdx, name from regionname " +
+                "union " +
+                "select legalTownCodeIdx, concat(name, '동') from regionname where name like '%상당구 북문로%'" +
+                ") as regionname " +
+                "where substring_index(name, ' ', 3) like '%도 %시 %구') " +
+                "UNION (select legalTownCodeIdx, name from regionname)";
+
+        return jdbcTemplate.query(query, (rs, rowNum) -> { return RegionName.builder()
+                .legalCodeId(rs.getInt("legalTownCodeIdx"))
+                .name(rs.getString("name"))
+                .build();});
+    }
+
+    public List<String> getSigunguCodes() {
+        String query = "select left(legalTownCodeIdx, 5) as legalTownCodeIdx from `RegionName`" +
+                "where substring_index(name, ' ', 1) <> substring_index(name, ' ', 2)" +
+                "group by left(legalTownCodeIdx, 5)";
+
+        return jdbcTemplate.query(query, (rs, rowNum) -> rs.getString("legalTownCodeIdx"));
+    }
+
+
     private RowMapper<RealEstateTransactionData> transactionRowMapper() {
         return new RowMapper<RealEstateTransactionData>() {
             @Override
@@ -195,6 +322,7 @@ public class RealEstateDao {
         };
     }
 
+<<<<<<< HEAD
     private RowMapper<RealEstateInfo> realEstateInfoRowMapper(){
         return new RowMapper<RealEstateInfo>() {
             @Override
@@ -241,4 +369,14 @@ public class RealEstateDao {
         return findAreaQuery;
     }
 
+    private RowMapper<RegionName> regionNameRowMapper() {
+        return ((rs, rowNum) -> {
+            RegionName regionName = RegionName.builder()
+                    .legalCodeId(rs.getInt("legalTownCodeIdx"))
+                    .name(rs.getString("name"))
+                    .parentId(rs.getInt("parentIdx"))
+                    .build();
+            return regionName;
+        });
+    }
 }
