@@ -37,10 +37,7 @@ public class ExcelFileReader {
 
             List<RegionName> regionNames = realEstateDao.getRegionsForExcel();
 
-            int cnt = 0;
-
             for (File file : files) {
-                if (cnt++ > 1) break;
                 if (!(file.isFile() && file.canRead())) {
                     System.out.println(file.getName());
                     continue;
