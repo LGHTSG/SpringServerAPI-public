@@ -51,7 +51,8 @@ public class ResellDao {
                         "최근 거래가 기준",
                         rs.getString("image1"),
                         rs.getString("image2"),
-                        rs.getString("image3")
+                        rs.getString("image3"),
+                        rs.getInt("iconImageIdx")
                 )
         );
     }
@@ -73,7 +74,8 @@ public class ResellDao {
                         "최근 거래가 기준",
                         rs.getString("image1"),
                         rs.getString("image2"),
-                        rs.getString("image3")
+                        rs.getString("image3"),
+                        rs.getInt("iconImageIdx")
                 )
         );
     }
@@ -96,7 +98,8 @@ public class ResellDao {
                         "최근 거래가 기준",
                         rs.getString("image1"),
                         rs.getString("image2"),
-                        rs.getString("image3")),
+                        rs.getString("image3"),
+                        rs.getInt("iconImageIdx")),
                 getResellParams);
     }
 
