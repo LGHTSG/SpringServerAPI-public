@@ -1,6 +1,7 @@
 package site.lghtsg.api.resells;
 
 
+import org.apache.commons.codec.binary.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,8 @@ import site.lghtsg.api.resells.model.ResellBox;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+
+import static site.lghtsg.api.config.Constant.ASCENDING_PARAM;
 
 @Service
 public class ResellProvider {
@@ -36,11 +39,11 @@ public class ResellProvider {
 
     public List<GetResellRes> getResellsByRate(String order) throws BaseException {
         try {
-            List<GetResellRes> getResellsByRateRes = resellDao.getResellsByRate();
-            if (order.equals("ascending")) {
+            List<GetResellRes> getResellsByRateRes = resellDao.getResellsByRate(order);
+            if (StringUtils.equals(order, ASCENDING_PARAM)) {
                 Collections.sort(getResellsByRateRes, comparatorAsc);
             }
-            if (order.equals("descending")) {
+            else {
                 Collections.sort(getResellsByRateRes, comparatorDesc);
             }
             return getResellsByRateRes;
@@ -60,9 +63,9 @@ public class ResellProvider {
         }
     }
 
-    public ResellBox getResellBoxes(int resellIdx) throws BaseException {
+    public ResellBox getResellBox(int resellIdx) throws BaseException {
         try {
-            ResellBox resellBox = resellDao.getResellBoxes(resellIdx);
+            ResellBox resellBox = resellDao.getResellBox(resellIdx);
             return resellBox;
         } catch (Exception e) {
             e.printStackTrace();

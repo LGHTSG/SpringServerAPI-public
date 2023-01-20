@@ -35,7 +35,7 @@ public class ResellController {
 
     @ResponseBody
     @GetMapping("")
-    public BaseResponse<List<GetResellRes>> getResells(@RequestParam(required = false) String sort, @RequestParam String order) {
+    public BaseResponse<List<GetResellRes>> getResells(@RequestParam(required = false) String sort, @RequestParam(required = false) String order) {
         try {
             if (sort == null) {
                 List<GetResellRes> getResellRes = resellProvider.getResells(order);

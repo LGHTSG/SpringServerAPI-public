@@ -1,5 +1,6 @@
 package site.lghtsg.api.realestates;
 
+import org.apache.commons.codec.binary.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -41,7 +42,7 @@ public class RealEstateDao {
     public List<RealEstateBox> getAllRealEstateBox(String sort, String order) {
         // 쿼리세팅
         String orderQuery = "";
-        if(order.equals(ASCENDING_PARAM)) orderQuery += "ASC\n";
+        if(StringUtils.equals(order, ASCENDING_PARAM)) orderQuery += "ASC\n";
         else orderQuery += "DESC\n";
 
         String getRealEstateBoxesQuery =
@@ -66,8 +67,9 @@ public class RealEstateDao {
      * @param area String
      */
     public List<RealEstateBox> getRealEstateBoxesInArea(String area, String sort, String order){
+        if(area == "") return null;
         String orderQuery = "";
-        if(order.equals(ASCENDING_PARAM)) orderQuery += "ASC\n";
+        if(StringUtils.equals(order, ASCENDING_PARAM)) orderQuery += "ASC\n";
         else orderQuery += "DESC\n";
 
         String findAreaQuery = getFindAreaQuery(area);
@@ -303,8 +305,8 @@ public class RealEstateDao {
         }
 
         String query = queryBuilder.substring(0, queryBuilder.length() - 1); // 끝에 , 제거
-
-        jdbcTemplate.update(query, params);
+        Object[] inputParams = params;
+        jdbcTemplate.update(query, inputParams);
 
         return "success";
     }

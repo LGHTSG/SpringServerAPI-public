@@ -22,9 +22,7 @@ public class RealEstateController {
     private final ApiConnector apiConnector;
 
     @Autowired
-    private RealEstateDao realEstateDao;
-
-    public RealEstateController(RealEstateProvider realEstateProvider, ApiConnector apiConnector){
+    private RealEstateDao realEstateDao; // 테스트용 - 삭제 예정
     private final ExcelFileReader excelFileReader;
 
     public RealEstateController(RealEstateDao realEstateDao, RealEstateProvider realEstateProvider, ApiConnector apiConnector, ExcelFileReader excelFileReader){

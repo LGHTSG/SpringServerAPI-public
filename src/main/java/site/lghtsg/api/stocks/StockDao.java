@@ -1,6 +1,8 @@
 package site.lghtsg.api.stocks;
 
 
+import org.apache.commons.codec.binary.StringUtils;
+import org.apache.poi.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -11,6 +13,9 @@ import site.lghtsg.api.stocks.model.GetStockRes;
 
 import javax.sql.DataSource;
 import java.util.List;
+
+import static site.lghtsg.api.config.Constant.ASCENDING_PARAM;
+import static site.lghtsg.api.config.Constant.LIST_LIMIT_QUERY;
 
 
 @Repository
@@ -44,7 +49,7 @@ public class StockDao {
                     "dt on S.name = dt.name and ST.transactionTime = dt.maxtime order by ST.tradingVolume desc limit 100";
         }
          */
-        if(sort.equals("trading-volume") && order.equals("ascending")){
+        if(StringUtils.equals(sort, "trading-volume") && StringUtils.equals(order, ASCENDING_PARAM)){
             getStocksQuery += "cast(((ST.price-F.price)/F.price*100) as decimal(10,1)) as rateOfChange, ST.tradingVolume " +
                     "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
                     "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
@@ -56,7 +61,7 @@ public class StockDao {
                     "order by stockTransactionIdx desc limit 18446744073709551615) res group by stockIdx) as F " +
                     "on ST.stockIdx = F.stockIdx order by tradingVolume asc limit 100";
         }
-        if(sort.equals("trading-volume") && order.equals("descending")){
+        else if(StringUtils.equals(sort, "trading-volume")){
             getStocksQuery += "cast(((ST.price-F.price)/F.price*100) as decimal(10,1)) as rateOfChange, ST.tradingVolume " +
                     "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
                     "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
@@ -89,7 +94,7 @@ public class StockDao {
         }
         */
 
-        if(sort.equals("market-cap") && order.equals("ascending")){
+        if(StringUtils.equals(sort, "market-cap") && StringUtils.equals(order, ASCENDING_PARAM)){
             getStocksQuery += "cast(((ST.price-F.price)/F.price*100) as decimal(10,1)) as rateOfChange, " +
                     "S.issuedShares * ST.price as marketCap " +
                     "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
@@ -102,7 +107,7 @@ public class StockDao {
                     "order by stockTransactionIdx desc limit 18446744073709551615) res group by stockIdx) as F " +
                     "on ST.stockIdx = F.stockIdx order by marketCap desc limit 100";
         }
-        if(sort.equals("market-cap") && order.equals("descending")){
+        else if(StringUtils.equals(sort, "market-cap")){
             getStocksQuery += "cast(((ST.price-F.price)/F.price*100) as decimal(10,1)) as rateOfChange, " +
                     "S.issuedShares * ST.price as marketCap " +
                     "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
@@ -117,7 +122,7 @@ public class StockDao {
         }
 
         //등락폭
-        if(sort.equals("fluctuation") && order.equals("ascending")){
+        if(StringUtils.equals(sort, "fluctuation") && StringUtils.equals(order, ASCENDING_PARAM)){
             getStocksQuery += "cast(((ST.price-F.price)/F.price*100) as decimal(10,1)) as rateOfChange " +
                     "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
                     "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
@@ -129,7 +134,7 @@ public class StockDao {
                     "where date(transactionTime) = curdate() - 1 order by stockTransactionIdx desc limit 18446744073709551615) " +
                     "res group by stockIdx) as F on ST.stockIdx = F.stockIdx order by rateOfChange asc limit 100";
         }
-        if(sort.equals("fluctuation") && order.equals("descending")){
+        else if(StringUtils.equals(sort, "fluctuation")){
             getStocksQuery += "cast(((ST.price-F.price)/F.price*100) as decimal(10,1)) as rateOfChange " +
                     "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx " +
                     "left join StockTransaction ST on S.stockIdx = ST.stockIdx " +
@@ -141,7 +146,6 @@ public class StockDao {
                     "where date(transactionTime) = curdate() - 1 order by stockTransactionIdx desc limit 18446744073709551615) " +
                     "res group by stockIdx) as F on ST.stockIdx = F.stockIdx order by rateOfChange desc limit 100";
         }
-
 
         try{
             return this.jdbcTemplate.query(getStocksQuery,
@@ -183,12 +187,11 @@ public class StockDao {
                 "on ST.stockIdx = F.stockIdx order by stockIdx ";
 
 
-        if(order.equals("ascending")){
-            getStocksByIdxQuery += "ASC limit 100";
+        if(StringUtils.equals(order, ASCENDING_PARAM)){
+            getStocksByIdxQuery += "ASC " + LIST_LIMIT_QUERY;
         }
-
-        if (order.equals("descending")){
-            getStocksByIdxQuery += "DESC limit 100";
+        else {
+            getStocksByIdxQuery += "DESC " + LIST_LIMIT_QUERY;
         }
 
         try {

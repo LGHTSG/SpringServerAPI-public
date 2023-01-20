@@ -1,5 +1,6 @@
 package site.lghtsg.api.resells;
 
+import org.apache.commons.codec.binary.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.WebDriver;
@@ -18,6 +19,8 @@ import javax.sql.DataSource;
 import java.time.Duration;
 import java.util.*;
 
+import static site.lghtsg.api.config.Constant.ASCENDING_PARAM;
+
 @Repository
 public class ResellDao {
 
@@ -30,13 +33,10 @@ public class ResellDao {
 
     public List<GetResellRes> getResells(String order) {
         String getResellsQuery = "select * from Resell order by resellIdx ";
-        if (order.equals("ascending")) {
+        if (StringUtils.equals(order, ASCENDING_PARAM)) {
             getResellsQuery += "ASC";
         }
-
-        if (order.equals("descending")) {
-            getResellsQuery += "DESC";
-        }
+        else getResellsQuery += "DESC";
 
         return this.jdbcTemplate.query(getResellsQuery,
                 (rs, row) -> new GetResellRes(
@@ -56,8 +56,13 @@ public class ResellDao {
                         rs.getInt("iconImageIdx")));
     }
 
-    public List<GetResellRes> getResellsByRate() {
-        String getResellsQuery = "select * from Resell";
+    public List<GetResellRes> getResellsByRate(String order) {
+        String getResellsQuery = "select * from Resell order by resellIdx ";
+        if (StringUtils.equals(order, ASCENDING_PARAM)) {
+            getResellsQuery += "ASC";
+        }
+        else getResellsQuery += "DESC";
+
 
         return this.jdbcTemplate.query(getResellsQuery,
                 (rs, row) -> new GetResellRes(
@@ -97,7 +102,7 @@ public class ResellDao {
                 getResellParams);
     }
 
-    public ResellBox getResellBoxes(int resellIdx) {
+    public ResellBox getResellBox(int resellIdx) {
         String getResellQuery = "select * from Resell where resellIdx = ?";
         int getResellParams = resellIdx;
 
