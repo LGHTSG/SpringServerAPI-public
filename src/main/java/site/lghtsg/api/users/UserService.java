@@ -50,11 +50,6 @@ public class UserService {
         }
     }
 
-    public interface EmailService {
-        String sendSimpleMessage(String to) throws Exception;
-    }
-
-
     // 회원정보 수정 (비밀번호)
     public void modifyUserPassword(PatchUserPasswordReq patchUserPasswordReq) throws BaseException {
         String password;
@@ -123,4 +118,5 @@ public class UserService {
             throw new BaseException(DATABASE_ERROR);
         }
     }
+
 }

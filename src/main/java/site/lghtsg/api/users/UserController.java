@@ -1,15 +1,21 @@
 package site.lghtsg.api.users;
 
+import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
+import site.lghtsg.api.config.BaseResponseStatus;
 import site.lghtsg.api.users.model.*;
 import site.lghtsg.api.utils.JwtService;
+import site.lghtsg.api.utils.ValidationRegex;
 
+import javax.mail.MessagingException;
 import javax.sound.midi.Patch;
+
+import java.io.UnsupportedEncodingException;
 
 import static site.lghtsg.api.config.BaseResponseStatus.*;
 import static site.lghtsg.api.utils.ValidationRegex.isRegexEmail;
@@ -25,12 +31,14 @@ public class UserController {
     private final UserService userService;
     @Autowired
     private final JwtService jwtService;
+    @Autowired
+    private final EmailService emailService;
 
-
-    public UserController(UserProvider userProvider, UserService userService, JwtService jwtService) {
+    public UserController(UserProvider userProvider, UserService userService, JwtService jwtService, EmailService emailService) {
         this.userProvider = userProvider;
         this.userService = userService;
         this.jwtService = jwtService;
+        this.emailService = emailService;
     }
 
     /**
@@ -58,14 +66,14 @@ public class UserController {
     }
 
     /**
-     * 이메일 인증 API
-     * [POST] /users/sign-up/emailCheck
+     * Email 인증 API
+     * [Post] /users/sign-up/emailCheck
      */
     @ResponseBody
     @PostMapping("/sign-up/emailCheck")
-    public String emailCheck(@RequestParam String email) throws Exception {
-        String check = new UserService.sendSimpleMessage(email);
-        return check;
+    public BaseResponse<EmailCheckRes> EmailCheck(@RequestBody EmailCheckReq emailCheckReq) throws MessagingException, UnsupportedEncodingException  {
+        EmailCheckRes emailCheckRes = emailService.sendEmail(emailCheckReq);
+        return new BaseResponse<>(emailCheckRes);
     }
 
     /**
