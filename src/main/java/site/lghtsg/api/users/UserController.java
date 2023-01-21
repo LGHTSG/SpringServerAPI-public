@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
+import site.lghtsg.api.stocks.model.StockBox;
 import site.lghtsg.api.users.model.*;
 import site.lghtsg.api.utils.JwtService;
 
@@ -13,6 +14,7 @@ import javax.mail.MessagingException;
 
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 import static site.lghtsg.api.config.BaseResponseStatus.*;
 import static site.lghtsg.api.utils.ValidationRegex.isRegexEmail;
@@ -156,6 +158,13 @@ public class UserController {
      * 나의 자산 조회 API
      * [GET] /users/my-asset
      */
+    @ResponseBody
+    @GetMapping("/my-asset")
+    public BaseResponse<List<>> getMyAsset(@RequestHeader ) {
+        try {
+            int userIdx = jwtService.getUserIdx();
+        }
+    }
 }
 
 
