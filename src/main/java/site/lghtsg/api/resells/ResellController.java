@@ -1,5 +1,6 @@
 package site.lghtsg.api.resells;
 
+import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,16 +21,21 @@ public class ResellController {
     private final ResellProvider resellProvider;
 
     @Autowired
+    private final ResellDao resellDao;
+
+    @Autowired
     private final ResellService resellService;
 
-    public ResellController(ResellProvider resellProvider, ResellService resellService) {
+
+    public ResellController(ResellProvider resellProvider, ResellDao resellDao, ResellService resellService) {
         this.resellProvider = resellProvider;
+        this.resellDao = resellDao;
         this.resellService = resellService;
     }
 
     @ResponseBody
     @GetMapping("")
-    public BaseResponse<List<GetResellRes>> getResells(@RequestParam(required = false) String sort, @RequestParam String order) {
+    public BaseResponse<List<GetResellRes>> getResells(@RequestParam(required = false) String sort, @RequestParam(required = false) String order) {
         try {
             if (sort == null) {
                 List<GetResellRes> getResellRes = resellProvider.getResells(order);
@@ -41,6 +47,12 @@ public class ResellController {
         } catch (BaseException e) {
             return new BaseResponse<>((e.getStatus()));
         }
+    }
+
+    @ResponseBody
+    @GetMapping("/test")
+    public void test(){
+        resellDao.scraping();
     }
 
     @ResponseBody
