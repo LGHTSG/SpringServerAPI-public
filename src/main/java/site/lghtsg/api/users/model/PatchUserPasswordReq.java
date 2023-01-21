@@ -7,6 +7,7 @@ import lombok.*;
 @AllArgsConstructor
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class PatchUserPasswordReq {
-    private int userIdx;
+    private String pastPassword;
     private String password;
+    private int userIdx;
 }

@@ -40,8 +40,14 @@ public enum BaseResponseStatus {
 
     // [PATCH] /users/changeInfo
     // 회원정보 수정
-    NOT_MATCH_PASSWORD(2020,"이전 비밀번호가 일치하지 않습니다."),
+    NOT_MATCH_PASTPASSWORD(2020,"이전 비밀번호가 일치하지 않습니다."),
+    NOT_MATCH_PASSWORD(2021,"비밀번호가 일치하지 않습니다."),
 
+    // [POST] /users/log-in
+    WITHDRAW_USER(2030,"존재하지 않거나 탈퇴한 유저입니다."),
+
+    // [GET] /realestates/area-realation-list
+    GET_REGIONS_EMPTY_KEYWORD(2201, "검색어를 입력해주세요."),
 
     /**
      * 3000 : Response 오류
@@ -50,7 +56,7 @@ public enum BaseResponseStatus {
     RESPONSE_ERROR(3000, "값을 불러오는데 실패하였습니다."),
 
     // [POST] /users
-    DUPLICATED_EMAIL( 3013, "중복된 이메일입니다."),
+    // DUPLICATED_EMAIL( 3013, "중복된 이메일입니다."),
     FAILED_TO_LOGIN(3015,"없는 아이디거나 비밀번호가 틀렸습니다."),
 
 

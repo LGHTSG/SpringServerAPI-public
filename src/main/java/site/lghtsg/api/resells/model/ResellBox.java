@@ -4,12 +4,14 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
-
 @Getter
 @Setter
 @AllArgsConstructor
-public class GetResellTransactionRes {
+public class ResellBox {
     private int resellIdx;
-    private int price;
-    private String transactionTime;
+    private String name;
+    private String rateOfChange;
+    private String rateCalDateDiff;
+    private String iconImage;
+    private String price;
 }

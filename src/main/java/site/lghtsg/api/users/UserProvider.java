@@ -35,18 +35,27 @@ public class UserProvider {
         }
     }
 
+    // 비밀번호 체크 (회원 정보 수정 때 사용)
+    public String checkPassword(int userIdx) throws BaseException {
+        try {
+            return userDao.getOnlyPwd(userIdx);
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
     // 로그인
     public PostLoginRes logIn(PostLoginReq postLoginReq) throws BaseException {
         User user = userDao.getPassword(postLoginReq);
         String password;
         try {
-            password = new AES128(Secret.USER_INFO_PASSWORD_KEY).decrypt(user.getPassword()); // 암호화
+            password = new AES128(Secret.USER_INFO_PASSWORD_KEY).decrypt(user.getPassword());
         } catch (Exception ignored) {
             throw new BaseException(PASSWORD_DECRYPTION_ERROR);
         }
 
         // 탈퇴한 회원인지 확인 (테스트 X)
-        if (user.getWithdrawCheck() != 0) throw new BaseException(EMPTY_EMAIL);
+        if (user.getWithdrawCheck() != 0) throw new BaseException(WITHDRAW_USER);
 
         // 여기서부터 본격적인 로그인입니다.
         if (postLoginReq.getPassword().equals(password)) {  // password가 일치하는 지 확인 (encryption된 password)

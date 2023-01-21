@@ -9,7 +9,6 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PatchUserDeleteReq {
-    private int userIdx;
-    private String password;
+public class EmailCheckReq {
+    private String email;
 }
