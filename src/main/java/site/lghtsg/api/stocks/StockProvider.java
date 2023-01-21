@@ -62,4 +62,8 @@ public class StockProvider {
         }
     }
 
+    public StockBox stockBox(int stockIdx) throws BaseException {
+        return null;
+    }
+
 }
