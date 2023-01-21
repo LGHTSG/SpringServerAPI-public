@@ -1,19 +1,16 @@
 package site.lghtsg.api.users;
 
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
-import site.lghtsg.api.config.BaseResponseStatus;
 import site.lghtsg.api.users.model.*;
 import site.lghtsg.api.utils.JwtService;
-import site.lghtsg.api.utils.ValidationRegex;
 
 import javax.mail.MessagingException;
-import javax.sound.midi.Patch;
+
 
 import java.io.UnsupportedEncodingException;
 
@@ -71,9 +68,9 @@ public class UserController {
      */
     @ResponseBody
     @PostMapping("/sign-up/emailCheck")
-    public BaseResponse<EmailCheckRes> EmailCheck(@RequestBody EmailCheckReq emailCheckReq) throws MessagingException, UnsupportedEncodingException  {
-        EmailCheckRes emailCheckRes = emailService.sendEmail(emailCheckReq);
-        return new BaseResponse<>(emailCheckRes);
+    public BaseResponse<String> EmailCheck(@RequestBody EmailCheckReq emailCheckReq) throws MessagingException, UnsupportedEncodingException  {
+        String authCode = emailService.sendEmail(emailCheckReq.getEmail());
+        return new BaseResponse<>(authCode);
     }
 
     /**

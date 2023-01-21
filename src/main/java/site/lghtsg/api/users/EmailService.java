@@ -3,8 +3,6 @@ package site.lghtsg.api.users;
 import lombok.RequiredArgsConstructor;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
-import site.lghtsg.api.users.model.EmailCheckReq;
-import site.lghtsg.api.users.model.EmailCheckRes;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
@@ -74,13 +72,13 @@ public class EmailService {
     }
 
     //실제 메일 전송
-    public EmailCheckRes sendEmail(EmailCheckReq emailCheckReq) throws MessagingException, UnsupportedEncodingException {
+    public String sendEmail(String email) throws MessagingException, UnsupportedEncodingException {
 
         //메일전송에 필요한 정보 설정
-        MimeMessage emailForm = createEmailForm(emailCheckReq.getEmail());
+        MimeMessage emailForm = createEmailForm(email);
         //실제 메일 전송
         emailSender.send(emailForm);
 
-        return new EmailCheckRes(authNum); //인증 코드 반환
+        return authNum; //인증 코드 반환
     }
 }

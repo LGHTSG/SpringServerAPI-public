@@ -1,7 +1,5 @@
 package site.lghtsg.api.users;
 
-import com.fasterxml.jackson.databind.ser.Serializers;
-import lombok.extern.java.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
