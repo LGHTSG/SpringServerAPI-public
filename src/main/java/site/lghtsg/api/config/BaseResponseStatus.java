@@ -46,6 +46,9 @@ public enum BaseResponseStatus {
     // [POST] /users/log-in
     WITHDRAW_USER(2030,"존재하지 않거나 탈퇴한 유저입니다."),
 
+    // [GET] /realestates/area-realation-list
+    GET_REGIONS_EMPTY_KEYWORD(2201, "검색어를 입력해주세요."),
+
     /**
      * 3000 : Response 오류
      */
