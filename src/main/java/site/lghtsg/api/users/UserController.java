@@ -170,7 +170,7 @@ public class UserController {
             // List<GetMyAssetRes> getMyRealEstate = StockProvider.realestateBox(user.getUserIdx());
 
 
-            return new BaseResponse<>(getMyAssetRes);
+            return new BaseResponse<>();
         } catch (BaseException exception) {
             return new BaseResponse<>(exception.getStatus());
         }
