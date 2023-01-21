@@ -11,8 +11,8 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GetStockInfoRes {
-    private int stockIdx;
-    private int stockTransactionIdx;
+    private long stockIdx;
+    private long stockTransactionIdx;
     private String name;
     private int price;
     private long issuedShares;

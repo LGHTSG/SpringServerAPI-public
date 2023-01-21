@@ -10,9 +10,8 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class GetStockRes {
-    private int stockIdx;
-    private int stockTransactionIdx;
+public class StockBox {
+    private long stockIdx;
     private String name;
     private int price;
     //private String rateOfChange;

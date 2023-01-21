@@ -22,22 +22,22 @@ public class StockProvider {
     }
 
 
-    public List<GetStockRes> getStocks(String sort, String order) throws BaseException {
+    public List<StockBox> getStockBoxes(String sort, String order) throws BaseException {
         try {
-            List<GetStockRes> getStockRes = stockDao.getStocks(sort, order);
-            return getStockRes;
+            List<StockBox> stockBox = stockDao.getStockBoxes(sort, order);
+            return stockBox;
         } catch (Exception exception) {
-            System.out.println(exception);
+            //System.out.println(exception);
             throw new BaseException(DATABASE_ERROR);
         }
     }
 
-    public List<GetStockRes> getStocksByIdx(String order) throws BaseException {
+    public List<StockBox> getStockBoxesByIdx(String order) throws BaseException {
         try {
-            List<GetStockRes> getStockRes = stockDao.getStocksByIdx(order);
-            return getStockRes;
+            List<StockBox> stockBox = stockDao.getStockBoxesByIdx(order);
+            return stockBox;
         } catch (Exception exception) {
-            System.out.println(exception);
+            //System.out.println(exception);
             throw new BaseException(DATABASE_ERROR);
         }
     }
@@ -47,7 +47,7 @@ public class StockProvider {
             GetStockInfoRes getStockInfoRes = stockDao.getStockInfo(stockIdx);
             return getStockInfoRes;
         } catch (Exception exception) {
-            System.out.println(exception);
+            //System.out.println(exception);
             throw new BaseException(DATABASE_ERROR);
         }
     }
@@ -57,7 +57,7 @@ public class StockProvider {
             List<GetStockPricesRes> getStockPricesRes = stockDao.getStockPrices(stockIdx);
             return getStockPricesRes;
         } catch (Exception exception) {
-            System.out.println(exception);
+            //System.out.println(exception);
             throw new BaseException(DATABASE_ERROR);
         }
     }
