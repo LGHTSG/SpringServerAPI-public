@@ -12,8 +12,8 @@ import lombok.Setter;
 @AllArgsConstructor
 public class GetMyAssetRes {
     private String assetName;
-    private String iconImage;
     private int price;
     private float rateOfChange;
     private String rateCalDateDiff;
+    private String iconImage;
 }

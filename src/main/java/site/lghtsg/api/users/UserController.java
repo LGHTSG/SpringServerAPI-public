@@ -1,17 +1,18 @@
 package site.lghtsg.api.users;
 
+import io.jsonwebtoken.Jwt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
-import site.lghtsg.api.stocks.model.StockBox;
+import site.lghtsg.api.stocks.StockProvider;
 import site.lghtsg.api.users.model.*;
 import site.lghtsg.api.utils.JwtService;
 
 import javax.mail.MessagingException;
-
+import javax.servlet.http.HttpServletRequest;
 
 import java.io.UnsupportedEncodingException;
 import java.util.List;
@@ -160,9 +161,18 @@ public class UserController {
      */
     @ResponseBody
     @GetMapping("/my-asset")
-    public BaseResponse<List<>> getMyAsset(@RequestHeader ) {
+    public BaseResponse<List<GetMyAssetRes>> getMyAsset(@RequestParam(required = false) String sort) {
         try {
             int userIdx = jwtService.getUserIdx();
+
+            List<GetMyAssetRes> getMyStock = StockProvider.stockBox(userIdx);
+            // List<GetMyAssetRes> getMyResell = StockProvider.resellBox(user.getUserIdx());
+            // List<GetMyAssetRes> getMyRealEstate = StockProvider.realestateBox(user.getUserIdx());
+
+
+            return new BaseResponse<>(getMyAssetRes);
+        } catch (BaseException exception) {
+            return new BaseResponse<>(exception.getStatus());
         }
     }
 }
