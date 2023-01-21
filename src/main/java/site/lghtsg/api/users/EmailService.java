@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import java.io.UnsupportedEncodingException;
 import java.util.Random;
 
 @Service
@@ -25,10 +24,10 @@ public class EmailService {
 
             switch (idx) {
                 case 0 :
-                    key.append((char) ((int)random.nextInt(26) + 97));
+                    key.append((char) (random.nextInt(26) + 97));
                     break;
                 case 1:
-                    key.append((char) ((int)random.nextInt(26) + 65));
+                    key.append((char) (random.nextInt(26) + 65));
                     break;
                 case 2:
                     key.append(random.nextInt(9));
@@ -39,14 +38,13 @@ public class EmailService {
     }
 
     // 메일 양식 작성
-    public MimeMessage createEmailForm(String email) throws MessagingException, UnsupportedEncodingException {
+    public MimeMessage createEmailForm(String email) throws MessagingException {
         createCode();
         String setFrom = "kodd11021@gmail.com";
-        String toEmail = email;
         String title = "LGHTSG 인증번호 테스트";
 
         MimeMessage message = emailSender.createMimeMessage();
-        message.addRecipients(MimeMessage.RecipientType.TO, toEmail);
+        message.addRecipients(MimeMessage.RecipientType.TO, email);
         message.setSubject(title);
 
         // 메일 내용
@@ -72,7 +70,7 @@ public class EmailService {
     }
 
     //실제 메일 전송
-    public String sendEmail(String email) throws MessagingException, UnsupportedEncodingException {
+    public String sendEmail(String email) throws MessagingException {
 
         //메일전송에 필요한 정보 설정
         MimeMessage emailForm = createEmailForm(email);
