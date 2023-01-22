@@ -306,17 +306,4 @@ public class StockDao {
                         rs.getString("transactionTime")
                 ), getStockPricesParam);
     }
-
-    // 나의 자산 조회 API
-    public List<StockBox> getStockBox(int userIdx) {
-        String getStockBoxQuery =
-                "SELECT S.name AS assetName, ST.price, II.iconImage," +
-                        "SUT.saleCheck, SUT.updatedAt" +
-                        "FROM StockUserTransaction AS SUT" +
-                        "INNER JOIN StockTransaction AS ST ON ST.stockTransactionIdx = SUT.stockTransactionIdx" +
-                        "INNER JOIN Stock AS S ON S.stockIdx = ST.stockIdx" +
-                        "INNER JOIN IconImage AS II ON II.iconImageIdx = S.iconImageIdx" +
-                        "WHERE userIdx = ?";
-
-    }
 }

@@ -165,12 +165,9 @@ public class UserController {
         try {
             int userIdx = jwtService.getUserIdx();
 
-            List<GetMyAssetRes> getMyStock = StockProvider.stockBox(userIdx);
-            // List<GetMyAssetRes> getMyResell = StockProvider.resellBox(user.getUserIdx());
-            // List<GetMyAssetRes> getMyRealEstate = StockProvider.realestateBox(user.getUserIdx());
+            List<GetMyAssetRes> resultOfAsset = userProvider.myAsset(userIdx);
 
-
-            return new BaseResponse<>();
+            return new BaseResponse<>(resultOfAsset);
         } catch (BaseException exception) {
             return new BaseResponse<>(exception.getStatus());
         }

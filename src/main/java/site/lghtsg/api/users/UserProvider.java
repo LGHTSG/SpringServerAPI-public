@@ -8,9 +8,13 @@ import site.lghtsg.api.config.BaseException;
 import static site.lghtsg.api.config.BaseResponseStatus.*;
 
 import site.lghtsg.api.config.Secret.Secret;
+import site.lghtsg.api.stocks.model.StockBox;
 import site.lghtsg.api.utils.AES128;
 import site.lghtsg.api.utils.JwtService;
 import site.lghtsg.api.users.model.*;
+
+import java.util.Comparator;
+import java.util.List;
 
 @Service
 public class UserProvider {
@@ -65,6 +69,30 @@ public class UserProvider {
 
         } else { // 비밀번호가 다르다면 에러메세지를 출력한다.
             throw new BaseException(FAILED_TO_LOGIN);
+        }
+    }
+
+    // 주식 자산 조회
+    public List<GetMyAssetRes> myAsset(int userIdx) throws BaseException {
+        try {
+            System.out.println("프로바이더 테스트1");
+            List<GetMyAssetRes> stockAsset = userDao.getStockAsset(userIdx);
+            System.out.println("프로바이더 테스트2");
+            System.out.println(stockAsset);
+            List<GetMyAssetRes> resellAsset = userDao.getResellAsset(userIdx);
+            System.out.println("프로바이더 테스트3");
+            System.out.println(resellAsset);
+            List<GetMyAssetRes> realEstateAsset = userDao.getRealEstateAsset(userIdx);
+            System.out.println("프로바이더 테스트4");
+            System.out.println(realEstateAsset);
+
+            stockAsset.addAll(resellAsset);
+            stockAsset.addAll(realEstateAsset);
+
+            return stockAsset;
+        } catch (Exception exception) {
+            //System.out.println(exception);
+            throw new BaseException(DATABASE_ERROR);
         }
     }
 }
