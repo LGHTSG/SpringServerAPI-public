@@ -7,9 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponseStatus;
-import site.lghtsg.api.resells.model.GetResellRes;
+import site.lghtsg.api.resells.model.GetResellInfoRes;
 import site.lghtsg.api.resells.model.GetResellTransactionRes;
-import site.lghtsg.api.resells.model.ResellBox;
+import site.lghtsg.api.resells.model.GetResellBoxRes;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -27,24 +27,13 @@ public class ResellProvider {
         this.resellDao = resellDao;
     }
 
-    public List<GetResellRes> getResells(String order) throws BaseException {
+    public List<GetResellBoxRes> getResellBoxesByIdx(String order) throws BaseException {
         try {
-            List<GetResellRes> getResellsRes = resellDao.getResells(order);
-            return getResellsRes;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new BaseException(BaseResponseStatus.DATABASE_ERROR);
-        }
-    }
-
-    public List<GetResellRes> getResellsByRate(String order) throws BaseException {
-        try {
-            List<GetResellRes> getResellsByRateRes = resellDao.getResellsByRate(order);
+            List<GetResellBoxRes> getResellsByRateRes = resellDao.getResellBoxes();
             if (StringUtils.equals(order, ASCENDING_PARAM)) {
-                Collections.sort(getResellsByRateRes, comparatorAsc);
-            }
-            else {
-                Collections.sort(getResellsByRateRes, comparatorDesc);
+                Collections.sort(getResellsByRateRes, comparatorIdxAsc);
+            } else {
+                Collections.sort(getResellsByRateRes, comparatorIdxDesc);
             }
             return getResellsByRateRes;
         } catch (Exception e) {
@@ -53,20 +42,35 @@ public class ResellProvider {
         }
     }
 
-    public GetResellRes getResell(int resellIdx) throws BaseException {
+    public List<GetResellBoxRes> getResellsByRate(String order) throws BaseException {
         try {
-            GetResellRes getResellRes = resellDao.getResell(resellIdx);
-            return getResellRes;
+            List<GetResellBoxRes> getResellsByRateRes = resellDao.getResellBoxes();
+            if (StringUtils.equals(order, ASCENDING_PARAM)) {
+                Collections.sort(getResellsByRateRes, comparatorRateAsc);
+            } else {
+                Collections.sort(getResellsByRateRes, comparatorRateDesc);
+            }
+            return getResellsByRateRes;
         } catch (Exception e) {
             e.printStackTrace();
             throw new BaseException(BaseResponseStatus.DATABASE_ERROR);
         }
     }
 
-    public ResellBox getResellBox(int resellIdx) throws BaseException {
+    public GetResellInfoRes getResellInfo(int resellIdx) throws BaseException {
         try {
-            ResellBox resellBox = resellDao.getResellBox(resellIdx);
-            return resellBox;
+            GetResellInfoRes getResellInfoRes = resellDao.getResellInfo(resellIdx);
+            return getResellInfoRes;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new BaseException(BaseResponseStatus.DATABASE_ERROR);
+        }
+    }
+
+    public GetResellBoxRes getResellBox(int resellIdx) throws BaseException {
+        try {
+            GetResellBoxRes getResellBoxRes = resellDao.getResellBox(resellIdx);
+            return getResellBoxRes;
         } catch (Exception e) {
             e.printStackTrace();
             throw new BaseException(BaseResponseStatus.DATABASE_ERROR);
@@ -83,9 +87,41 @@ public class ResellProvider {
         }
     }
 
-    Comparator<GetResellRes> comparatorDesc = new Comparator<GetResellRes>() {
+    Comparator<GetResellBoxRes> comparatorIdxDesc = new Comparator<GetResellBoxRes>() {
         @Override
-        public int compare(GetResellRes a, GetResellRes b) {
+        public int compare(GetResellBoxRes a, GetResellBoxRes b) {
+            long a1 = a.getResellIdx();
+            long b1 = b.getResellIdx();
+
+            if (a1 < b1) {
+                return 1;
+            } else if (a1 > b1) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+    };
+
+    Comparator<GetResellBoxRes> comparatorIdxAsc = new Comparator<GetResellBoxRes>() {
+        @Override
+        public int compare(GetResellBoxRes a, GetResellBoxRes b) {
+            long a1 = a.getResellIdx();
+            long b1 = b.getResellIdx();
+
+            if (a1 > b1) {
+                return 1;
+            } else if (a1 < b1) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
+    };
+
+    Comparator<GetResellBoxRes> comparatorRateDesc = new Comparator<GetResellBoxRes>() {
+        @Override
+        public int compare(GetResellBoxRes a, GetResellBoxRes b) {
             double a1 = Double.parseDouble(a.getRateOfChange());
             double b1 = Double.parseDouble(b.getRateOfChange());
 
@@ -99,9 +135,9 @@ public class ResellProvider {
         }
     };
 
-    Comparator<GetResellRes> comparatorAsc = new Comparator<GetResellRes>() {
+    Comparator<GetResellBoxRes> comparatorRateAsc = new Comparator<GetResellBoxRes>() {
         @Override
-        public int compare(GetResellRes a, GetResellRes b) {
+        public int compare(GetResellBoxRes a, GetResellBoxRes b) {
             double a1 = Double.parseDouble(a.getRateOfChange());
             double b1 = Double.parseDouble(b.getRateOfChange());
 
