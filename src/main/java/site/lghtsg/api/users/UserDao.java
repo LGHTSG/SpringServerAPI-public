@@ -94,7 +94,8 @@ public class UserDao {
     // 주식 자산 조회
     public List<GetMyAssetRes> getStockAsset(int userIdx) {
         String getStockAssetQuery =
-                "SELECT S.name AS assetName, ST.price, II.iconImage," +
+                "SELECT S.name AS assetName, ST.price, ST.price*100 AS rateOfChange," +
+                        "ST.price-100 AS rateCalDateDiff, II.iconImage," +
                         "SUT.saleCheck, SUT.updatedAt" +
                         "FROM StockUserTransaction AS SUT" +
                         "INNER JOIN StockTransaction AS ST ON ST.stockTransactionIdx = SUT.stockTransactionIdx" +

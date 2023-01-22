@@ -75,6 +75,7 @@ public class UserProvider {
     // 주식 자산 조회
     public List<GetMyAssetRes> myAsset(int userIdx) throws BaseException {
         try {
+            System.out.println(userIdx);
             System.out.println("프로바이더 테스트1");
             List<GetMyAssetRes> stockAsset = userDao.getStockAsset(userIdx);
             System.out.println("프로바이더 테스트2");
