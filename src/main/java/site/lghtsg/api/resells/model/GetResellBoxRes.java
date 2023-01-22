@@ -8,7 +8,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class ResellBox {
-    private int resellIdx;
+    private long resellIdx;
     private String name;
     private String rateOfChange;
     private String rateCalDateDiff;

@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class GetResellRes {
+public class GetResellInfoRes {
     private int resellIdx;
     private String name;
     private String price;
