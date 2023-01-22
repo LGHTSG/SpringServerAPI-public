@@ -1,6 +1,5 @@
 package site.lghtsg.api.resells;
 
-import org.apache.commons.codec.binary.StringUtils;
 import org.openqa.selenium.By;
 import org.openqa.selenium.PageLoadStrategy;
 import org.openqa.selenium.WebDriver;
@@ -11,15 +10,13 @@ import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
-import site.lghtsg.api.resells.model.GetResellRes;
+import site.lghtsg.api.resells.model.GetResellInfoRes;
 import site.lghtsg.api.resells.model.GetResellTransactionRes;
-import site.lghtsg.api.resells.model.ResellBox;
+import site.lghtsg.api.resells.model.GetResellBoxRes;
 
 import javax.sql.DataSource;
 import java.time.Duration;
 import java.util.*;
-
-import static site.lghtsg.api.config.Constant.ASCENDING_PARAM;
 
 @Repository
 public class ResellDao {
@@ -31,61 +28,25 @@ public class ResellDao {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
-    public List<GetResellRes> getResells(String order) {
-        String getResellsQuery = "select * from Resell order by resellIdx ";
-        if (StringUtils.equals(order, ASCENDING_PARAM)) {
-            getResellsQuery += "ASC";
-        }
-        else getResellsQuery += "DESC";
+    public List<GetResellBoxRes> getResellBoxes() {
+        String getResellBoxesQuery = "select R.resellIdx, R.name, I.iconImage from Resell as R left join IconImage I on I.iconImageIdx = R.iconImageIdx";
 
-        return this.jdbcTemplate.query(getResellsQuery,
-                (rs, row) -> new GetResellRes(
+        return this.jdbcTemplate.query(getResellBoxesQuery,
+                (rs, row) -> new GetResellBoxRes(
                         rs.getInt("resellIdx"),
                         rs.getString("name"),
-                        calculateChangeOfRate(rs.getInt("resellIdx")).get(0),
-                        rs.getString("releasedPrice"),
-                        rs.getString("releasedDate"),
-                        rs.getString("color"),
-                        rs.getString("brand"),
-                        rs.getString("productNum"),
                         calculateChangeOfRate(rs.getInt("resellIdx")).get(1),
                         "최근 거래가 기준",
-                        rs.getString("image1"),
-                        rs.getString("image2"),
-                        rs.getString("image3"),
-                        rs.getInt("iconImageIdx")));
+                        rs.getString("iconImage"),
+                        calculateChangeOfRate(rs.getInt("resellIdx")).get(0)));
     }
 
-    public List<GetResellRes> getResellsByRate(String order) {
-        String getResellsQuery = "select * from Resell order by resellIdx ";
-        if (StringUtils.equals(order, ASCENDING_PARAM)) {
-            getResellsQuery += "ASC";
-        }
-        else getResellsQuery += "DESC";
-
-
-        return this.jdbcTemplate.query(getResellsQuery,
-                (rs, row) -> new GetResellRes(
-                        rs.getInt("resellIdx"),
-                        rs.getString("name"),
-                        calculateChangeOfRate(rs.getInt("resellIdx")).get(0),
-                        rs.getString("releasedPrice"),
-                        rs.getString("releasedDate"),
-                        rs.getString("color"),
-                        rs.getString("brand"),
-                        rs.getString("productNum"),
-                        calculateChangeOfRate(rs.getInt("resellIdx")).get(1),
-                        "최근 거래가 기준", rs.getString("image1"),
-                        rs.getString("image2"), rs.getString("image3"),
-                        rs.getInt("iconImageIdx")));
-    }
-
-    public GetResellRes getResell(int resellIdx) {
+    public GetResellInfoRes getResellInfo(int resellIdx) {
         String getResellQuery = "select * from Resell where resellIdx = ?";
         int getResellParams = resellIdx;
 
         return this.jdbcTemplate.queryForObject(getResellQuery,
-                (rs, rowNum) -> new GetResellRes(
+                (rs, rowNum) -> new GetResellInfoRes(
                         rs.getInt("resellIdx"),
                         rs.getString("name"),
                         calculateChangeOfRate(rs.getInt("resellIdx")).get(0),
@@ -102,12 +63,12 @@ public class ResellDao {
                 getResellParams);
     }
 
-    public ResellBox getResellBox(int resellIdx) {
+    public GetResellBoxRes getResellBox(int resellIdx) {
         String getResellQuery = "select * from Resell where resellIdx = ?";
         int getResellParams = resellIdx;
 
         return this.jdbcTemplate.queryForObject(getResellQuery,
-                (rs, rowNum) -> new ResellBox(
+                (rs, rowNum) -> new GetResellBoxRes(
                         rs.getInt("resellIdx"),
                         rs.getString("name"),
                         calculateChangeOfRate(rs.getInt("resellIdx")).get(1),
