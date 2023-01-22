@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class ResellBox {
+public class GetResellBoxRes {
     private long resellIdx;
     private String name;
     private String rateOfChange;
