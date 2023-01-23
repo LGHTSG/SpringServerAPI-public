@@ -1,4 +1,4 @@
-package site.lghtsg.api.realestates.model.upload;
+package site.lghtsg.api.realestates.dataUploader.model;
 
 
 import lombok.*;

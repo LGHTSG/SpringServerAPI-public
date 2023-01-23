@@ -8,9 +8,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.config.Secret.Secret;
-import site.lghtsg.api.realestates.RealEstateDao;
-import site.lghtsg.api.realestates.model.upload.RealEstate;
-import site.lghtsg.api.realestates.model.upload.RealEstateTransaction;
+import site.lghtsg.api.realestates.dataUploader.model.RealEstate;
+import site.lghtsg.api.realestates.dataUploader.model.RealEstateTransaction;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -29,7 +28,7 @@ import java.util.Set;
 @Service
 public class ApiConnector {
 
-    private final RealEstateDao realEstateDao;
+    private final RealEstateUploadDao realEstateUploadDao;
     private String authKey = Secret.REALESTATE_PUBLIC_API_AUTHKEY; // api 호출 시 필요한 인증 키
 
 
@@ -41,7 +40,7 @@ public class ApiConnector {
     private List<String> makeUrls() throws UnsupportedEncodingException {
 
         List<String> urlLinks = new ArrayList<>();
-        List<String> regionCodes = realEstateDao.getSigunguCodes();
+        List<String> regionCodes = realEstateUploadDao.getSigunguCodes();
         String link = "http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev";
 
         String currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
@@ -72,10 +71,9 @@ public class ApiConnector {
 
             List<String> urlLinks = makeUrls();
 
-
+            int requestCnt = 0;
             for (String urlLink : urlLinks) {
                 URL url = new URL(urlLink);
-
                 // connection 세팅
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
                 connection.setRequestMethod("GET");
@@ -88,6 +86,8 @@ public class ApiConnector {
                 } else {
                     responseReader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
                 }
+
+                requestCnt++;
 
                 StringBuilder sb = new StringBuilder();
                 String line;
@@ -102,7 +102,7 @@ public class ApiConnector {
                 responses.add(sb.toString());
             }
 
-            return new BaseResponse<>(readData(responses));
+            return new BaseResponse<>(readData(responses) + " / 보낸 요청 수 : " + requestCnt + "회");
 
         } catch (UnsupportedEncodingException encodingException) {
             encodingException.printStackTrace();
@@ -163,7 +163,7 @@ public class ApiConnector {
             }
             String result;
 
-            if (rowDatas.size() > 0) result = createObject(rowDatas);
+            if (rowDatas.size() > 0) result = createObject(rowDatas) + "row 업데이트";
             else result = "업로드할 데이터 없음";
 
             return result;
@@ -177,7 +177,7 @@ public class ApiConnector {
     private String createObject(List<String[]> rowDatas) {
         // 저장할 값 list
         Set<RealEstate> realEstates = new HashSet<>();
-        List<RealEstateTransaction> transactions = new ArrayList<>();
+        Set<RealEstateTransaction> transactions = new HashSet<>();
 
         // realEstates 먼저 업로드 - realEstateId가 없으므로
 
@@ -191,10 +191,10 @@ public class ApiConnector {
                     .regionId(regionIdx)
                     .build());
         }
-        realEstateDao.uploadRealEstates(realEstates);
+        realEstateUploadDao.uploadRealEstates(realEstates);
 
         // id 생성된 부동산 리스트 가져오기
-        List<RealEstate> realEstatesInDB = realEstateDao.getRealEstates();
+        List<RealEstate> realEstatesInDB = realEstateUploadDao.getRealEstates();
 
         for (String[] rowData : rowDatas) {
             Long price = Long.parseLong(rowData[0].replaceAll(",", "")) * 10000;
@@ -211,8 +211,10 @@ public class ApiConnector {
             // realEstateIdx 찾기
             int realEstateId = -1;
 
+            int regionId = Integer.parseInt(rowData[2] + rowData[3].substring(0, 3));
+
             for (RealEstate realEstate : realEstatesInDB) {
-                if (realEstate.getName().equals(rowData[4])) {
+                if (realEstate.getName().equals(rowData[4]) && realEstate.getRegionId() == regionId) {
                     realEstateId = realEstate.getId();
                     break;
                 }
@@ -224,8 +226,8 @@ public class ApiConnector {
                     .realEstateId(realEstateId)
                     .build());
         }
-        realEstateDao.uploadTransactions(transactions);
+        realEstateUploadDao.uploadTransactions(transactions);
 
-        return "success";
+        return String.valueOf(rowDatas.size());
     }
 }

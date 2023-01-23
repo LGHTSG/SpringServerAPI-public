@@ -2,8 +2,7 @@ package site.lghtsg.api.realestates.dataUploader;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import site.lghtsg.api.realestates.RealEstateDao;
-import site.lghtsg.api.realestates.model.upload.RegionName;
+import site.lghtsg.api.realestates.dataUploader.model.RegionName;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -15,47 +14,52 @@ import java.util.*;
 @Service
 public class RegionUploader {
 
-    private final RealEstateDao realEstateDao;
+    private final RealEstateUploadDao realEstateUploadDao;
 
     private final String fileName = "C:\\Users\\2High\\Downloads\\법정동코드 전체자료\\법정동코드 전체자료.txt";
 
-    public String readData() throws IOException {
+    public String readData() {
 
         List<HashMap<Integer, String>> regions = new ArrayList<>(4); // 길이가 짧은 것부터 업로드 예정 (parentID 때문에)
 
-        for (int i = 0; i < 4; i++) {
-            regions.add(new HashMap<Integer, String>()); // 지역 ID, 지역명 저장
-        }
+        try {
 
-        // 파일 읽어오기
-        BufferedReader fileReader = new BufferedReader(new InputStreamReader(new FileInputStream(fileName), "MS949"));
-
-        String line;
-
-        fileReader.readLine(); // 첫 줄(컬럼 이름 표시) 버리기
-
-        while ((line = fileReader.readLine()) != null) {
-
-            String[] row = line.split("[ \t]");
-
-            // 폐지된 지역명, 리 단위 정보는 제외
-            if (!isRequired(row)) continue;
-
-            int regionCode = Integer.parseInt(row[0].substring(0, 8));
-            String[] nameParts = Arrays.copyOfRange(row, 1, row.length-1);
-
-            String name = String.join(" ", nameParts);
-
-            if (nameParts.length == 5) {
-                for (String part : row) {
-                    System.out.println(part);
-                }
+            for (int i = 0; i < 4; i++) {
+                regions.add(new HashMap<Integer, String>()); // 지역 ID, 지역명 저장
             }
-            regions.get(nameParts.length-1).put(regionCode, name);
-        }
-        createRegionName(regions);
 
-        return "success";
+            // 파일 읽어오기
+            BufferedReader fileReader = new BufferedReader(new InputStreamReader(new FileInputStream(fileName), "MS949"));
+
+            String line;
+
+            fileReader.readLine(); // 첫 줄(컬럼 이름 표시) 버리기
+
+            while ((line = fileReader.readLine()) != null) {
+
+                String[] row = line.split("[ \t]");
+
+                // 폐지된 지역명, 리 단위 정보는 제외
+                if (!isRequired(row)) continue;
+
+                int regionCode = Integer.parseInt(row[0].substring(0, 8));
+                String[] nameParts = Arrays.copyOfRange(row, 1, row.length-1);
+
+                String name = String.join(" ", nameParts);
+
+                if (nameParts.length == 5) {
+                    for (String part : row) {
+                        System.out.println(part);
+                    }
+                }
+                regions.get(nameParts.length-1).put(regionCode, name);
+            }
+            createRegionName(regions);
+
+            return "success";
+        } catch (IOException e) {
+            return "파일 읽기 실패";
+        }
     }
 
     private boolean isRequired(String[] parts) {
@@ -87,7 +91,7 @@ public class RegionUploader {
                 }
 
                 // 상위 지역 찾기
-                List<RegionName> regionsInDB = realEstateDao.getRegions();
+                List<RegionName> regionsInDB = realEstateUploadDao.getRegions();
 
                 String nameInFile = regionName.getName();
 
@@ -122,7 +126,7 @@ public class RegionUploader {
                 regionName.setParentId(parentRegionId);
                 regionData.add(regionName);
             }
-            realEstateDao.uploadRegionNames(regionData);
+            realEstateUploadDao.uploadRegionNames(regionData);
         }
     }
 }
