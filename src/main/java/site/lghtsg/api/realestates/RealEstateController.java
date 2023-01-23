@@ -32,7 +32,6 @@ public class RealEstateController {
      * @brief 부동산 리스트 조회
      * @param sort 정렬기준
      * @param order 오름차순 내림차순 여부
-     * @return
      */
     @GetMapping("")
     public BaseResponse<List<RealEstateBox>> realEstateList(@RequestParam(required = false) String sort, @RequestParam(required = false) String order, @RequestParam(required = false) String area){
@@ -40,6 +39,7 @@ public class RealEstateController {
         // null 값 처리만 해준다. null-> default
         if(sort == null) sort = PARAM_DEFAULT;
         if(order == null) order = PARAM_DEFAULT;
+        if(area == null) area = PARAM_DEFAULT;
 
         try{
            List<RealEstateBox> realEstateBoxes = realEstateProvider.getRealEstateBoxes(sort, order, area);
@@ -55,9 +55,8 @@ public class RealEstateController {
      * TODO : 2. 특정 지역의 가격 추세를 확인할 수 있는 그래프를 제공하는 것이 목적.
      *          따라서 같은 지역이라도 부동산간의 가격 차이가 크기에 같은 날 거래된 부동산들의 평균가를 제시하는 방향 고려중
      *          부동산은 다른 데이터 셋과 달리 통합 그래프를 그릴 수 있어야 하기에 지역의 거래 데이터를 선별적으로 제공하는 방법에 대해서도 고민해야한다.
-     * 특정 지역의 누적 가격 정보 데이터를 제공한다.
+     * @brief 특정 지역의 누적 가격 정보 데이터를 제공한다.
      * @param area
-     * @return
      */
     @GetMapping("/prices")
     public BaseResponse<List<RealEstateTransactionData>> realEstateAreaPrices(@RequestParam String area){
@@ -71,9 +70,8 @@ public class RealEstateController {
     }
 
     /**
-     * 검색어를 포함하는 지역들의 리스트를 반환한다.
+     * @brief 검색어를 포함하는 지역들의 리스트를 반환한다.
      * @param keyword 검색어
-     * @return areas 지역 리스트
      */
     @GetMapping("/area-relation-list")
     public BaseResponse<List<String>> areaRelationList(@RequestParam(required = false) String keyword){
@@ -88,14 +86,13 @@ public class RealEstateController {
 
     /**
      * TODO : 1. Info와 Box 관계 명확해지면 Provider 이하 리팩토링
-     * 특정 부동산의 정보를 반환한다.
-     * @param realestateIdx
-     * @return
+     * @brief 특정 부동산의 정보를 반환한다.
+     * @param realEstateIdx
      */
-    @GetMapping("/{realestateIdx}/info")
-    public BaseResponse<RealEstateInfo> realEstateInfo(@PathVariable long realestateIdx){
+    @GetMapping("/{realEstateIdx}/info")
+    public BaseResponse<RealEstateInfo> realEstateInfo(@PathVariable long realEstateIdx){
         try{
-            RealEstateInfo realEstateInfo = realEstateProvider.getRealEstateInfo(realestateIdx);
+            RealEstateInfo realEstateInfo = realEstateProvider.getRealEstateInfo(realEstateIdx);
             return new BaseResponse<>(realEstateInfo);
         }
         catch(BaseException e){
@@ -105,9 +102,8 @@ public class RealEstateController {
 
     /**
      * TODO : 1. Dao 단계에서 하루 단위 중복 거래 등 데이터 처리 필요
-     * 특정 부동산의 누적 가격 데이터를 반환한다.
+     * @brief 특정 부동산의 누적 가격 데이터를 반환한다.
      * @param realEstateIdx
-     * @return
      */
     @GetMapping("/{realEstateIdx}/prices")
     public BaseResponse<List<RealEstateTransactionData>> realEstatePrices(@PathVariable long realEstateIdx){
@@ -121,8 +117,7 @@ public class RealEstateController {
     }
 
     /**
-     * 부동산 거래 DB 업데이트 - api
-     * @return
+     * @brief 부동산 거래 DB 업데이트 - api
      */
     @GetMapping("/connect_api")
     public BaseResponse<String> updateData() {
@@ -131,8 +126,7 @@ public class RealEstateController {
 
 
     /**
-     * 부동산 거래 DB 업데이트 - 파일
-     * @return
+     * @brief 부동산 거래 DB 업데이트 - 파일
      */
     @GetMapping("/upload_file_data")
     public BaseResponse<String> uploadFileData() {

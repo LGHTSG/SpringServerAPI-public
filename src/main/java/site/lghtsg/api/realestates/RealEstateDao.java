@@ -30,13 +30,12 @@ public class RealEstateDao {
 
 
     /**
-     * TODO : 정렬기준 변경에 대해 어떻게 처리해야하는지 작업 해야함.
+     * ==========================================================================================
+     * TODO : 데이터만 받아옴. fluctuation 작업은 Provider 에서 할 것.
      * 모든 부동산의 box 반환
      * @return
      */
-    // 리스트가 길어지면 안되므로 짤라서 계산 -> dao 안에서 모든 계산이 이루어져야 함
     public List<RealEstateBox> getAllRealEstateBoxes() {
-        // 쿼리세팅
 
         String getRealEstateBoxesQuery =
                 "select re.realEstateIdx,\n" +
@@ -55,8 +54,6 @@ public class RealEstateDao {
                         "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
                         "  and re.iconImageIdx = ii.iconImageIdx;";
 
-//        getRealEstateBoxesQuery += orderQuery + LIST_LIMIT_QUERY;
-
         return this.jdbcTemplate.query(getRealEstateBoxesQuery, realEstateBoxRowMapper());
     }
 
@@ -66,7 +63,6 @@ public class RealEstateDao {
      * @param area String
      */
     public List<RealEstateBox> getRealEstateBoxesInArea(String area){
-        if(area == "") return null;
 
         String findAreaQuery = getFindAreaQuery(area);
         String getRealEstateBoxesInAreaQuery =
@@ -177,7 +173,6 @@ public class RealEstateDao {
     }
 
     /**
-     * TODO : 1. 같은 날 2번 이상의 거래 있는 경우 이는 어떻게 처리할지
      * @brief
      * 특정 부동산 누적 가격 정보 전달
      * @param realEstateIdx long
@@ -361,9 +356,10 @@ public class RealEstateDao {
         return new RowMapper<RealEstateTransactionData>() {
             @Override
             public RealEstateTransactionData mapRow(ResultSet rs, int rowNum) throws SQLException {
-                RealEstateTransactionData realEstateTransactionData = new RealEstateTransactionData();
-                realEstateTransactionData.setDatetime(rs.getString("transactionTime"));
-                realEstateTransactionData.setPrice(rs.getLong("price"));
+                RealEstateTransactionData realEstateTransactionData = new RealEstateTransactionData(
+                        rs.getString("transactionTime"),
+                        rs.getLong("price")
+                );
                 return realEstateTransactionData;
             }
         };
@@ -375,10 +371,8 @@ public class RealEstateDao {
             @Override
             public RealEstateBox mapRow(ResultSet rs, int rowNum) throws SQLException {
                 RealEstateBox getRealEstateBox = new RealEstateBox();
-                getRealEstateBox.setRealEstateIdx(rs.getLong("realEstateIdx"));
+                getRealEstateBox.setIdx(rs.getLong("realEstateIdx"));
                 getRealEstateBox.setName(rs.getString("name"));
-//                getRealEstateBox.setRateOfChange(rs.getString("rateOfChange"));
-//                getRealEstateBox.setRateCalDateDiff(rs.getString("rateCalDateDiff"));
                 getRealEstateBox.setIconImage(rs.getString("iconImage"));
                 getRealEstateBox.setPrice(rs.getLong("price"));
                 return getRealEstateBox;
@@ -391,16 +385,16 @@ public class RealEstateDao {
             @Override
             public RealEstateInfo mapRow(ResultSet rs, int rowNum) throws SQLException {
                 RealEstateInfo getRealEstateInfo = new RealEstateInfo();
-                getRealEstateInfo.setRealEstateIdx(rs.getLong("realEstateIdx"));
+                getRealEstateInfo.setIdx(rs.getLong("realEstateIdx"));
                 getRealEstateInfo.setName(rs.getString("name"));
-//                getRealEstateBox.setRateOfChange(rs.getString("rateOfChange"));
-//                getRealEstateBox.setRateCalDateDiff(rs.getString("rateCalDateDiff"));
                 getRealEstateInfo.setIconImage(rs.getString("iconImage"));
                 getRealEstateInfo.setPrice(rs.getLong("price"));
                 return getRealEstateInfo;
             }
         };
     }
+
+    // 이렇게 안쓰고 싶은데.. 눈물이 난다...
     private String getFindAreaQuery(String area){
         String findAreaQuery;
         area.replace('+', ' ');

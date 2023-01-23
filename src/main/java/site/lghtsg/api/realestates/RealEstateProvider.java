@@ -1,6 +1,9 @@
 package site.lghtsg.api.realestates;
 
 import org.springframework.stereotype.Service;
+import site.lghtsg.api.common.model.Box;
+import site.lghtsg.api.common.model.CompareByPrice;
+import site.lghtsg.api.common.model.CompareByRate;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
@@ -34,7 +37,7 @@ public class RealEstateProvider {
 
         // 1. 데이터 가져오기
         try {
-            if(area == null) realEstateBoxes = realEstateDao.getRealEstateBoxesInArea(area);
+            if(area.equals(PARAM_DEFAULT)) realEstateBoxes = realEstateDao.getRealEstateBoxesInArea(area);
             else realEstateBoxes = realEstateDao.getAllRealEstateBoxes();
         }
         catch (Exception ignored) {
@@ -53,7 +56,7 @@ public class RealEstateProvider {
      * TODO : 정렬 로직을 클래스에 내포시키는게 깔끔
         -> List<RealEstateBox>를 하나의 클래스로 덮어야 하는데 굳이 그럴까 싶어 고려중
         TODO : 2. var 입력값 없는 경우에 대해 validation 처리를 한꺼번에 하긴 하는데... 코드가 너무 난잡해진 기분.
-                입력이 꼭 와야하는 필수 요소 (입력이 잘못된 경우) -> 이런 validation은 controller에서 컷 하고,
+                입력이 꼭 와야하는 필수 요소 (입력이 잘못된 경우) -> 이런 validation 은 controller 에서 컷 하고,
                 여기에서는 걍 에러처리를 안하는게 맞지 않니.
      * RealEstateBoxes 리스트를 정렬 기준에 맞게 정렬 후 반환
      * @param realEstateBoxes
@@ -87,25 +90,6 @@ public class RealEstateProvider {
         }
     }
 
-    static class CompareByPrice implements Comparator<RealEstateBox> {
-        @Override
-        public int compare(RealEstateBox o1, RealEstateBox o2) {
-            long o1Price = o1.getPrice(), o2Price = o2.getPrice();
-            if (o1Price < o2Price) return 1;
-            else if (o1Price > o2Price) return -1;
-            return 0;
-        }
-    }
-
-    static class CompareByRate implements Comparator<RealEstateBox> {
-        @Override
-        public int compare(RealEstateBox o1, RealEstateBox o2) {
-            double o1Rate = o1.getRateOfChange(), o2Rate = o2.getRateOfChange();
-            if (o1Rate < o2Rate) return 1;
-            else if (o1Rate > o2Rate) return -1;
-            return 0;
-        }
-    }
 
     /**
      * ==========================================================================================
@@ -115,10 +99,7 @@ public class RealEstateProvider {
      * @throws BaseException
      */
     public RealEstateInfo getRealEstateInfo(long realEstateIdx) throws BaseException {
-        // 가지고 있는 realEstateIdx인지 validation 필요
-        // 없는 경우에는 알아서 database error 반환하는데,
-        // 그게 그 에러인지는 알아야지
-        // 반환하는 값이 없는 경우에만 해당 자산 없다고 반환하자.
+        // 가지고 있는 realEstateIdx 인지 validation - REQUESTED_DATA_FAIL_TO_EXIST
         RealEstateInfo realEstateInfo;
         try {
              realEstateInfo = realEstateDao.getRealEstateInfo(realEstateIdx);
