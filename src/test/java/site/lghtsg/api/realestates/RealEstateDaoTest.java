@@ -3,16 +3,23 @@ package site.lghtsg.api.realestates;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import site.lghtsg.api.common.model.CompareByPrice;
+import site.lghtsg.api.config.BaseException;
+import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
 import java.util.Collections;
 import java.util.List;
+
+import static site.lghtsg.api.config.Constant.*;
 
 @SpringBootTest
 public class RealEstateDaoTest {
 
     @Autowired
     private RealEstateDao realEstateDao;
+    @Autowired
+    private RealEstateProvider realEstateProvider;
 
     @Test
     void 부동산_리스트_반환(){
@@ -30,75 +37,74 @@ public class RealEstateDaoTest {
 
 
     @Test
-    void 모든_부동산_조회_및_정렬(){
-//        final int test = 10;
-//
-//        String sort = null;
-//        String order = ASCENDING_PARAM;
-//
-//        long startTime = 0, afterReadTime = 0, endTime = 0;
-//
-//        for(int i = 0; i < test; i++){
-//            long start = System.currentTimeMillis();
-//
-//            List<RealEstateBox> realEstateBoxes = realEstateDao.getAllRealEstateBoxes();
-//            long afterRead = System.currentTimeMillis();
-//
-//            Collections.sort(realEstateBoxes);
-//            long end = System.currentTimeMillis();
-//
-//            System.out.println("Test #" + (int)(i + 1));
-//            System.out.println("Data length : " + realEstateBoxes.size());
-//            System.out.println("Total Duration : " + (double)(end - start) / 1000 + "s");
-//            System.out.println("Read Duration : " + (double)(afterRead - start) / 1000 + "s");
-//            System.out.println("Sort Duration : " + (double)(end - afterRead) / 1000 + "s");
-//            System.out.println();
-//            startTime += start; afterReadTime += afterRead; endTime+= end;
-//        }
-//        startTime /= test; afterReadTime /= test; endTime /= test;
-//
-//        System.out.println("==== Test Results ====");
-//        System.out.println("Avg Duration : " + (double)(endTime - startTime) / 1000 + "s");
-//        System.out.println("Avg Read Duration : " + (double)(afterReadTime - startTime) / 1000 + "s");
-//        System.out.println("Avg Sort Duration : " + (double)(endTime - afterReadTime) / 1000 + "s");
-//        System.out.println();
+    void 모든_부동산_조회(){
+        final int test = 100;
+
+        String sort = SORT_PRICE_PARAM;
+        String order = ASCENDING_PARAM;
+        String area = PARAM_DEFAULT;
+
+        long startTime = 0,endTime = 0;
+        for(int i = 0; i < test; i++){
+            long start = System.currentTimeMillis();
+            try {
+                List<RealEstateBox> realEstateBoxes = realEstateProvider.getRealEstateBoxes(sort, order, area);
+
+                long end = System.currentTimeMillis();
+
+                System.out.println("Test #" + (int)(i + 1));
+                System.out.println("Data length : " + realEstateBoxes.size());
+                System.out.println("Total Duration : " + (double)(end - start) / 1000 + "s");
+                System.out.println();
+                startTime += start; endTime+= end;
+            }
+            catch(BaseException e){
+                System.out.println(e.getStatus());
+            }
+
+        }
+        startTime /= test; endTime /= test;
+
+        System.out.println("==== Test Results ====");
+        System.out.println("Avg Duration : " + (double)(endTime - startTime) / 1000 + "s");
+        System.out.println();
     }
 
     @Test
-    void 특정_지역내_부동산_조회_및_정럴(){
-//        final int test = 10;
-//
-//        String sort = null;
-//        String order = ASCENDING_PARAM;
-//        String area = "서울특별시";
-//
-//        long startTime = 0, afterReadTime = 0, endTime = 0;
-//
-//        for(int i = 0; i < test; i++){
-//            long start = System.currentTimeMillis();
-//
-//            List<RealEstateBox> realEstateBoxes = realEstateDao.getRealEstateBoxesInArea(area);
-//            long afterRead = System.currentTimeMillis();
-//
-//            Collections.sort(realEstateBoxes);
-//            long end = System.currentTimeMillis();
-//
-//            System.out.println("Test #" + (int)(i + 1));
-//            System.out.println("Data length : " + realEstateBoxes.size());
-//            System.out.println("Total Duration : " + (double)(end - start) / 1000 + "s");
-//            System.out.println("Read Duration : " + (double)(afterRead - start) / 1000 + "s");
-//            System.out.println("Sort Duration : " + (double)(end - afterRead) / 1000 + "s");
-//            System.out.println();
-//            startTime += start; afterReadTime += afterRead; endTime+= end;
-//        }
-//        startTime /= test; afterReadTime /= test; endTime /= test;
-//
-//
-//        System.out.println("==== Test Results ====");
-//        System.out.println("Avg Duration : " + (double)(endTime - startTime) / 1000 + "s");
-//        System.out.println("Avg Read Duration : " + (double)(afterReadTime - startTime) / 1000 + "s");
-//        System.out.println("Avg Sort Duration : " + (double)(endTime - afterReadTime) / 1000 + "s");
-//        System.out.println();
+    void 부동산_조회_및_정럴(){
+        final int test = 10;
+
+        String sort = null;
+        String order = ASCENDING_PARAM;
+        String area = "서울특별시";
+
+        long startTime = 0, afterReadTime = 0, endTime = 0;
+
+        for(int i = 0; i < test; i++){
+            long start = System.currentTimeMillis();
+
+            List<RealEstateBox> realEstateBoxes = realEstateDao.getRealEstateBoxesInArea(area);
+            long afterRead = System.currentTimeMillis();
+
+            Collections.sort(realEstateBoxes, new CompareByPrice());
+            long end = System.currentTimeMillis();
+
+            System.out.println("Test #" + (int)(i + 1));
+            System.out.println("Data length : " + realEstateBoxes.size());
+            System.out.println("Total Duration : " + (double)(end - start) / 1000 + "s");
+            System.out.println("Read Duration : " + (double)(afterRead - start) / 1000 + "s");
+            System.out.println("Sort Duration : " + (double)(end - afterRead) / 1000 + "s");
+            System.out.println();
+            startTime += start; afterReadTime += afterRead; endTime+= end;
+        }
+        startTime /= test; afterReadTime /= test; endTime /= test;
+
+
+        System.out.println("==== Test Results ====");
+        System.out.println("Avg Duration : " + (double)(endTime - startTime) / 1000 + "s");
+        System.out.println("Avg Read Duration : " + (double)(afterReadTime - startTime) / 1000 + "s");
+        System.out.println("Avg Sort Duration : " + (double)(endTime - afterReadTime) / 1000 + "s");
+        System.out.println();
 
     }
 

@@ -4,4 +4,5 @@ import site.lghtsg.api.common.model.Box;
 
 
 public class RealEstateBox extends Box {
+
 }

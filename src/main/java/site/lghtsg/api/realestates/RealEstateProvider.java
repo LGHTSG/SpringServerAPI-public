@@ -37,8 +37,8 @@ public class RealEstateProvider {
 
         // 1. 데이터 가져오기
         try {
-            if(area.equals(PARAM_DEFAULT)) realEstateBoxes = realEstateDao.getRealEstateBoxesInArea(area);
-            else realEstateBoxes = realEstateDao.getAllRealEstateBoxes();
+            if(area.equals(PARAM_DEFAULT)) realEstateBoxes = realEstateDao.getAllRealEstateBoxes();
+            else realEstateBoxes = realEstateDao.getRealEstateBoxesInArea(area);
         }
         catch (Exception ignored) {
             throw new BaseException(DATABASE_ERROR);
