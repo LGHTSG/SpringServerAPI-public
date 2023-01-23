@@ -230,4 +230,12 @@ public class ApiConnector {
 
         return String.valueOf(rowDatas.size());
     }
+
+    public void updateLastTransactions() {
+        Set<Integer> realEstateIdxs = realEstateUploadDao.getUpdatedRealEstateIdxs();
+
+        for (Integer realEstateIdx : realEstateIdxs) {
+            realEstateUploadDao.updateLastTransactions(realEstateIdx);
+        }
+    }
 }

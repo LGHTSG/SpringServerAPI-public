@@ -44,4 +44,14 @@ public class RealEstateUploadController {
         return regionUploader.readData();
 
     }
+
+    @GetMapping("/last_transactions")
+    public BaseResponse updateLastTransactions() {
+        try {
+            apiConnector.updateLastTransactions();
+            return new BaseResponse<>("거래 업데이트 성공");
+        } catch (Exception e) {
+            return new BaseResponse<>("거래 업데이트 실패");
+        }
+    }
 }

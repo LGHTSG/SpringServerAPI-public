@@ -10,6 +10,7 @@ import site.lghtsg.api.realestates.dataUploader.model.RegionName;
 
 import javax.sql.DataSource;
 import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -25,7 +26,7 @@ public class RealEstateUploadDao {
 
     /**
      * 부동산 정보 업로드
-     * @param realEstateList
+     * @param realEstateSet
      */
     public void uploadRealEstates(Set<RealEstate> realEstateSet) { // 한 업로드 단위(파일, api응답) 안에서의 중복 방지
 
@@ -64,8 +65,45 @@ public class RealEstateUploadDao {
     }
 
     /**
+     * 새 거래 데이터가 올라온 RealEstate들의 Idx 반환
+     * @return
+     */
+    public Set<Integer> getUpdatedRealEstateIdxs() {
+        String query =
+                "select re.realEstateIdx from RealEstate re INNER JOIN RealEstateTransaction ret on re.realEstateIdx = ret.realEstateIdx\n" +
+                "where DATEDIFF(ret.createdAt, now()) = -1 group by re.realEstateIdx limit 1000000";
+
+
+        return new HashSet<>(this.jdbcTemplate.query(query, (rs, rowNum) -> rs.getInt("realEstateIdx")));
+    }
+
+    /**
+     * RealEstate.lastTransactionIdx, s2LastTransactionIdx 업데이트
+     * @param realEstateId
+     */
+    public void updateLastTransactions(int realEstateId) {
+        String recentTransactionIdxsQuery = "select realEstateTransactionIdx from RealEstateTransaction ret " +
+                "where realEstateIdx = ? order by transactionTime desc limit 2";
+
+        List<Integer> recentTransactionIdxs = this.jdbcTemplate.query(recentTransactionIdxsQuery,
+                (rs, rowNum) -> rs.getInt("realEstateTransactionIdx"), realEstateId);
+
+        String updateQuery = (recentTransactionIdxs.size() == 2) ? // size() == 1 or 2.
+                "update RealEstate set lastTransactionIdx = ?, s2LastTransactionIdx = ? where realEstateIdx = ?"
+                : "update RealEstate set lastTransactionIdx = ? where realEstateIdx = ?";
+
+        Object[] updateParams = (recentTransactionIdxs.size() == 2) ?
+                new Object[]{recentTransactionIdxs.get(0), recentTransactionIdxs.get(1), realEstateId}
+                : new Object[]{recentTransactionIdxs.get(0), realEstateId};
+
+
+        this.jdbcTemplate.update(updateQuery, updateParams);
+
+    }
+
+    /**
      * 실거래가 정보 업로드
-     * @param transactionList
+     * @param transactionSet
      */
     public void uploadTransactions(Set<RealEstateTransaction> transactionSet) {
         StringBuilder queryBuilder = new StringBuilder("insert into `RealEstateTransaction`(price, transactionTime, realEstateIdx) values");
