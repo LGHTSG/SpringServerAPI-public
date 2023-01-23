@@ -76,9 +76,12 @@ public enum BaseResponseStatus {
     PASSWORD_ENCRYPTION_ERROR( 4011, "비밀번호 암호화에 실패하였습니다."),
     PASSWORD_DECRYPTION_ERROR( 4012, "비밀번호 복호화에 실패하였습니다."),
 
-    REALESTATE_SORTING_ERROR(4201, "데이터 정렬 과정에서 오류가 발생했습니다.");
-
     // 42XX
+    DATALIST_SORTING_ERROR(4201, "데이터 정렬 과정에서 오류가 발생했습니다."),
+    MISSING_REQUIRED_ARGUMENT(4202, "필요한 변수가 입력되지 않았습니다"),
+    INCORRECT_REQUIRED_ARGUMENT(4203, "잘못된 변수가 입력되었습니다."),
+
+    REQUESTED_DATA_FAIL_TO_EXIST(4204, "요청한 데이터가 존재하지 않습니다.");
     // 5000 : 필요시 만들어서 쓰세요
     // 6000 : 필요시 만들어서 쓰세요
 

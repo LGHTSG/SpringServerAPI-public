@@ -1,24 +1,10 @@
 package site.lghtsg.api.realestates.model;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import site.lghtsg.api.common.model.TransactionData;
 
-@Getter
-@Setter
-@NoArgsConstructor
-public class RealEstateTransactionData implements Comparable<RealEstateTransactionData> {
-    String datetime;
-    long price;
+public class RealEstateTransactionData extends TransactionData {
 
-    @Override
-    public int compareTo(RealEstateTransactionData rtd) {
-        if(this.price < rtd.price){
-            return 1;
-        }
-        else if(this.price > rtd.price) {
-            return -1;
-        }
-        else return 0;
+    public RealEstateTransactionData(String datetime, long price) {
+        super(datetime, price);
     }
 }
