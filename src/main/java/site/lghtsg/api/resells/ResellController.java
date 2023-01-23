@@ -1,14 +1,14 @@
 package site.lghtsg.api.resells;
 
-import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
-import site.lghtsg.api.resells.model.GetResellRes;
+import site.lghtsg.api.resells.model.GetResellInfoRes;
 import site.lghtsg.api.resells.model.GetResellTransactionRes;
+import site.lghtsg.api.resells.model.GetResellBoxRes;
 
 import java.util.List;
 
@@ -35,15 +35,15 @@ public class ResellController {
 
     @ResponseBody
     @GetMapping("")
-    public BaseResponse<List<GetResellRes>> getResells(@RequestParam(required = false) String sort, @RequestParam(required = false) String order) {
+    public BaseResponse<List<GetResellBoxRes>> getResellBoxes(@RequestParam(required = false) String sort, @RequestParam(required = false) String order) {
         try {
             if (sort == null) {
-                List<GetResellRes> getResellRes = resellProvider.getResells(order);
-                return new BaseResponse<>(getResellRes);
+                List<GetResellBoxRes> getGetResellBoxesRes = resellProvider.getResellBoxesByIdx(order);
+                return new BaseResponse<>(getGetResellBoxesRes);
             }
 
-            List<GetResellRes> getResellRes = resellProvider.getResellsByRate(order);
-            return new BaseResponse<>(getResellRes);
+            List<GetResellBoxRes> getGetResellBoxesRes = resellProvider.getResellsByRate(order);
+            return new BaseResponse<>(getGetResellBoxesRes);
         } catch (BaseException e) {
             return new BaseResponse<>((e.getStatus()));
         }
@@ -52,15 +52,15 @@ public class ResellController {
     @ResponseBody
     @GetMapping("/test")
     public void test(){
-        resellDao.scraping();
+        //resellDao.scraping();
     }
 
     @ResponseBody
     @GetMapping("/{resellIdx}/info")
-    public BaseResponse<GetResellRes> getResell(@PathVariable("resellIdx") int resellIdx) {
+    public BaseResponse<GetResellInfoRes> getResellInfo(@PathVariable("resellIdx") int resellIdx) {
         try {
-            GetResellRes getResellRes = resellProvider.getResell(resellIdx);
-            return new BaseResponse<>(getResellRes);
+            GetResellInfoRes getResellInfoRes = resellProvider.getResellInfo(resellIdx);
+            return new BaseResponse<>(getResellInfoRes);
         } catch (BaseException e) {
             e.printStackTrace();
             return new BaseResponse<>((e.getStatus()));

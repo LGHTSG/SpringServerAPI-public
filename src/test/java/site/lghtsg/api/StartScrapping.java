@@ -16,8 +16,5 @@ public class StartScrapping {
     void 스크래핑(){
       resellDao.scraping();
     }
-    @Test
-    void 스크래핑2(){
-//        resellDao.scrapingTest();
-    }
+
 }
