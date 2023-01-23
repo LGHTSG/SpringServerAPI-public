@@ -2,69 +2,127 @@ package site.lghtsg.api.realestates;
 
 import org.springframework.stereotype.Service;
 import site.lghtsg.api.config.BaseException;
-import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
-import static site.lghtsg.api.config.BaseResponseStatus.DATABASE_ERROR;
+import static site.lghtsg.api.config.BaseResponseStatus.*;
+import static site.lghtsg.api.config.Constant.*;
 
 @Service
 public class RealEstateProvider {
 
     private final RealEstateDao realEstateDao;
 
-    public RealEstateProvider(RealEstateDao realEstateDao){
+    public RealEstateProvider(RealEstateDao realEstateDao) {
         this.realEstateDao = realEstateDao;
     }
 
     /**
+     * ==========================================================================================
      * 부동산 리스트 반환
-     * @return
+     * @return List<RealEstateBox>
      * @throws BaseException
      */
-    // 데이터 불러와서 걍 sort에 따라 정렬해주는 함수.
-    // 여기 box 에서 rateCalDateDiff, rateOfChange 넣어주기
-    // 계산하는 로직 들어가야 함.
 
     public List<RealEstateBox> getRealEstateBoxes(String sort, String order, String area) throws BaseException {
         List<RealEstateBox> realEstateBoxes;
 
+        // 1. 데이터 가져오기
         try {
-             // 지역을 특정하지 않았을 경우
-             if(area == null) realEstateBoxes = realEstateDao.getAllRealEstateBox(sort, order);
-             // 지역을 특정하였을 경우
-             else realEstateBoxes = realEstateDao.getRealEstateBoxesInArea(area, sort, order);
+            if(area == null) realEstateBoxes = realEstateDao.getRealEstateBoxesInArea(area);
+            else realEstateBoxes = realEstateDao.getAllRealEstateBoxes();
         }
-        catch(Exception ignored){
+        catch (Exception ignored) {
             throw new BaseException(DATABASE_ERROR);
         }
+
+        // 2. 정렬
+        // sortRealEstateBoxes() - Throws BaseException
+        realEstateBoxes = sortRealEstateBoxes(realEstateBoxes, sort, order);
 
         return realEstateBoxes;
     }
 
-    // 하나의 box 반환 - 리스트 구성 인자
-    // TODO : updatedAt 추가
-    public RealEstateBox getRealEstateBox(long realEstateIdx) throws BaseException {
-
-        // 가지고 있는 realEstateIdx인지 validation 필요
-        RealEstateBox realEstateBox;
+    /**
+     * ==========================================================================================
+     * TODO : 정렬 로직을 클래스에 내포시키는게 깔끔
+        -> List<RealEstateBox>를 하나의 클래스로 덮어야 하는데 굳이 그럴까 싶어 고려중
+        TODO : 2. var 입력값 없는 경우에 대해 validation 처리를 한꺼번에 하긴 하는데... 코드가 너무 난잡해진 기분.
+                입력이 꼭 와야하는 필수 요소 (입력이 잘못된 경우) -> 이런 validation은 controller에서 컷 하고,
+                여기에서는 걍 에러처리를 안하는게 맞지 않니.
+     * RealEstateBoxes 리스트를 정렬 기준에 맞게 정렬 후 반환
+     * @param realEstateBoxes
+     * @param sort
+     * @param order
+     * @return List<RealEstateBox>
+     * @throws BaseException
+     */
+    static List<RealEstateBox> sortRealEstateBoxes(List<RealEstateBox> realEstateBoxes, String sort, String order) throws BaseException {
         try {
-            realEstateBox = realEstateDao.getRealEstateBox(realEstateIdx);
+            // 1. 정렬
+            if (sort.equals(SORT_FLUCTUATION_PARAM)){   // 증감율 기준
+                realEstateBoxes.sort(new CompareByRate());
+            } else if (sort.equals(SORT_PRICE_PARAM)) { // 가격 기준
+                realEstateBoxes.sort(new CompareByPrice());
+            } else if(!sort.equals(PARAM_DEFAULT)){     // 기준이 없는(잘못입력) 경우
+                throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
+            }
+
+            // 2. 차순
+            if (order.equals(ASCENDING_PARAM)) {        // 오름차순
+                Collections.reverse(realEstateBoxes);
+            } else if (!order.equals(PARAM_DEFAULT) && !order.equals(DESCENDING_PARAM)){    // 기준이 없는(잘못입력) 경우
+                throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
+            }
+
+            return realEstateBoxes;
         }
-        catch(Exception ignored){
-            throw new BaseException(DATABASE_ERROR);
+        catch(Exception e) {
+            throw new BaseException(DATALIST_SORTING_ERROR);
         }
-        return realEstateBox;
     }
 
-    // 하나의 info를 반환 - 테이블 원소 그대로
+    static class CompareByPrice implements Comparator<RealEstateBox> {
+        @Override
+        public int compare(RealEstateBox o1, RealEstateBox o2) {
+            long o1Price = o1.getPrice(), o2Price = o2.getPrice();
+            if (o1Price < o2Price) return 1;
+            else if (o1Price > o2Price) return -1;
+            return 0;
+        }
+    }
+
+    static class CompareByRate implements Comparator<RealEstateBox> {
+        @Override
+        public int compare(RealEstateBox o1, RealEstateBox o2) {
+            double o1Rate = o1.getRateOfChange(), o2Rate = o2.getRateOfChange();
+            if (o1Rate < o2Rate) return 1;
+            else if (o1Rate > o2Rate) return -1;
+            return 0;
+        }
+    }
+
+    /**
+     * ==========================================================================================
+     * 하나의 부동산 정보를 반환
+     * @param realEstateIdx
+     * @return RealEstateInfo
+     * @throws BaseException
+     */
     public RealEstateInfo getRealEstateInfo(long realEstateIdx) throws BaseException {
+        // 가지고 있는 realEstateIdx인지 validation 필요
+        // 없는 경우에는 알아서 database error 반환하는데,
+        // 그게 그 에러인지는 알아야지
+        // 반환하는 값이 없는 경우에만 해당 자산 없다고 반환하자.
         RealEstateInfo realEstateInfo;
         try {
-            realEstateInfo = realEstateDao.getRealEstateInfo(realEstateIdx);
+             realEstateInfo = realEstateDao.getRealEstateInfo(realEstateIdx);
+            if(realEstateInfo == null) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
         }
         catch(Exception ignored){
             throw new BaseException(DATABASE_ERROR);
@@ -73,26 +131,16 @@ public class RealEstateProvider {
     }
 
     /**
-<<<<<<< HEAD
+     * ==========================================================================================
      * 특정 지역 내 부동산 누적 거래 데이터 전체 반환
      * @param area
-     * @return
+     * @return List<RealEstateTransactionData>
      */
-    public List<RealEstateTransactionData> getRealEstatePricesInArea(String area) throws BaseException{
+    public List<RealEstateTransactionData> getAreaRealEstatePrices(String area) throws BaseException{
         List<RealEstateTransactionData> realEstateTransactionData;
         try {
             realEstateTransactionData = realEstateDao.getRealEstatePricesInArea(area);
-        }
-        catch(Exception e){
-            throw new BaseException(DATABASE_ERROR);
-        }
-        return realEstateTransactionData;
-    }
-
-    public List<RealEstateTransactionData> getRealEstatePrices(long realEstateIdx) throws BaseException{
-        List<RealEstateTransactionData> realEstateTransactionData;
-        try {
-            realEstateTransactionData = realEstateDao.getRealEstatePrices(realEstateIdx);
+            if(realEstateTransactionData == null) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
         }
         catch(Exception e){
             throw new BaseException(DATABASE_ERROR);
@@ -101,20 +149,38 @@ public class RealEstateProvider {
     }
 
     /**
-     *
+     * ==========================================================================================
+     * 특정 부동산 거래 데이터 반환
+     * @param realEstateIdx
+     * @return List<RealEstateTransactionData>
+     * @throws BaseException
+     */
+    public List<RealEstateTransactionData> getRealEstatePrices(long realEstateIdx) throws BaseException{
+        List<RealEstateTransactionData> realEstateTransactionData;
+        try {
+            realEstateTransactionData = realEstateDao.getRealEstatePrices(realEstateIdx);
+            if(realEstateTransactionData == null) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+        }
+        catch(Exception e){
+            throw new BaseException(DATABASE_ERROR);
+        }
+        return realEstateTransactionData;
+    }
+
+    /**
+     * ==========================================================================================
      * @param keyword
      * @return regionNames
      * @throws BaseException
      */
     public List<String> getRegionNames(String keyword) throws BaseException {
-        List<String> result;
         try {
-            if(keyword == null) result = realEstateDao.getAllRegionNames();
-            else result = realEstateDao.getRegionNamesWithKeyword(keyword);
-        } catch (Exception e) {
+            if(keyword.equals(PARAM_DEFAULT)) return realEstateDao.getAllRegionNames();
+            else return realEstateDao.getRegionNamesWithKeyword(keyword);
+        }
+        catch (Exception e) {
             throw new BaseException(DATABASE_ERROR);
         }
-        return result;
     }
 
 }
