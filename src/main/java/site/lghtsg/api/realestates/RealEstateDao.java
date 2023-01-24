@@ -36,6 +36,7 @@ public class RealEstateDao {
      * @return
      */
     public List<RealEstateBox> getAllRealEstateBoxes() {
+
         String getRealEstateBoxesQuery =
                 "select re.realEstateIdx,\n" +
                         "       re.name,\n" +
@@ -48,8 +49,12 @@ public class RealEstateDao {
                         "     RealEstateTransaction as ret2,\n" +
                         "     IconImage as ii,\n" +
                         "     RegionName as rn\n" +
-                        "where ret.realEstateTransactionIdx = re.lastTransactionIdx\n" +
-                        "  and ret2.realEstateTransactionIdx = re.s2LastTransactionIdx\n" +
+
+                        "where ret.realEstateTransactionIdx = (select ret.realEstateTransactionIdx\n" +
+                        "                                      from RealEstateTransaction as ret\n" +
+                        "                                      where re.realEstateIdx = ret.realEstateIdx\n" +
+                        "                                      order by ret.realEstateTransactionIdx desc\n" +
+                        "                                      limit 1)\n" +
                         "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
                         "  and re.iconImageIdx = ii.iconImageIdx;";
 
@@ -84,20 +89,20 @@ public class RealEstateDao {
         String findAreaQuery = getFindAreaQuery(area);
         String getRealEstateBoxesInAreaQuery =
                 "select re.realEstateIdx,\n" +
-                        "       re.name,\n" +
-                        "       ret.price as lastPrice,\n" +
-                        "       ret2.price as s2LastPrice,\n" +
-                        "       ret.transactionTime,\n" +
-                        "       ii.iconImage\n" +
-                        "from RealEstate as re,\n" +
-                        "     RealEstateTransaction as ret,\n" +
-                        "     RealEstateTransaction as ret2,\n" +
-                        "     IconImage as ii,\n" +
-                        "     RegionName as rn\n" +
-                        "where ret.realEstateTransactionIdx = re.lastTransactionIdx\n" +
-                        "  and ret2.realEstateTransactionIdx = re.s2LastTransactionIdx\n" +
-                        "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
-                        "  and re.iconImageIdx = ii.iconImageIdx" +
+                "       re.name,\n" +
+                "       ret.price,\n" +
+                "       ii.iconImage\n" +
+                "from RealEstate as re,\n" +
+                "     RealEstateTransaction as ret,\n" +
+                "     IconImage as ii,\n" +
+                "     RegionName as rn\n" +
+                "where ret.realEstateTransactionIdx = (select ret.realEstateTransactionIdx\n" +
+                "                                      from RealEstateTransaction as ret\n" +
+                "                                      where re.realEstateIdx = ret.realEstateIdx\n" +
+                "                                      order by ret.realEstateTransactionIdx desc\n" +
+                "                                      limit 1)\n" +
+                "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
+                "  and re.iconImageIdx = ii.iconImageIdx\n" +
                 "  and re.legalTownCodeIdx in (" +
                 findAreaQuery + ")";
 
