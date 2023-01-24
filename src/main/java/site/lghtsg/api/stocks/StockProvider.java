@@ -61,14 +61,4 @@ public class StockProvider {
             throw new BaseException(DATABASE_ERROR);
         }
     }
-/*
-    public List<StockBox> stockBox(int userIdx) throws BaseException {
-        try {
-            List<StockBox> stockBox = stockDao.getStockBox(userIdx);
-        } catch (Exception exception) {
-            //System.out.println(exception);
-            throw new BaseException(DATABASE_ERROR);
-        }
-    }*/
-
 }

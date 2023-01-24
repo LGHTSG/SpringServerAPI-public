@@ -75,20 +75,17 @@ public class UserProvider {
     // 주식 자산 조회
     public List<GetMyAssetRes> myAsset(int userIdx) throws BaseException {
         try {
-            System.out.println(userIdx);
-            System.out.println("프로바이더 테스트1");
+            System.out.println("프로바이더 테스트1 시작");
             List<GetMyAssetRes> stockAsset = userDao.getStockAsset(userIdx);
-            System.out.println("프로바이더 테스트2");
-            System.out.println(stockAsset);
+            /*
+            System.out.println("프로바이더 테스트1 완료, 2 시작");
             List<GetMyAssetRes> resellAsset = userDao.getResellAsset(userIdx);
-            System.out.println("프로바이더 테스트3");
-            System.out.println(resellAsset);
+            System.out.println("프로바이더 테스트2 완료, 3 시작");
             List<GetMyAssetRes> realEstateAsset = userDao.getRealEstateAsset(userIdx);
-            System.out.println("프로바이더 테스트4");
-            System.out.println(realEstateAsset);
+            System.out.println("프로바이더 테스트3 완료");
 
             stockAsset.addAll(resellAsset);
-            stockAsset.addAll(realEstateAsset);
+            stockAsset.addAll(realEstateAsset);*/
 
             return stockAsset;
         } catch (Exception exception) {

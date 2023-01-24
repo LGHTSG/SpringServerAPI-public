@@ -11,6 +11,7 @@ import java.sql.Timestamp;
 @Getter
 @Setter
 @NoArgsConstructor
+@AllArgsConstructor
 public class GetMyAssetRes {
     private String assetName;
     private int price;

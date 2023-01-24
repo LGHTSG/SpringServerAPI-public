@@ -94,20 +94,17 @@ public class UserDao {
 
     // 주식 자산 조회
     public List<GetMyAssetRes> getStockAsset(int userIdx) {
-
-        System.out.println("주식 쿼리문 시작");
         String getStockAssetQuery =
                 "SELECT S.name AS assetName, ST.price, ST.price*100 AS rateOfChange," +
                         "ST.price-100 AS rateCalDateDiff, II.iconImage," +
-                        "SUT.saleCheck, SUT.updatedAt" +
-                        "FROM StockUserTransaction AS SUT" +
-                        "INNER JOIN StockTransaction AS ST ON ST.stockTransactionIdx = SUT.stockTransactionIdx" +
-                        "INNER JOIN Stock AS S ON S.stockIdx = ST.stockIdx" +
-                        "INNER JOIN IconImage AS II ON II.iconImageIdx = S.iconImageIdx" +
+                        "SUT.saleCheck, SUT.updatedAt " +
+                        "FROM StockUserTransaction AS SUT " +
+                        "INNER JOIN StockTransaction AS ST ON ST.stockTransactionIdx = SUT.stockTransactionIdx " +
+                        "INNER JOIN Stock AS S ON S.stockIdx = ST.stockIdx " +
+                        "INNER JOIN IconImage AS II ON II.iconImageIdx = S.iconImageIdx " +
                         "WHERE userIdx = ?";
         int getStockAssetParams = userIdx;
 
-        System.out.println("주식 쿼리문 완료 및 배치 시작");
         return this.jdbcTemplate.query(getStockAssetQuery,
                 (rs, rowNum) -> new GetMyAssetRes(
                         rs.getString("assetName"),
@@ -123,12 +120,13 @@ public class UserDao {
     // 리셀 자산 조회
     public List<GetMyAssetRes> getResellAsset(int userIdx) {
         String getResellAssetQuery =
-                "SELECT R.name AS assetName, RT.price, II.iconImage," +
-                        "RUT.saleCheck, RUT.updatedAt" +
-                        "FROM ResellUserTransaction AS RUT" +
-                        "INNER JOIN ResellTransaction AS RT ON RT.stockTransactionIdx = RUT.stockTransactionIdx" +
-                        "INNER JOIN Resell AS R ON R.stockIdx = RT.stockIdx" +
-                        "INNER JOIN IconImage AS II ON II.iconImageIdx = R.iconImageIdx" +
+                "SELECT R.name AS assetName, RT.price, RT.price*100 AS rateOfChange, " +
+                        "RT.price-100 AS rateCalDateDiff, II.iconImage, " +
+                        "RUT.saleCheck, RUT.updatedAt " +
+                        "FROM ResellUserTransaction AS RUT " +
+                        "INNER JOIN ResellTransaction AS RT ON RT.resellTransactionIdx = RUT.resellTransactionIdx " +
+                        "INNER JOIN Resell AS R ON R.resellIdx = RT.resellIdx " +
+                        "INNER JOIN IconImage AS II ON II.iconImageIdx = R.iconImageIdx " +
                         "WHERE userIdx = ?";
         int getResellBoxParams = userIdx;
 
@@ -147,12 +145,13 @@ public class UserDao {
     // 부동산 자산 조회
     public List<GetMyAssetRes> getRealEstateAsset(int userIdx) {
         String getRealEstateAssetQuery =
-                "SELECT RE.name AS assetName, RET.price, II.iconImage," +
-                        "REUT.saleCheck, REUT.updatedAt" +
-                        "FROM RealEstateUserTransaction AS REUT" +
-                        "INNER JOIN RealEstateTransaction AS RET ON RET.stockTransactionIdx = REUT.stockTransactionIdx" +
-                        "INNER JOIN RealEstate AS RE ON RE.stockIdx = RET.stockIdx" +
-                        "INNER JOIN IconImage AS II ON II.iconImageIdx = RE.iconImageIdx" +
+                "SELECT RE.name AS assetName, RET.price, RET.price*100 AS rateOfChange, " +
+                        "RET.price-100 AS rateCalDateDiff, II.iconImage," +
+                        "REUT.saleCheck, REUT.updatedAt " +
+                        "FROM RealEstateUserTransaction AS REUT " +
+                        "INNER JOIN RealEstateTransaction AS RET ON RET.realEstateTransactionIdx = REUT.realEstateTransactionIdx " +
+                        "INNER JOIN RealEstate AS RE ON RE.realEstateIdx = RET.realEstateIdx " +
+                        "INNER JOIN IconImage AS II ON II.iconImageIdx = RE.iconImageIdx " +
                         "WHERE userIdx = ?";
         int getRealEstateParams = userIdx;
 
