@@ -1,6 +1,7 @@
 package site.lghtsg.api.users;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import site.lghtsg.api.users.model.*;
@@ -93,6 +94,8 @@ public class UserDao {
 
     // 주식 자산 조회
     public List<GetMyAssetRes> getStockAsset(int userIdx) {
+
+        System.out.println("주식 쿼리문 시작");
         String getStockAssetQuery =
                 "SELECT S.name AS assetName, ST.price, ST.price*100 AS rateOfChange," +
                         "ST.price-100 AS rateCalDateDiff, II.iconImage," +
@@ -104,13 +107,16 @@ public class UserDao {
                         "WHERE userIdx = ?";
         int getStockAssetParams = userIdx;
 
+        System.out.println("주식 쿼리문 완료 및 배치 시작");
         return this.jdbcTemplate.query(getStockAssetQuery,
                 (rs, rowNum) -> new GetMyAssetRes(
                         rs.getString("assetName"),
                         rs.getInt("price"),
                         rs.getFloat("rateOfChange"),
                         rs.getString("rateCalDateDiff"),
-                        rs.getString("iconImage")),
+                        rs.getString("iconImage"),
+                        rs.getInt("saleCheck"),
+                        rs.getString("updatedAt")),
                 getStockAssetParams);
     }
 
@@ -132,7 +138,9 @@ public class UserDao {
                         rs.getInt("price"),
                         rs.getFloat("rateOfChange"),
                         rs.getString("rateCalDateDiff"),
-                        rs.getString("iconImage")),
+                        rs.getString("iconImage"),
+                        rs.getInt("saleCheck"),
+                        rs.getString("updatedAt")),
                 getResellBoxParams);
     }
 
@@ -154,7 +162,9 @@ public class UserDao {
                         rs.getInt("price"),
                         rs.getFloat("rateOfChange"),
                         rs.getString("rateCalDateDiff"),
-                        rs.getString("iconImage")),
+                        rs.getString("iconImage"),
+                        rs.getInt("saleCheck"),
+                        rs.getString("updatedAt")),
                 getRealEstateParams);
     }
 }
