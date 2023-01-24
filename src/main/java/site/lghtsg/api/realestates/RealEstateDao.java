@@ -39,17 +39,34 @@ public class RealEstateDao {
         String getRealEstateBoxesQuery =
                 "select re.realEstateIdx,\n" +
                         "       re.name,\n" +
-                        "       ret.price,\n" +
+                        "       ret.price as lastPrice,\n" +
+                        "       ret2.price as s2LastPrice,\n" +
+                        "       ret.transactionTime,\n" +
                         "       ii.iconImage\n" +
                         "from RealEstate as re,\n" +
                         "     RealEstateTransaction as ret,\n" +
+                        "     RealEstateTransaction as ret2,\n" +
                         "     IconImage as ii,\n" +
                         "     RegionName as rn\n" +
                         "where ret.realEstateTransactionIdx = re.lastTransactionIdx\n" +
+                        "  and ret2.realEstateTransactionIdx = re.s2LastTransactionIdx\n" +
                         "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
                         "  and re.iconImageIdx = ii.iconImageIdx;";
 
-        return this.jdbcTemplate.query(getRealEstateBoxesQuery, realEstateBoxRowMapper());
+        String getRealEstateBoxesQuery2 = "select re.realEstateIdx,\n" +
+                "       re.name,\n" +
+                "       ret.realEstateTransactionIdx,\n" +
+                "       ret.transactionTime\n" +
+                "from RealEstate as re,\n" +
+                "     RealEstateTransaction as ret,\n" +
+                "     IconImage as ii,\n" +
+                "     RegionName as rn\n" +
+                "where ret.realEstateTransactionIdx = re.lastTransactionIdx\n" +
+                "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
+                "  and re.iconImageIdx = ii.iconImageIdx";
+
+//        return this.jdbcTemplate.query(getRealEstateBoxesQuery, realEstateBoxRowMapper());
+        return this.jdbcTemplate.query(getRealEstateBoxesQuery2, realEstateBoxRowMapper());
     }
 
     /**
@@ -63,13 +80,17 @@ public class RealEstateDao {
         String getRealEstateBoxesInAreaQuery =
                 "select re.realEstateIdx,\n" +
                         "       re.name,\n" +
-                        "       ret.price,\n" +
+                        "       ret.price as lastPrice,\n" +
+                        "       ret2.price as s2LastPrice,\n" +
+                        "       ret.transactionTime,\n" +
                         "       ii.iconImage\n" +
                         "from RealEstate as re,\n" +
                         "     RealEstateTransaction as ret,\n" +
+                        "     RealEstateTransaction as ret2,\n" +
                         "     IconImage as ii,\n" +
                         "     RegionName as rn\n" +
                         "where ret.realEstateTransactionIdx = re.lastTransactionIdx\n" +
+                        "  and ret2.realEstateTransactionIdx = re.s2LastTransactionIdx\n" +
                         "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
                         "  and re.iconImageIdx = ii.iconImageIdx" +
                 "  and re.legalTownCodeIdx in (" +
@@ -366,6 +387,8 @@ public class RealEstateDao {
                 getRealEstateBox.setName(rs.getString("name"));
                 getRealEstateBox.setIconImage(rs.getString("iconImage"));
                 getRealEstateBox.setPrice(rs.getLong("price"));
+//                getRealEstateBox.setPrice(rs.getLong("lastPrice"));
+//                getRealEstateBox.setS2Price(rs.getLong("s2LastPrice"));
                 return getRealEstateBox;
             }
         };

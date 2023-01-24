@@ -43,6 +43,8 @@ public class RealEstateProvider {
         catch (Exception ignored) {
             throw new BaseException(DATABASE_ERROR);
         }
+        // 2. 증감율 계산
+        realEstateBoxes = calculateRateOfChange(realEstateBoxes);
 
         // 2. 정렬
         // sortRealEstateBoxes() - Throws BaseException
@@ -88,6 +90,19 @@ public class RealEstateProvider {
         catch(Exception e) {
             throw new BaseException(DATALIST_SORTING_ERROR);
         }
+    }
+
+    static List<RealEstateBox> calculateRateOfChange(List<RealEstateBox> realEstateBoxes) throws BaseException {
+        try {
+            for (int i = 0, lim = realEstateBoxes.size(); i < lim; i++) {
+                double rateOfChange = (realEstateBoxes.get(i).getPrice() - realEstateBoxes.get(i).getS2Price()) / realEstateBoxes.get(i).getS2Price() * 100;
+                realEstateBoxes.get(i).setRateOfChange(rateOfChange);
+            }
+        }
+        catch(Exception e){
+            throw new BaseException(DATALIST_CAL_RATE_ERROR);
+        }
+        return realEstateBoxes;
     }
 
 
