@@ -168,16 +168,16 @@ public class UserDao {
     }
 
     // 자산 구매
-    public int postMyAsset(int userIdx, int topic, PostMyAssetReq postMyAssetReq) {
+    public int postMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
         String postMyAssetQuery = "";
-        switch(topic) {
-            case 1: // stock
+        switch(postMyAssetReq.getCategory()) {
+            case "stocks": // stock
                 postMyAssetQuery = "insert into StockUserTransaction(userIdx, stockTransactionIdx) values (?,?)";
                 break;
-            case 2: // resell
+            case "resells": // resell
                 postMyAssetQuery = "insert into ResellUserTransaction(userIdx, resellTransactionIdx) values (?,?)";
                 break;
-            case 3: // realestate
+            case "realestates": // realestate
                 postMyAssetQuery = "insert into RealEstateUserTransaction(userIdx, realEstateTransactionIdx) values (?,?)";
                 break;
             default:
