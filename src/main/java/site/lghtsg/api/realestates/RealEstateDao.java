@@ -55,18 +55,23 @@ public class RealEstateDao {
 
         String getRealEstateBoxesQuery2 = "select re.realEstateIdx,\n" +
                 "       re.name,\n" +
-                "       ret.realEstateTransactionIdx,\n" +
-                "       ret.transactionTime\n" +
+                "       ret.price,\n" +
+                "       ii.iconImage\n" +
                 "from RealEstate as re,\n" +
                 "     RealEstateTransaction as ret,\n" +
                 "     IconImage as ii,\n" +
                 "     RegionName as rn\n" +
-                "where ret.realEstateTransactionIdx = re.lastTransactionIdx\n" +
+                "where ret.realEstateTransactionIdx = (select ret.realEstateTransactionIdx\n" +
+                "                                      from RealEstateTransaction as ret\n" +
+                "                                      where re.realEstateIdx = ret.realEstateIdx\n" +
+                "                                      order by ret.realEstateTransactionIdx desc\n" +
+                "                                      limit 1)\n" +
                 "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
-                "  and re.iconImageIdx = ii.iconImageIdx";
+                "  and re.iconImageIdx = ii.iconImageIdx;";
 
-//        return this.jdbcTemplate.query(getRealEstateBoxesQuery, realEstateBoxRowMapper());
-        return this.jdbcTemplate.query(getRealEstateBoxesQuery2, realEstateBoxRowMapper());
+
+        return this.jdbcTemplate.query(getRealEstateBoxesQuery, realEstateBoxRowMapper());
+//        return this.jdbcTemplate.query(getRealEstateBoxesQuery2, realEstateBoxRowMapper());
     }
 
     /**
@@ -386,9 +391,9 @@ public class RealEstateDao {
                 getRealEstateBox.setIdx(rs.getLong("realEstateIdx"));
                 getRealEstateBox.setName(rs.getString("name"));
                 getRealEstateBox.setIconImage(rs.getString("iconImage"));
-                getRealEstateBox.setPrice(rs.getLong("price"));
-//                getRealEstateBox.setPrice(rs.getLong("lastPrice"));
-//                getRealEstateBox.setS2Price(rs.getLong("s2LastPrice"));
+//                getRealEstateBox.setPrice(rs.getLong("price"));
+                getRealEstateBox.setPrice(rs.getLong("lastPrice"));
+                getRealEstateBox.setS2Price(rs.getLong("s2LastPrice"));
                 return getRealEstateBox;
             }
         };

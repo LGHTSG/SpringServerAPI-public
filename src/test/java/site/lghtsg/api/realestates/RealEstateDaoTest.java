@@ -38,7 +38,7 @@ public class RealEstateDaoTest {
 
     @Test
     void 모든_부동산_조회(){
-        final int test = 100;
+        final int test = 10;
 
         String sort = SORT_PRICE_PARAM;
         String order = ASCENDING_PARAM;
@@ -47,8 +47,8 @@ public class RealEstateDaoTest {
         long startTime = 0,endTime = 0;
         for(int i = 0; i < test; i++){
             long start = System.currentTimeMillis();
-            try {
-                List<RealEstateBox> realEstateBoxes = realEstateProvider.getRealEstateBoxes(sort, order, area);
+//            try {
+                List<RealEstateBox> realEstateBoxes = realEstateDao.getAllRealEstateBoxes();
 
                 long end = System.currentTimeMillis();
 
@@ -57,10 +57,10 @@ public class RealEstateDaoTest {
                 System.out.println("Total Duration : " + (double)(end - start) / 1000 + "s");
                 System.out.println();
                 startTime += start; endTime+= end;
-            }
-            catch(BaseException e){
-                System.out.println(e.getStatus());
-            }
+//            }
+//            catch(BaseException e){
+//                System.out.println(e.getStatus());
+//            }
 
         }
         startTime /= test; endTime /= test;
