@@ -31,8 +31,7 @@ public class StockController {
             }
             List<StockBox> stockBox = stockProvider.getStockBoxes(sort, order);
             return new BaseResponse<>(stockBox);
-        } catch (
-    BaseException exception) {
+        } catch (BaseException exception) {
             return new BaseResponse<>((exception.getStatus()));
         }
     }
