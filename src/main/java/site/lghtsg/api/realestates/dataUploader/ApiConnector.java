@@ -1,15 +1,12 @@
 package site.lghtsg.api.realestates.dataUploader;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.config.Secret.Secret;
 import site.lghtsg.api.realestates.dataUploader.model.RealEstate;
 import site.lghtsg.api.realestates.dataUploader.model.RealEstateTransaction;
