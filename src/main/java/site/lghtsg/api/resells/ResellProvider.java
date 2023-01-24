@@ -11,7 +11,6 @@ import site.lghtsg.api.resells.model.GetResellInfoRes;
 import site.lghtsg.api.resells.model.GetResellTransactionRes;
 import site.lghtsg.api.resells.model.GetResellBoxRes;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,9 +30,10 @@ public class ResellProvider {
     public List<GetResellBoxRes> getResellBoxes(String sort, String order) throws BaseException {
         try {
             List<GetResellBoxRes> getResellBoxesRes = resellDao.getResellBoxes();
+
             getResellBoxesRes = calculateResellBoxesPriceAndRateOFChange(getResellBoxesRes);
             getResellBoxesRes = sortResellBoxesRes(getResellBoxesRes, sort, order);
-            if(getResellBoxesRes == null){
+            if (getResellBoxesRes == null) {
                 throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
             }
             return getResellBoxesRes;
@@ -45,10 +45,10 @@ public class ResellProvider {
 
     public List<GetResellBoxRes> calculateResellBoxesPriceAndRateOFChange(List<GetResellBoxRes> getResellBoxesRes) {
         for (GetResellBoxRes getResellBoxRes : getResellBoxesRes) {
-            List<Object> result = calculateChangeOfRate(getResellBoxRes.getIdx());
-            Double rateOfChange = Double.parseDouble(String.valueOf(result.get(1)));
-            Long price = Long.parseLong(String.valueOf(result.get(0)));
-            getResellBoxRes.setPrice(price);
+            Long lastPrice = getResellBoxRes.getPrice();
+            Long s2LastPrice = getResellBoxRes.getLastPrice();
+            Double rateOfChange = (double) (lastPrice - s2LastPrice) / s2LastPrice * 100;
+            rateOfChange = Math.round(rateOfChange * 10) / 10.0;
             getResellBoxRes.setRateOfChange(rateOfChange);
         }
         return getResellBoxesRes;
@@ -81,6 +81,7 @@ public class ResellProvider {
     public GetResellInfoRes getResellInfo(long resellIdx) throws BaseException {
         try {
             GetResellInfoRes getResellInfoRes = resellDao.getResellInfo(resellIdx);
+            getResellInfoRes = calculateResellInfoResPriceAndRateOFChange(getResellInfoRes);
             if (getResellInfoRes == null) {
                 throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
             }
@@ -91,10 +92,21 @@ public class ResellProvider {
         }
     }
 
+    public GetResellInfoRes calculateResellInfoResPriceAndRateOFChange(GetResellInfoRes getResellInfoRes) {
+
+        Long lastPrice = getResellInfoRes.getPrice();
+        Long s2LastPrice = getResellInfoRes.getLastPrice();
+        Double rateOfChange = (double) (lastPrice - s2LastPrice) / s2LastPrice * 100;
+        rateOfChange = Math.round(rateOfChange * 10) / 10.0;
+        getResellInfoRes.setRateOfChange(rateOfChange);
+
+        return getResellInfoRes;
+    }
+
     public GetResellBoxRes getResellBox(long resellIdx) throws BaseException {
         try {
             GetResellBoxRes getResellBoxRes = resellDao.getResellBox(resellIdx);
-            if(getResellBoxRes == null){
+            if (getResellBoxRes == null) {
                 throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
             }
             return getResellBoxRes;
@@ -107,24 +119,12 @@ public class ResellProvider {
     public List<GetResellTransactionRes> getResellTransaction(long resellIdx) throws BaseException {
         try {
             List<GetResellTransactionRes> getResellTransactionRes = resellDao.getResellTransaction(resellIdx);
-            if(getResellTransactionRes == null){
+            if (getResellTransactionRes == null) {
                 throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
             }
             return getResellTransactionRes;
         } catch (Exception e) {
             throw new BaseException(DATABASE_ERROR);
         }
-    }
-
-    public List<Object> calculateChangeOfRate(long resellIdx) {
-        List<Integer> resellTransactionHistory = resellDao.getResellTransactionForPriceAndRateOfChange(resellIdx);
-        List<Object> result = new ArrayList<>();
-        int currentPrice = resellTransactionHistory.get(0);
-        int latestPrice = resellTransactionHistory.get(1);
-        double changeOfRate = (double) (currentPrice - latestPrice) / latestPrice * 100;
-        changeOfRate = Math.round(changeOfRate);
-        result.add(currentPrice);
-        result.add(changeOfRate);
-        return result;
     }
 }
