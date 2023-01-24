@@ -172,6 +172,28 @@ public class UserController {
             return new BaseResponse<>(exception.getStatus());
         }
     }
+
+    /**
+     * 자산 구매 API
+     * [POST] /users/my-asset/purchase
+     */
+    @ResponseBody
+    @PostMapping("/my-asset/purchase")
+    public BaseResponse<String> postMyAsset(@RequestBody PostMyAssetReq postMyAssetReq) {
+        try {
+            int userIdx = jwtService.getUserIdx();
+            userService.postMyAsset(userIdx, postMyAssetReq);
+            String result = "구매 완료";
+            return new BaseResponse<>(result);
+        } catch (BaseException exception) {
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+    /**
+     * 자산 판매 API
+     * [PATCH] /users/my-asset/sale
+     */
 }
 
 

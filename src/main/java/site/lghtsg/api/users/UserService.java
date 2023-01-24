@@ -117,4 +117,32 @@ public class UserService {
         }
     }
 
+    // 자산 구매
+    public void postMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+        int topic = 0;
+        try {
+            // 카테고리와 비교하여 userDao switch를 위한 topic 값 변경
+            switch(postMyAssetReq.getCategory()) {
+                case "stocks" :
+                    topic = 1;
+                    break;
+                case "resells" :
+                    topic = 2;
+                    break;
+                case "realestates" :
+                    topic = 3;
+                    break;
+                default :
+                    System.out.println("종목 변경 실패");
+                    break;
+            }
+            int result = userDao.postMyAsset(userIdx, topic, postMyAssetReq);
+            if(result == 0) {
+                throw new BaseException(DELETE_FAIL_USER);
+            }
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
 }

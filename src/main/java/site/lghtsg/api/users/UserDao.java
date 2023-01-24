@@ -102,7 +102,7 @@ public class UserDao {
                         "INNER JOIN StockTransaction AS ST ON ST.stockTransactionIdx = SUT.stockTransactionIdx " +
                         "INNER JOIN Stock AS S ON S.stockIdx = ST.stockIdx " +
                         "INNER JOIN IconImage AS II ON II.iconImageIdx = S.iconImageIdx " +
-                        "WHERE userIdx = ?";
+                        "WHERE SUT.userIdx = ?";
         int getStockAssetParams = userIdx;
 
         return this.jdbcTemplate.query(getStockAssetQuery,
@@ -127,7 +127,7 @@ public class UserDao {
                         "INNER JOIN ResellTransaction AS RT ON RT.resellTransactionIdx = RUT.resellTransactionIdx " +
                         "INNER JOIN Resell AS R ON R.resellIdx = RT.resellIdx " +
                         "INNER JOIN IconImage AS II ON II.iconImageIdx = R.iconImageIdx " +
-                        "WHERE userIdx = ?";
+                        "WHERE RUT.userIdx = ?";
         int getResellBoxParams = userIdx;
 
         return this.jdbcTemplate.query(getResellAssetQuery,
@@ -152,7 +152,7 @@ public class UserDao {
                         "INNER JOIN RealEstateTransaction AS RET ON RET.realEstateTransactionIdx = REUT.realEstateTransactionIdx " +
                         "INNER JOIN RealEstate AS RE ON RE.realEstateIdx = RET.realEstateIdx " +
                         "INNER JOIN IconImage AS II ON II.iconImageIdx = RE.iconImageIdx " +
-                        "WHERE userIdx = ?";
+                        "WHERE REUT.userIdx = ?";
         int getRealEstateParams = userIdx;
 
         return this.jdbcTemplate.query(getRealEstateAssetQuery,
@@ -166,4 +166,26 @@ public class UserDao {
                         rs.getString("updatedAt")),
                 getRealEstateParams);
     }
+
+    // 자산 구매
+    public int postMyAsset(int userIdx, int topic, PostMyAssetReq postMyAssetReq) {
+        String postMyAssetQuery = "";
+        switch(topic) {
+            case 1: // stock
+                postMyAssetQuery = "insert into StockUserTransaction(userIdx, stockTransactionIdx) values (?,?)";
+                break;
+            case 2: // resell
+                postMyAssetQuery = "insert into ResellUserTransaction(userIdx, resellTransactionIdx) values (?,?)";
+                break;
+            case 3: // realestate
+                postMyAssetQuery = "insert into RealEstateUserTransaction(userIdx, realEstateTransactionIdx) values (?,?)";
+                break;
+            default:
+                break;
+        }
+        Object[] postMyAssetParams =
+                new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
+        return this.jdbcTemplate.update(postMyAssetQuery, postMyAssetParams);
+    }
+
 }
