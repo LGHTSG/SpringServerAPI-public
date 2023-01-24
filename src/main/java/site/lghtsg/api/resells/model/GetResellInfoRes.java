@@ -9,6 +9,7 @@ public class GetResellInfoRes {
     private Long resellIdx;
     private String name;
     private Long price;
+    private Long lastPrice;
     private String releasedPrice;
     private String releasedDate;
     private String color;

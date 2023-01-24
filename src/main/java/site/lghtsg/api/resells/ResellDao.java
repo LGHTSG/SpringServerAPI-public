@@ -34,13 +34,41 @@ public class ResellDao {
     }
 
     public List<GetResellBoxRes> getResellBoxes() {
-        String getResellBoxesQuery = "select R.resellIdx, R.name, I.iconImage from Resell as R left join IconImage I on I.iconImageIdx = R.iconImageIdx";
+        String getResellBoxesQuery = "select rs.resellIdx, rs.name, rst.price, rst2.price, ii.iconImage\n" +
+                "from Resell as rs,\n" +
+                "     ResellTransaction as rst,\n" +
+                "     ResellTransaction as rst2,\n" +
+                "     IconImage as ii\n" +
+                "where rst.resellTransactionIdx = rs.lastTransactionIdx\n" +
+                "  and rst2.resellTransactionIdx = rs.s2LastTransactionIdx\n" +
+                "  and rs.iconImageIdx = ii.iconImageIdx";
 
-        return this.jdbcTemplate.query(getResellBoxesQuery, resellBoxResRowMapper());
+
+        return this.jdbcTemplate.query(getResellBoxesQuery,resellBoxResRowMapper());
     }
 
     public GetResellInfoRes getResellInfo(long resellIdx) {
-        String getResellQuery = "select R.resellIdx, R.name, R.releasedPrice, R.releasedDate, R.color, R.brand, R.productNum, R.image1, R.image2, R.image3, I.iconImage from Resell as R left join IconImage I on I.iconImageIdx= R.iconImageIdx where  R.resellIdx = ?";
+        String getResellQuery = "select rs.resellIdx,\n" +
+                "       rs.name,\n" +
+                "       rs.releasedPrice,\n" +
+                "       rs.releasedDate,\n" +
+                "       rs.color,\n" +
+                "       rs.brand,\n" +
+                "       rs.productNum,\n" +
+                "       rs.image1,\n" +
+                "       rs.image2,\n" +
+                "       rs.image3,\n" +
+                "       ii.iconImage,\n" +
+                "       rst.price,\n" +
+                "       rst2.price\n" +
+                "from Resell as rs,\n" +
+                "     ResellTransaction as rst,\n" +
+                "     ResellTransaction as rst2,\n" +
+                "     IconImage as ii\n" +
+                "where rst.resellTransactionIdx = rs.lastTransactionIdx\n" +
+                "  and rst2.resellTransactionIdx = rs.s2LastTransactionIdx\n" +
+                "  and rs.iconImageIdx = ii.iconImageIdx\n" +
+                "  and rs.resellIdx = ?";
         long getResellParams = resellIdx;
 
         return this.jdbcTemplate.queryForObject(getResellQuery, resellInfoResRowMapper(), getResellParams);
@@ -74,6 +102,8 @@ public class ResellDao {
                 getResellBoxRes.setName(rs.getString("name"));
                 getResellBoxRes.setRateCalDateDiff("최근 거래가 기준");
                 getResellBoxRes.setIconImage(rs.getString("iconImage"));
+                getResellBoxRes.setPrice(rs.getLong("rst.price"));
+                getResellBoxRes.setLastPrice(rs.getLong("rst2.price"));
                 return getResellBoxRes;
             }
         };
@@ -96,6 +126,8 @@ public class ResellDao {
                 getResellInfoRes.setImage2(rs.getString("image2"));
                 getResellInfoRes.setImage3(rs.getString("image3"));
                 getResellInfoRes.setIconImage(rs.getString("iconImage"));
+                getResellInfoRes.setPrice(rs.getLong("rst.price"));
+                getResellInfoRes.setLastPrice(rs.getLong("rst2.price"));
                 return getResellInfoRes;
             }
         };
@@ -200,7 +232,7 @@ public class ResellDao {
                         this.jdbcTemplate.update(createResellTransactionQuery, createResellTransactionParams);
                     }
 
-                    System.out.println("------------------------");
+                    System.out.println("————————————");
                 }
                 urlList.remove(0);
             }
