@@ -8,10 +8,9 @@ import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 import site.lghtsg.api.config.BaseResponse;
-import site.lghtsg.api.realestates.RealEstateDao;
-import site.lghtsg.api.realestates.model.upload.RealEstate;
-import site.lghtsg.api.realestates.model.upload.RealEstateTransaction;
-import site.lghtsg.api.realestates.model.upload.RegionName;
+import site.lghtsg.api.realestates.dataUploader.model.RealEstate;
+import site.lghtsg.api.realestates.dataUploader.model.RealEstateTransaction;
+import site.lghtsg.api.realestates.dataUploader.model.RegionName;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -24,18 +23,17 @@ import java.util.*;
 public class ExcelFileReader {
 
     private String dataFolderName = "C:\\Users\\2High\\Desktop\\아파트 실거래가";
-    private final RealEstateDao realEstateDao;
+    private final RealEstateUploadDao realEstateUploadDao;
 
 
 
     public BaseResponse<String> readData() {
         try {
-
             // Files 읽어오기
             File folder = new File(dataFolderName);
             File[] files = folder.listFiles();
 
-            List<RegionName> regionNames = realEstateDao.getRegionsForExcel();
+            List<RegionName> regionNames = realEstateUploadDao.getRegionsForExcel();
 
             for (File file : files) {
                 if (!(file.isFile() && file.canRead())) {
@@ -78,7 +76,9 @@ public class ExcelFileReader {
                 }
 
                 createObject(rowDatas, regionNames); // 파일 단위로 업로드
+                workbook.close();
             }
+
             return new BaseResponse<>("부동산 데이터 업로드 완료");
         } catch (IOException e) {
             e.printStackTrace();
@@ -90,24 +90,25 @@ public class ExcelFileReader {
 
         Set<RealEstate> realEstates = new HashSet<>();
 
+        Set<RealEstateTransaction> transactions = new HashSet<>();
 
-        List<RealEstateTransaction> transactions = new ArrayList<>();
 
         // realEstate 먼저 업로드
-        for (String[] rowData : rowDatas) {
+        for (int i = 0; i < rowDatas.size(); i++) {
             // 가공 - 지역명 -> 지역 ID(=regionCode)
-            String[] regionSource = rowData[0].split(" ");
+            String[] regionSource = rowDatas.get(i)[0].split(" ");
             String last = regionSource[regionSource.length-1];
 
             if (last.endsWith("리") || last.endsWith(")")) {
-                rowData[0] = String.join(" ", Arrays.copyOfRange(regionSource, 0, regionSource.length-1));
+                rowDatas.get(i)[0] = String.join(" ", Arrays.copyOfRange(regionSource, 0, regionSource.length-1));
             }
 
             int regionId = -1;
 
             for (RegionName regionName : regionNames) {
-                if (regionName.getName().equals(rowData[0])) {
+                if (regionName.getName().equals(rowDatas.get(i)[0])) {
                     regionId = regionName.getLegalCodeId();
+                    rowDatas.get(i)[0] = String.valueOf(regionId); // transaction 객체 생성에 재활용
                 }
             }
 
@@ -115,20 +116,20 @@ public class ExcelFileReader {
 
 
 
-            if (regionId == -1) System.out.println(rowData[0]);
+            if (regionId == -1) System.out.println(rowDatas.get(i)[0]);
             else {
                 realEstates.add(RealEstate.builder()
-                        .name(rowData[1])
+                        .name(rowDatas.get(i)[1])
                         .regionId(regionId)
                         .build());
             }
 
         }
 
-        realEstateDao.uploadRealEstates(realEstates);
+        realEstateUploadDao.uploadRealEstates(realEstates);
 
         // id 생성된 부동산 리스트
-        List<RealEstate> realEstatesInDB = realEstateDao.getRealEstates();
+        List<RealEstate> realEstatesInDB = realEstateUploadDao.getRealEstates();
 
         // transaction 업로드
         for (String[] rowData : rowDatas) {
@@ -150,7 +151,8 @@ public class ExcelFileReader {
 
             for (RealEstate realEstate : realEstatesInDB) {
 
-                if (realEstate.getName().equals(rowData[1])) {
+                // 건물명이 같고, 지역도 같으면
+                if (realEstate.getName().equals(rowData[1]) && realEstate.getRegionId() == Integer.parseInt(rowData[0])) {
                     realEstateId = realEstate.getId();
                     break;
                 }
@@ -166,6 +168,6 @@ public class ExcelFileReader {
 
         }
 
-        realEstateDao.uploadTransactions(transactions);
+        realEstateUploadDao.uploadTransactions(transactions);
     }
 }
