@@ -8,11 +8,11 @@ import site.lghtsg.api.config.BaseException;
 import static site.lghtsg.api.config.BaseResponseStatus.*;
 
 import site.lghtsg.api.config.Secret.Secret;
-import site.lghtsg.api.stocks.model.StockBox;
 import site.lghtsg.api.utils.AES128;
 import site.lghtsg.api.utils.JwtService;
 import site.lghtsg.api.users.model.*;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -75,22 +75,29 @@ public class UserProvider {
     // 주식 자산 조회
     public List<GetMyAssetRes> myAsset(int userIdx) throws BaseException {
         try {
-            System.out.println("프로바이더 테스트1 시작");
             List<GetMyAssetRes> stockAsset = userDao.getStockAsset(userIdx);
-            /*
-            System.out.println("프로바이더 테스트1 완료, 2 시작");
             List<GetMyAssetRes> resellAsset = userDao.getResellAsset(userIdx);
-            System.out.println("프로바이더 테스트2 완료, 3 시작");
             List<GetMyAssetRes> realEstateAsset = userDao.getRealEstateAsset(userIdx);
-            System.out.println("프로바이더 테스트3 완료");
-
+            // list 병합 -> stockAsset으로 합침
             stockAsset.addAll(resellAsset);
-            stockAsset.addAll(realEstateAsset);*/
+            stockAsset.addAll(realEstateAsset);
+            // updatedAt 기준으로 정렬
+            Collections.sort(stockAsset, new ListComparator());
 
             return stockAsset;
         } catch (Exception exception) {
             //System.out.println(exception);
             throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    // 정렬을 위한 class
+    public class ListComparator implements Comparator {
+        @Override
+        public int compare(Object o1, Object o2) {
+            String testString1 = ((GetMyAssetRes)o1).getUpdatedAt();
+            String testString2 = ((GetMyAssetRes)o2).getUpdatedAt();
+            return testString1.compareTo(testString2);
         }
     }
 }

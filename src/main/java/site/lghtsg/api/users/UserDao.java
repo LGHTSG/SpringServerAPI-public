@@ -102,7 +102,7 @@ public class UserDao {
                         "INNER JOIN StockTransaction AS ST ON ST.stockTransactionIdx = SUT.stockTransactionIdx " +
                         "INNER JOIN Stock AS S ON S.stockIdx = ST.stockIdx " +
                         "INNER JOIN IconImage AS II ON II.iconImageIdx = S.iconImageIdx " +
-                        "WHERE SUT.userIdx = ?";
+                        "WHERE userIdx = ?";
         int getStockAssetParams = userIdx;
 
         return this.jdbcTemplate.query(getStockAssetQuery,
@@ -127,7 +127,7 @@ public class UserDao {
                         "INNER JOIN ResellTransaction AS RT ON RT.resellTransactionIdx = RUT.resellTransactionIdx " +
                         "INNER JOIN Resell AS R ON R.resellIdx = RT.resellIdx " +
                         "INNER JOIN IconImage AS II ON II.iconImageIdx = R.iconImageIdx " +
-                        "WHERE RUT.userIdx = ?";
+                        "WHERE userIdx = ?";
         int getResellBoxParams = userIdx;
 
         return this.jdbcTemplate.query(getResellAssetQuery,
@@ -152,7 +152,7 @@ public class UserDao {
                         "INNER JOIN RealEstateTransaction AS RET ON RET.realEstateTransactionIdx = REUT.realEstateTransactionIdx " +
                         "INNER JOIN RealEstate AS RE ON RE.realEstateIdx = RET.realEstateIdx " +
                         "INNER JOIN IconImage AS II ON II.iconImageIdx = RE.iconImageIdx " +
-                        "WHERE REUT.userIdx = ?";
+                        "WHERE userIdx = ?";
         int getRealEstateParams = userIdx;
 
         return this.jdbcTemplate.query(getRealEstateAssetQuery,
