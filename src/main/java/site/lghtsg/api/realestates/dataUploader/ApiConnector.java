@@ -1,6 +1,9 @@
 package site.lghtsg.api.realestates.dataUploader;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -18,18 +21,23 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-@RequiredArgsConstructor
-@Service
+@Component
 public class ApiConnector {
 
     private final RealEstateUploadDao realEstateUploadDao;
     private String authKey = Secret.REALESTATE_PUBLIC_API_AUTHKEY; // api 호출 시 필요한 인증 키
+
+    public ApiConnector(RealEstateUploadDao realEstateUploadDao) {
+        this.realEstateUploadDao = realEstateUploadDao;
+    }
+
 
 
     /**
@@ -62,17 +70,25 @@ public class ApiConnector {
     }
 
     /**
-     * api 호출, 데이터 line단위로 받아서 readData에 전달
-     * @return
+     * api 호출, 데이터 line단위로 받아서 readData에 전달 <br>
+     * 매일 오전 3시에 실행
      */
-    public BaseResponse<String> getData() {
+    @Async
+    @Scheduled(cron = "0 0 3 * * ?")
+    public void getData() {
         try {
+            // 실행 시간 출력
+            String now = LocalDateTime.now().format(DateTimeFormatter.ofPattern("HH:mm:ss"));
+            System.out.println("부동산 - 업데이트 실행 시간 : " + now);
+
             List<String> responses = new ArrayList<>();
 
             List<String> urlLinks = makeUrls();
 
-            int requestCnt = 0;
+            int requestCnt = 0; // 완료된 요청/응답 개수
+
             for (String urlLink : urlLinks) {
+
                 URL url = new URL(urlLink);
                 // connection 세팅
                 HttpURLConnection connection = (HttpURLConnection) url.openConnection();
@@ -102,14 +118,17 @@ public class ApiConnector {
                 responses.add(sb.toString());
             }
 
-            return new BaseResponse<>(readData(responses) + " / 보낸 요청 수 : " + requestCnt + "회");
+            updateLastTransactions();
+
+            String result = readData(responses) + " / 보낸 요청 수 : " + requestCnt + "회";
+            System.out.println("[" + Thread.currentThread().getName() + "] : " + result);
 
         } catch (UnsupportedEncodingException encodingException) {
             encodingException.printStackTrace();
-            return new BaseResponse<>("url 인코딩 실패");
+            System.out.println("[" + Thread.currentThread().getName() + "] : url 인코딩 실패");
         } catch (Exception e) {
             e.printStackTrace();
-            return new BaseResponse<>("데이터 가져오기 실패");
+            System.out.println("[" + Thread.currentThread().getName() + "] : 데이터 가져오기 실패");
         }
     }
 
@@ -163,7 +182,7 @@ public class ApiConnector {
             }
             String result;
 
-            if (rowDatas.size() > 0) result = createObject(rowDatas) + "row 업데이트";
+            if (rowDatas.size() > 0) result = createObject(rowDatas) + " row 업데이트";
             else result = "업로드할 데이터 없음";
 
             return result;

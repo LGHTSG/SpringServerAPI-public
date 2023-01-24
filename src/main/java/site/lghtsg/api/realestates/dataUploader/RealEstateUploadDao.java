@@ -71,7 +71,7 @@ public class RealEstateUploadDao {
     public Set<Integer> getUpdatedRealEstateIdxs() {
         String query =
                 "select re.realEstateIdx from RealEstate re INNER JOIN RealEstateTransaction ret on re.realEstateIdx = ret.realEstateIdx\n" +
-                "where DATEDIFF(ret.createdAt, now()) = -1 group by re.realEstateIdx limit 1000000";
+                "where DATEDIFF(ret.createdAt, now()) in (-1, 0) group by re.realEstateIdx limit 1000000";
 
 
         return new HashSet<>(this.jdbcTemplate.query(query, (rs, rowNum) -> rs.getInt("realEstateIdx")));
