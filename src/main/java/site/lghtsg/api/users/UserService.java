@@ -129,4 +129,6 @@ public class UserService {
         }
     }
 
+    // 자산 판매
+
 }

@@ -188,4 +188,31 @@ public class UserDao {
         return this.jdbcTemplate.update(postMyAssetQuery, postMyAssetParams);
     }
 
+    // 자산 판매
+    public int saleMyAsset(PostMyAssetReq postMyAssetReq) {
+        String saleMyAssetQuery = "";
+        // 판매
+        switch(postMyAssetReq.getCategory()) {
+            case "stocks":
+                saleMyAssetQuery = "UPDATE StockUserTransaction SET saleCheck = 1, updatedAt = DEFAULT" +
+                        "WHERE stockUserTransactionIdx = ?";
+                break;
+            case "resells":
+                saleMyAssetQuery = "UPDATE ResellUserTransaction SET saleCheck = 1, updatedAt = DEFAULT" +
+                        "WHERE resellUserTransactionIdx = ?";
+                break;
+            case "realestates":
+                saleMyAssetQuery = "UPDATE RealEstateUserTransaction SET saleCheck = 1, updatedAt = DEFAULT" +
+                        "WHERE realEstateUserTransactionIdx = ?";
+                break;
+            default:
+                break;
+        }
+        Object[] saleMyAssetParams = new Object[]{postMyAssetReq.getTransactionIdx()};
+        return this.jdbcTemplate.update(saleMyAssetQuery, saleMyAssetParams);
+    }
+
+    // 단일 자산 조회
+
+
 }
