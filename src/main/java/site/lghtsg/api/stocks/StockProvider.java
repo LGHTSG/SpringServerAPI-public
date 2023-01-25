@@ -12,7 +12,6 @@ import java.util.List;
 
 import static site.lghtsg.api.config.BaseResponseStatus.*;
 import static site.lghtsg.api.config.Constant.*;
-import static site.lghtsg.api.config.Constant.DESCENDING_PARAM;
 
 
 @Service
@@ -56,12 +55,15 @@ public class StockProvider {
                 stockBoxes.sort(new CompareByMarketCap()); // 시가총액 기준
             } else if (sort.equals(SORT_TRADING_VOL_PARAM)){
                 stockBoxes.sort(new CompareByTradingVolume()); // 거래량 기준
+            } else if (sort.equals(PARAM_DEFAULT)) { // idx 기준
+                stockBoxes.sort(new CompareByIdx());
             } else if(!sort.equals(PARAM_DEFAULT)){     // 기준이 없는(잘못 입력) 경우
                 throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
             }
 
             // 2. 차순
-            if (order.equals(ASCENDING_PARAM)) {        // 오름차순
+            System.out.println(order);
+            if (order.equals(ASCENDING_PARAM)) {        // 내림차순
                 Collections.reverse(stockBoxes);
             } else if (!order.equals(PARAM_DEFAULT) && !order.equals(DESCENDING_PARAM)){    // 기준이 없는(잘못 입력) 경우
                 throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
@@ -70,6 +72,7 @@ public class StockProvider {
             return stockBoxes;
         }
         catch(Exception e) {
+            System.out.println(e);
             throw new BaseException(DATALIST_SORTING_ERROR);
         }
     }
