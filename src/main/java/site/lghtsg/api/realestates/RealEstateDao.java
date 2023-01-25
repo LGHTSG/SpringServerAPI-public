@@ -41,18 +41,20 @@ public class RealEstateDao {
                 "select re.realEstateIdx,\n" +
                         "       re.name,\n" +
                         "       ret.price,\n" +
+                        "       ret2.price as s2LastPrice,\n" +
+                        "       ret.transactionTime,\n" +
+                        "       ret2.transactionTime as s2TransactionTime,\n" +
                         "       ii.iconImage\n" +
                         "from RealEstate as re,\n" +
                         "     RealEstateTransaction as ret,\n" +
+                        "     RealEstateTransaction as ret2,\n" +
                         "     IconImage as ii,\n" +
                         "     RegionName as rn\n" +
-                        "where ret.realEstateTransactionIdx = (select ret.realEstateTransactionIdx\n" +
-                        "                                      from RealEstateTransaction as ret\n" +
-                        "                                      where re.realEstateIdx = ret.realEstateIdx\n" +
-                        "                                      order by ret.realEstateTransactionIdx desc\n" +
-                        "                                      limit 1)\n" +
+                        "where ret.realEstateTransactionIdx = re.lastTransactionIdx\n" +
+                        "  and ret2.realEstateTransactionIdx = re.s2LastTransactionIdx\n" +
                         "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
-                        "  and re.iconImageIdx = ii.iconImageIdx;";
+                        "  and re.iconImageIdx = ii.iconImageIdx";
+
 
         return this.jdbcTemplate.query(getRealEstateBoxesQuery, realEstateBoxRowMapper());
     }
@@ -67,24 +69,23 @@ public class RealEstateDao {
         String findAreaQuery = getFindAreaQuery(area);
         String getRealEstateBoxesInAreaQuery =
                 "select re.realEstateIdx,\n" +
-                "       re.name,\n" +
-                "       ret.price,\n" +
-                "       ii.iconImage\n" +
-                "from RealEstate as re,\n" +
-                "     RealEstateTransaction as ret,\n" +
-                "     IconImage as ii,\n" +
-                "     RegionName as rn\n" +
-                "where ret.realEstateTransactionIdx = (select ret.realEstateTransactionIdx\n" +
-                "                                      from RealEstateTransaction as ret\n" +
-                "                                      where re.realEstateIdx = ret.realEstateIdx\n" +
-                "                                      order by ret.realEstateTransactionIdx desc\n" +
-                "                                      limit 1)\n" +
-                "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
-                "  and re.iconImageIdx = ii.iconImageIdx\n" +
+                        "       re.name,\n" +
+                        "       ret.price,\n" +
+                        "       ret2.price as s2LastPrice,\n" +
+                        "       ret.transactionTime,\n" +
+                        "       ret2.transactionTime as s2TransactionTime,\n" +
+                        "       ii.iconImage\n" +
+                        "from RealEstate as re,\n" +
+                        "     RealEstateTransaction as ret,\n" +
+                        "     RealEstateTransaction as ret2,\n" +
+                        "     IconImage as ii,\n" +
+                        "     RegionName as rn\n" +
+                        "where ret.realEstateTransactionIdx = re.lastTransactionIdx\n" +
+                        "  and ret2.realEstateTransactionIdx = re.s2LastTransactionIdx\n" +
+                        "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
+                        "  and re.iconImageIdx = ii.iconImageIdx" +
                 "  and re.legalTownCodeIdx in (" +
                 findAreaQuery + ")";
-
-//        getRealEstateBoxesInAreaQuery += orderQuery + LIST_LIMIT_QUERY;
 
         Object[] getRealEstateBoxParams = new Object[]{area}; // 주입될 값들
 
@@ -233,6 +234,9 @@ public class RealEstateDao {
                 getRealEstateBox.setName(rs.getString("name"));
                 getRealEstateBox.setIconImage(rs.getString("iconImage"));
                 getRealEstateBox.setPrice(rs.getLong("price"));
+                getRealEstateBox.setS2Price(rs.getLong("s2LastPrice"));
+                getRealEstateBox.setTransactionTime(rs.getString("transactionTime"));
+                getRealEstateBox.setS2TransactionTime(rs.getString("s2TransactionTime"));
                 return getRealEstateBox;
             }
         };

@@ -13,5 +13,6 @@ public class Box {
     private double rateOfChange;
     private String rateCalDateDiff;
     private String iconImage;
+    private String transactionTime;
     private long price;
 }

@@ -78,10 +78,11 @@ public enum BaseResponseStatus {
 
     // 42XX
     DATALIST_SORTING_ERROR(4201, "데이터 정렬 과정에서 오류가 발생했습니다."),
-    MISSING_REQUIRED_ARGUMENT(4202, "필요한 변수가 입력되지 않았습니다"),
-    INCORRECT_REQUIRED_ARGUMENT(4203, "잘못된 변수가 입력되었습니다."),
+    DATALIST_CAL_RATE_ERROR(4202, "증감율 계산 과정에서 오류가 발생했습니다."),
+    MISSING_REQUIRED_ARGUMENT(4203, "필요한 변수가 입력되지 않았습니다"),
+    INCORRECT_REQUIRED_ARGUMENT(4204, "잘못된 변수가 입력되었습니다."),
 
-    REQUESTED_DATA_FAIL_TO_EXIST(4204, "요청한 데이터가 존재하지 않습니다.");
+    REQUESTED_DATA_FAIL_TO_EXIST(4205, "요청한 데이터가 존재하지 않습니다.");
     // 5000 : 필요시 만들어서 쓰세요
     // 6000 : 필요시 만들어서 쓰세요
 

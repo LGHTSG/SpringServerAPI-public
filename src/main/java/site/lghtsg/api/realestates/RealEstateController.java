@@ -1,6 +1,7 @@
 package site.lghtsg.api.realestates;
 
 import org.springframework.web.bind.annotation.*;
+import site.lghtsg.api.common.model.Box;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.realestates.dataUploader.ApiConnector;
