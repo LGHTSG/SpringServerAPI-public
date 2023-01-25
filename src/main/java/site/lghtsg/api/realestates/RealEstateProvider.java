@@ -9,9 +9,8 @@ import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import static site.lghtsg.api.config.BaseResponseStatus.*;
 import static site.lghtsg.api.config.Constant.*;
@@ -34,22 +33,25 @@ public class RealEstateProvider {
 
     public List<RealEstateBox> getRealEstateBoxes(String sort, String order, String area) throws BaseException {
         List<RealEstateBox> realEstateBoxes;
-
+        long start = System.currentTimeMillis();
         // 1. 데이터 가져오기
         try {
-            if(area.equals(PARAM_DEFAULT)) realEstateBoxes = realEstateDao.getRealEstateBoxesInArea(area);
-            else realEstateBoxes = realEstateDao.getAllRealEstateBoxes();
+            if(area.equals(PARAM_DEFAULT)) realEstateBoxes = realEstateDao.getAllRealEstateBoxes();
+            else realEstateBoxes = realEstateDao.getRealEstateBoxesInArea(area);
+            if(realEstateBoxes.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
         }
         catch (Exception ignored) {
             throw new BaseException(DATABASE_ERROR);
         }
+        long end = System.currentTimeMillis();
+        System.out.println("데이터 가져오는데 걸린 시간 : " + (double) (end - start) / 1000 + "s");
         // 2. 증감율 계산
         realEstateBoxes = calculateRateOfChange(realEstateBoxes);
 
         // 2. 정렬
-        // sortRealEstateBoxes() - Throws BaseException
         realEstateBoxes = sortRealEstateBoxes(realEstateBoxes, sort, order);
 
+        // 출력 wrapping - 추후 고려
         return realEstateBoxes;
     }
 
@@ -94,9 +96,35 @@ public class RealEstateProvider {
 
     static List<RealEstateBox> calculateRateOfChange(List<RealEstateBox> realEstateBoxes) throws BaseException {
         try {
+            double price, s2Price;
+            long currentTime, s2DateTime, timeDiff, diffMonth;
+            long divideBy = (long)MILLISECONDS * SECONDS * MINUTES * HOURS * DAYS;
+            Date s2Date;
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
             for (int i = 0, lim = realEstateBoxes.size(); i < lim; i++) {
-                double rateOfChange = (realEstateBoxes.get(i).getPrice() - realEstateBoxes.get(i).getS2Price()) / realEstateBoxes.get(i).getS2Price() * 100;
-                realEstateBoxes.get(i).setRateOfChange(rateOfChange);
+                // 거래 기록이 1개만 있는 경우
+                if(realEstateBoxes.get(i).getS2TransactionTime() == null){
+                    realEstateBoxes.get(i).setRateOfChange(0.0);
+                    realEstateBoxes.get(i).setRateCalDateDiff(SINGLE_TRANSACTION_HISTORY);
+                    continue;
+                }
+
+                // 증감울 계산
+                price = realEstateBoxes.get(i).getPrice();
+                s2Price = realEstateBoxes.get(i).getS2Price();
+
+                realEstateBoxes.get(i).setRateOfChange((price - s2Price) / s2Price * 100);
+
+                // 증감율 게산 기간 계산 (부동산 단독 기능)
+                s2Date = sdf.parse(realEstateBoxes.get(i).getS2TransactionTime());
+
+                currentTime = System.currentTimeMillis();
+                s2DateTime = s2Date.getTime();
+
+                timeDiff = currentTime - s2DateTime;
+                diffMonth = timeDiff / divideBy;
+                realEstateBoxes.get(i).setRateCalDateDiff(processDateDiffOutput(diffMonth));
             }
         }
         catch(Exception e){
@@ -105,6 +133,23 @@ public class RealEstateProvider {
         return realEstateBoxes;
     }
 
+    static String processDateDiffOutput(long diffMonth){
+        if(diffMonth <= 3) return WITHIN_3_MONTHS;
+        else if(diffMonth <= 6) return WITHIN_6_MONTHS;
+        else if(diffMonth <= 12) return WITHIN_1_YEAR;
+        else return MORE_THAN_1_YEAR;
+    }
+
+    /**
+     * ==========================================================================================
+     * TODO : 메모리때문에 새로운 리스트 생성은 못하고, 일단은 현재 방식 전달 유지
+     * 프론트 전달할 때 필요없는 데이터 제거 - 모든 파트 구분없이 Box 헝태로 Wrapping 해 제공
+     * @param realEstateBoxes
+     * @return
+     */
+    static List<Box> outputWrapper(List<RealEstateBox> realEstateBoxes){
+        return null;
+    }
 
     /**
      * ==========================================================================================
@@ -170,13 +215,16 @@ public class RealEstateProvider {
      * @throws BaseException
      */
     public List<String> getRegionNames(String keyword) throws BaseException {
+        List<String> regionNames;
         try {
-            if(keyword.equals(PARAM_DEFAULT)) return realEstateDao.getAllRegionNames();
-            else return realEstateDao.getRegionNamesWithKeyword(keyword);
+            if(keyword.equals(PARAM_DEFAULT)) regionNames = realEstateDao.getAllRegionNames();
+            else regionNames = realEstateDao.getRegionNamesWithKeyword(keyword);
+            if(regionNames == null) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
         }
         catch (Exception e) {
             throw new BaseException(DATABASE_ERROR);
         }
+        return regionNames;
     }
 
 }

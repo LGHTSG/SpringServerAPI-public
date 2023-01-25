@@ -11,4 +11,5 @@ import site.lghtsg.api.common.model.Box;
 @NoArgsConstructor
 public class RealEstateBox extends Box {
     private long s2Price;
+    private String s2TransactionTime;
 }

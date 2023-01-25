@@ -3,10 +3,13 @@ package site.lghtsg.api.realestates;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
 import java.util.Collections;
 import java.util.List;
+
+import static site.lghtsg.api.config.Constant.*;
 
 @SpringBootTest
 public class RealEstateDaoTest {
