@@ -1,21 +1,18 @@
 package site.lghtsg.api.users;
 
-import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
-import site.lghtsg.api.config.BaseResponseStatus;
 import site.lghtsg.api.users.model.*;
 import site.lghtsg.api.utils.JwtService;
-import site.lghtsg.api.utils.ValidationRegex;
 
 import javax.mail.MessagingException;
-import javax.sound.midi.Patch;
 
 import java.io.UnsupportedEncodingException;
+import java.util.List;
 
 import static site.lghtsg.api.config.BaseResponseStatus.*;
 import static site.lghtsg.api.utils.ValidationRegex.isRegexEmail;
@@ -71,9 +68,9 @@ public class UserController {
      */
     @ResponseBody
     @PostMapping("/sign-up/emailCheck")
-    public BaseResponse<EmailCheckRes> EmailCheck(@RequestBody EmailCheckReq emailCheckReq) throws MessagingException, UnsupportedEncodingException  {
-        EmailCheckRes emailCheckRes = emailService.sendEmail(emailCheckReq);
-        return new BaseResponse<>(emailCheckRes);
+    public BaseResponse<String> EmailCheck(@RequestBody EmailCheckReq emailCheckReq) throws MessagingException, UnsupportedEncodingException  {
+        String authCode = emailService.sendEmail(emailCheckReq.getEmail());
+        return new BaseResponse<>(authCode);
     }
 
     /**
@@ -158,6 +155,41 @@ public class UserController {
     /**
      * 나의 자산 조회 API
      * [GET] /users/my-asset
+     */
+    @ResponseBody
+    @GetMapping("/my-asset")
+    public BaseResponse<List<GetMyAssetRes>> getMyAsset(@RequestParam(required = false) String sort) {
+        try {
+            int userIdx = jwtService.getUserIdx();
+
+            List<GetMyAssetRes> resultOfAsset = userProvider.myAsset(userIdx);
+
+            return new BaseResponse<>(resultOfAsset);
+        } catch (BaseException exception) {
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+    /**
+     * 자산 구매 API
+     * [POST] /users/my-asset/purchase
+     */
+    @ResponseBody
+    @PostMapping("/my-asset/purchase")
+    public BaseResponse<String> postMyAsset(@RequestBody PostMyAssetReq postMyAssetReq) {
+        try {
+            int userIdx = jwtService.getUserIdx();
+            userService.postMyAsset(userIdx, postMyAssetReq);
+            String result = "구매 완료";
+            return new BaseResponse<>(result);
+        } catch (BaseException exception) {
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+    /**
+     * 자산 판매 API
+     * [PATCH] /users/my-asset/sale
      */
 }
 

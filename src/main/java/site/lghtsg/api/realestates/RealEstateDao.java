@@ -7,9 +7,9 @@ import org.springframework.stereotype.Repository;
 import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
-import site.lghtsg.api.realestates.model.upload.RealEstate;
-import site.lghtsg.api.realestates.model.upload.RealEstateTransaction;
-import site.lghtsg.api.realestates.model.upload.RegionName;
+import site.lghtsg.api.realestates.dataUploader.model.RealEstate;
+import site.lghtsg.api.realestates.dataUploader.model.RealEstateTransaction;
+import site.lghtsg.api.realestates.dataUploader.model.RegionName;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
@@ -211,148 +211,6 @@ public class RealEstateDao {
     }
 
 
-    // 데이터 업로드용
-
-    /**
-     * 부동산 정보 업로드
-     * @param realEstateList
-    */
-    public void uploadRealEstates(Set<RealEstate> realEstateList) { // 한 업로드 단위(파일, api응답) 안에서의 중복 방지
-
-        String createTempTable = "create temporary table RealEstate_temp select * from RealEstate limit 0, 0;\n";
-        StringBuilder insertQueryBuilder = new StringBuilder("insert into RealEstate_temp (legalTownCodeIdx, name) values ");
-
-        String insertOnlyNotDuplicated =
-            "insert into RealEstate (legalTownCodeIdx, name)\n" +
-            "select legalTownCodeIdx, name \n" +
-            "from (\n" +
-            "select temp.legalTownCodeIdx, temp.name\n" +
-            "from RealEstate as r right join RealEstate_temp as temp on (r.legalTownCodeIdx, r.name) = (temp.legalTownCodeIdx, temp.name)\n" +
-            "where r.legalTownCodeIdx is null\n" +
-            ") as newData;";
-
-        String dropTempTable = "drop table RealEstate_temp;";
-
-        Object[] params = new Object[realEstateList.size() * 2];
-        int paramsIndex = 0;
-
-        for (RealEstate realEstate : realEstateList) {
-            params[paramsIndex++] = realEstate.getRegionId();
-            params[paramsIndex++] = realEstate.getName();
-
-            insertQueryBuilder.append("(?, ?),");
-        }
-
-        String insertOnTempTable = insertQueryBuilder.substring(0, Math.max(insertQueryBuilder.length()-1, 0)) + ";\n";
-
-        // 쿼리 실행
-        this.jdbcTemplate.update(createTempTable);
-        this.jdbcTemplate.update(insertOnTempTable, params);
-        this.jdbcTemplate.update(insertOnlyNotDuplicated);
-        this.jdbcTemplate.update(dropTempTable);
-
-    }
-
-    /**
-     * 실거래가 정보 업로드
-     * @param transactionList
-     */
-    public void uploadTransactions(List<RealEstateTransaction> transactionList) {
-        StringBuilder queryBuilder = new StringBuilder("insert into `RealEstateTransaction`(price, transactionTime, realEstateIdx) values");
-        Object[] params = new String[transactionList.size() * 3];
-
-        int paramsIndex = 0;
-
-        for (RealEstateTransaction transaction : transactionList) {
-            params[paramsIndex++] = String.valueOf(transaction.getPrice());
-            params[paramsIndex++] = transaction.getDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
-            params[paramsIndex++] = String.valueOf(transaction.getRealEstateId());
-
-            queryBuilder.append("(?, ?, ?),");
-        }
-
-        String query = queryBuilder.substring(0, queryBuilder.length() - 1); // 끝에 , 제거
-
-        jdbcTemplate.update(query, params);
-    }
-
-    /**
-     * 지역정보 업로드
-     * @param regionNameList
-     * @return
-     */
-    public String uploadRegionNames(List<RegionName> regionNameList) {
-
-        StringBuilder queryBuilder = new StringBuilder("insert into RegionName(legalTownCodeIdx, name, parentIdx) values");
-        String[] params = new String[regionNameList.size() * 3];
-
-        int paramsIndex = 0;
-
-        for (RegionName regionName : regionNameList) {
-            Integer parentRegionId = regionName.getParentId();
-
-            params[paramsIndex++] = regionName.getLegalCodeId().toString();
-            params[paramsIndex++] = regionName.getName();
-            params[paramsIndex++] = parentRegionId == null ? null : parentRegionId.toString(); // 최상위 지역일 때
-
-            queryBuilder.append("(?, ?, ?),");
-        }
-
-        String query = queryBuilder.substring(0, queryBuilder.length() - 1); // 끝에 , 제거
-        Object[] inputParams = params;
-        jdbcTemplate.update(query, inputParams);
-
-        return "success";
-    }
-
-    /**
-     * 부동산 정보(id, 건물명) 가져오기
-     * @return realEstateList
-     */
-    public List<RealEstate> getRealEstates() {
-        String query = "select realEstateIdx, name from `RealEstate`";
-
-        return jdbcTemplate.query(query, (rs, rowNum) -> RealEstate.builder()
-                .id(rs.getInt("realEstateIdx"))
-                .name(rs.getString("name"))
-                .build());
-    }
-
-    public List<RegionName> getRegions() {
-        String query = "select parentIdx, name, legalTownCodeIdx from `RegionName`";
-
-        return jdbcTemplate.query(query, regionNameRowMapper());
-    }
-
-    /**
-     * 엑셀 데이터 업로드용
-     * @return
-     */
-    public List<RegionName> getRegionsForExcel() {
-        String query = "(select legalTownCodeIdx, replace(name, '시 ', '') as name " +
-                "from (" +
-                "select legalTownCodeIdx, name from RegionName " +
-                "union " +
-                "select legalTownCodeIdx, concat(name, '동') from RegionName where name like '%상당구 북문로%'" +
-                ") as regionname " +
-                "where substring_index(name, ' ', 3) like '%도 %시 %구') " +
-                "UNION (select legalTownCodeIdx, name from RegionName)";
-
-        return jdbcTemplate.query(query, (rs, rowNum) -> { return RegionName.builder()
-                .legalCodeId(rs.getInt("legalTownCodeIdx"))
-                .name(rs.getString("name"))
-                .build();});
-    }
-
-    public List<String> getSigunguCodes() {
-        String query = "select left(legalTownCodeIdx, 5) as legalTownCodeIdx from `RegionName`" +
-                "where substring_index(name, ' ', 1) <> substring_index(name, ' ', 2)" +
-                "group by left(legalTownCodeIdx, 5)";
-
-        return jdbcTemplate.query(query, (rs, rowNum) -> rs.getString("legalTownCodeIdx"));
-    }
-
-
     private RowMapper<RealEstateTransactionData> transactionRowMapper() {
         return new RowMapper<RealEstateTransactionData>() {
             @Override
@@ -428,16 +286,5 @@ public class RealEstateDao {
                             "    group by rn.legalTownCodeIdx\n";
         }
         return findAreaQuery;
-    }
-
-    private RowMapper<RegionName> regionNameRowMapper() {
-        return ((rs, rowNum) -> {
-            RegionName regionName = RegionName.builder()
-                    .legalCodeId(rs.getInt("legalTownCodeIdx"))
-                    .name(rs.getString("name"))
-                    .parentId(rs.getInt("parentIdx"))
-                    .build();
-            return regionName;
-        });
     }
 }

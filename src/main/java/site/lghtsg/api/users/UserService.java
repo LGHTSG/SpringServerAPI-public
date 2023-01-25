@@ -1,7 +1,5 @@
 package site.lghtsg.api.users;
 
-import com.fasterxml.jackson.databind.ser.Serializers;
-import lombok.extern.java.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -111,6 +109,18 @@ public class UserService {
         }
         try {
             int result = userDao.withdrawUser(patchUserDeleteReq);
+            if(result == 0) {
+                throw new BaseException(DELETE_FAIL_USER);
+            }
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    // 자산 구매
+    public void postMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+        try {
+            int result = userDao.postMyAsset(userIdx, postMyAssetReq);
             if(result == 0) {
                 throw new BaseException(DELETE_FAIL_USER);
             }

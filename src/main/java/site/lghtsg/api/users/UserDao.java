@@ -1,11 +1,13 @@
 package site.lghtsg.api.users;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import site.lghtsg.api.users.model.*;
 
 import javax.sql.DataSource;
+import java.util.List;
 
 
 @Repository
@@ -88,6 +90,102 @@ public class UserDao {
         Object[] withdrawUserParams = new Object[]{patchUserDeleteReq.getUserIdx()};
 
         return this.jdbcTemplate.update(withdrawUserQuery, withdrawUserParams);
+    }
+
+    // 주식 자산 조회
+    public List<GetMyAssetRes> getStockAsset(int userIdx) {
+        String getStockAssetQuery =
+                "SELECT S.name AS assetName, ST.price, ST.price*100 AS rateOfChange," +
+                        "ST.price-100 AS rateCalDateDiff, II.iconImage," +
+                        "SUT.saleCheck, SUT.updatedAt " +
+                        "FROM StockUserTransaction AS SUT " +
+                        "INNER JOIN StockTransaction AS ST ON ST.stockTransactionIdx = SUT.stockTransactionIdx " +
+                        "INNER JOIN Stock AS S ON S.stockIdx = ST.stockIdx " +
+                        "INNER JOIN IconImage AS II ON II.iconImageIdx = S.iconImageIdx " +
+                        "WHERE userIdx = ?";
+        int getStockAssetParams = userIdx;
+
+        return this.jdbcTemplate.query(getStockAssetQuery,
+                (rs, rowNum) -> new GetMyAssetRes(
+                        rs.getString("assetName"),
+                        rs.getInt("price"),
+                        rs.getFloat("rateOfChange"),
+                        rs.getString("rateCalDateDiff"),
+                        rs.getString("iconImage"),
+                        rs.getInt("saleCheck"),
+                        rs.getString("updatedAt")),
+                getStockAssetParams);
+    }
+
+    // 리셀 자산 조회
+    public List<GetMyAssetRes> getResellAsset(int userIdx) {
+        String getResellAssetQuery =
+                "SELECT R.name AS assetName, RT.price, RT.price*100 AS rateOfChange, " +
+                        "RT.price-100 AS rateCalDateDiff, II.iconImage, " +
+                        "RUT.saleCheck, RUT.updatedAt " +
+                        "FROM ResellUserTransaction AS RUT " +
+                        "INNER JOIN ResellTransaction AS RT ON RT.resellTransactionIdx = RUT.resellTransactionIdx " +
+                        "INNER JOIN Resell AS R ON R.resellIdx = RT.resellIdx " +
+                        "INNER JOIN IconImage AS II ON II.iconImageIdx = R.iconImageIdx " +
+                        "WHERE userIdx = ?";
+        int getResellBoxParams = userIdx;
+
+        return this.jdbcTemplate.query(getResellAssetQuery,
+                (rs, rowNum) -> new GetMyAssetRes(
+                        rs.getString("assetName"),
+                        rs.getInt("price"),
+                        rs.getFloat("rateOfChange"),
+                        rs.getString("rateCalDateDiff"),
+                        rs.getString("iconImage"),
+                        rs.getInt("saleCheck"),
+                        rs.getString("updatedAt")),
+                getResellBoxParams);
+    }
+
+    // 부동산 자산 조회
+    public List<GetMyAssetRes> getRealEstateAsset(int userIdx) {
+        String getRealEstateAssetQuery =
+                "SELECT RE.name AS assetName, RET.price, RET.price*100 AS rateOfChange, " +
+                        "RET.price-100 AS rateCalDateDiff, II.iconImage," +
+                        "REUT.saleCheck, REUT.updatedAt " +
+                        "FROM RealEstateUserTransaction AS REUT " +
+                        "INNER JOIN RealEstateTransaction AS RET ON RET.realEstateTransactionIdx = REUT.realEstateTransactionIdx " +
+                        "INNER JOIN RealEstate AS RE ON RE.realEstateIdx = RET.realEstateIdx " +
+                        "INNER JOIN IconImage AS II ON II.iconImageIdx = RE.iconImageIdx " +
+                        "WHERE userIdx = ?";
+        int getRealEstateParams = userIdx;
+
+        return this.jdbcTemplate.query(getRealEstateAssetQuery,
+                (rs, rowNum) -> new GetMyAssetRes(
+                        rs.getString("assetName"),
+                        rs.getInt("price"),
+                        rs.getFloat("rateOfChange"),
+                        rs.getString("rateCalDateDiff"),
+                        rs.getString("iconImage"),
+                        rs.getInt("saleCheck"),
+                        rs.getString("updatedAt")),
+                getRealEstateParams);
+    }
+
+    // 자산 구매
+    public int postMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
+        String postMyAssetQuery = "";
+        switch(postMyAssetReq.getCategory()) {
+            case "stocks": // stock
+                postMyAssetQuery = "insert into StockUserTransaction(userIdx, stockTransactionIdx) values (?,?)";
+                break;
+            case "resells": // resell
+                postMyAssetQuery = "insert into ResellUserTransaction(userIdx, resellTransactionIdx) values (?,?)";
+                break;
+            case "realestates": // realestate
+                postMyAssetQuery = "insert into RealEstateUserTransaction(userIdx, realEstateTransactionIdx) values (?,?)";
+                break;
+            default:
+                break;
+        }
+        Object[] postMyAssetParams =
+                new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
+        return this.jdbcTemplate.update(postMyAssetQuery, postMyAssetParams);
     }
 
 }

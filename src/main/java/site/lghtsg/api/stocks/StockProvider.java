@@ -61,9 +61,4 @@ public class StockProvider {
             throw new BaseException(DATABASE_ERROR);
         }
     }
-
-    public StockBox stockBox(int stockIdx) throws BaseException {
-        return null;
-    }
-
 }

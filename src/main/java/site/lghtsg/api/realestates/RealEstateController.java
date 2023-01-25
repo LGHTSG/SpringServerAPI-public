@@ -19,14 +19,8 @@ import static site.lghtsg.api.config.Constant.PARAM_DEFAULT;
 public class RealEstateController {
     private final RealEstateProvider realEstateProvider;
 
-    // TODO : controller 구분 필요 - 수정 필요
-    private final ApiConnector apiConnector;
-    private final ExcelFileReader excelFileReader;
-
-    public RealEstateController(RealEstateDao realEstateDao, RealEstateProvider realEstateProvider, ApiConnector apiConnector, ExcelFileReader excelFileReader){
+    public RealEstateController(RealEstateProvider realEstateProvider){
         this.realEstateProvider = realEstateProvider;
-        this.apiConnector = apiConnector;
-        this.excelFileReader = excelFileReader;
     }
 
     /**
@@ -116,24 +110,6 @@ public class RealEstateController {
              return new BaseResponse<>((e.getStatus()));
         }
     }
-
-    /**
-     * @brief 부동산 거래 DB 업데이트 - api
-     */
-    @GetMapping("/connect_api")
-    public BaseResponse<String> updateData() {
-        return apiConnector.getData();
-    }
-
-
-    /**
-     * @brief 부동산 거래 DB 업데이트 - 파일
-     */
-    @GetMapping("/upload_file_data")
-    public BaseResponse<String> uploadFileData() {
-        return excelFileReader.readData();
-    }
-
 
 
 }

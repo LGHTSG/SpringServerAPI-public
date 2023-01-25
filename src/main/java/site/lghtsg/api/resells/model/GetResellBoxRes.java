@@ -1,17 +1,11 @@
 package site.lghtsg.api.resells.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
+import site.lghtsg.api.common.model.Box;
 
 @Getter
 @Setter
-@AllArgsConstructor
-public class GetResellBoxRes {
-    private long resellIdx;
-    private String name;
-    private String rateOfChange;
-    private String rateCalDateDiff;
-    private String iconImage;
-    private String price;
+public class GetResellBoxRes extends Box{
+    private Long lastPrice;
 }
