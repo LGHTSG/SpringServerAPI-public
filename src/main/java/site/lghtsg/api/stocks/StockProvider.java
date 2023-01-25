@@ -52,7 +52,7 @@ public class StockProvider {
             } else if (sort.equals(SORT_PRICE_PARAM)) { // 가격 기준
                 stockBoxes.sort(new CompareByPrice());
             } else if (sort.equals(SORT_MARKET_CAP_PARAM)){
-                stockBoxes.sort(new CompareByMarketCap()); // 시가총액 기준
+                stockBoxes.sort(new CompareByMarketCap()); // 시가 총액 기준
             } else if (sort.equals(SORT_TRADING_VOL_PARAM)){
                 stockBoxes.sort(new CompareByTradingVolume()); // 거래량 기준
             } else if (sort.equals(PARAM_DEFAULT)) { // idx 기준
@@ -63,7 +63,7 @@ public class StockProvider {
 
             // 2. 차순
             System.out.println(order);
-            if (order.equals(ASCENDING_PARAM)) {        // 내림차순
+            if (order.equals(ASCENDING_PARAM)) { // 오름차순
                 Collections.reverse(stockBoxes);
             } else if (!order.equals(PARAM_DEFAULT) && !order.equals(DESCENDING_PARAM)){    // 기준이 없는(잘못 입력) 경우
                 throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
