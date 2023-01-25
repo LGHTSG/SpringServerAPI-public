@@ -9,6 +9,8 @@ import site.lghtsg.api.stocks.model.*;
 
 import java.util.List;
 
+import static site.lghtsg.api.config.Constant.*;
+
 @RestController
 @RequestMapping("/stocks")
 public class StockController {
@@ -24,11 +26,12 @@ public class StockController {
     @ResponseBody
     @GetMapping("") //주식 리스트 조회 /stocks?sort=trading-volume&order=ascending or descending
     public BaseResponse<List<StockBox>> getStockBoxes(@RequestParam(required = false) String sort, @RequestParam(required = false) String order) {
+
+        if (sort == null) sort = PARAM_DEFAULT;
+        if (order == null) sort = PARAM_DEFAULT;
+        if (sort != null && order == null)  // order이 null 이면 기본값 ascending
+            order = ASCENDING_PARAM;
         try {
-            if (sort == null) { // sort가 null 이면 stockIdx 기준
-                List<StockBox> stockBox = stockProvider.getStockBoxesByIdx(order);
-                return new BaseResponse<>(stockBox);
-            }
             List<StockBox> stockBox = stockProvider.getStockBoxes(sort, order);
             return new BaseResponse<>(stockBox);
         } catch (BaseException exception) {
@@ -38,10 +41,10 @@ public class StockController {
 
     @ResponseBody
     @GetMapping("/{stockIdx}/info") //특정 주식 정보 조회 /stocks/1/info
-    public BaseResponse<GetStockInfoRes> getStockInfo(@PathVariable ("stockIdx") int stockIdx) {
+    public BaseResponse<StockBox> getStockInfo(@PathVariable ("stockIdx") long stockIdx) {
         try {
-            GetStockInfoRes getStockInfoRes = stockProvider.getStockInfo(stockIdx);
-            return new BaseResponse<>(getStockInfoRes);
+            StockBox stockBox = stockProvider.getStockInfo(stockIdx);
+            return new BaseResponse<>(stockBox);
         } catch (BaseException exception) {
             return new BaseResponse<>((exception.getStatus()));
         }
@@ -49,10 +52,10 @@ public class StockController {
 
     @ResponseBody
     @GetMapping("/{stockIdx}/prices") //특정 주식 누적 가격 조회 /stocks/1/prices
-    public BaseResponse<List<GetStockPricesRes>> getStockPrices(@PathVariable ("stockIdx") int stockIdx) {
+    public BaseResponse<List<StockTransactionData>> getStockPrices(@PathVariable ("stockIdx") long stockIdx) {
         try {
-            List<GetStockPricesRes> getStockPricesRes = stockProvider.getStockPrices(stockIdx);
-            return new BaseResponse<>(getStockPricesRes);
+            List<StockTransactionData> stockPricesRes = stockProvider.getStockPrices(stockIdx);
+            return new BaseResponse<>(stockPricesRes);
         } catch (BaseException exception) {
             return new BaseResponse<>((exception.getStatus()));
         }
