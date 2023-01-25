@@ -189,8 +189,7 @@ public class UserDao {
             default:
                 break;
         }
-        Object[] postMyAssetParams =
-                new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
+        Object[] postMyAssetParams = new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
         return this.jdbcTemplate.update(postMyAssetQuery, postMyAssetParams);
     }
 
@@ -225,4 +224,5 @@ public class UserDao {
                 "FROM StockUserTransaction" +
                 "WHERE userIdx = ? AND stockTransactionIdx = ?";
     }
+
 }
