@@ -10,7 +10,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class GetStockPricesRes {
-    private int price;
+public class StockTransactionData {
+    private long price;
     private String transactionTime;
 }
