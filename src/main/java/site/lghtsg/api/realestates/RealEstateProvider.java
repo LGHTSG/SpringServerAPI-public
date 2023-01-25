@@ -114,7 +114,7 @@ public class RealEstateProvider {
                 price = realEstateBoxes.get(i).getPrice();
                 s2Price = realEstateBoxes.get(i).getS2Price();
 
-                realEstateBoxes.get(i).setRateOfChange((price - s2Price) / s2Price * 100);
+                realEstateBoxes.get(i).setRateOfChange(Math.round((price - s2Price) / s2Price * 100 * 10) / 10.0);
 
                 // 증감율 게산 기간 계산 (부동산 단독 기능)
                 s2Date = sdf.parse(realEstateBoxes.get(i).getS2TransactionTime());
