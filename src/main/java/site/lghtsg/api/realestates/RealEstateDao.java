@@ -7,16 +7,11 @@ import org.springframework.stereotype.Repository;
 import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
-import site.lghtsg.api.realestates.dataUploader.model.RealEstate;
-import site.lghtsg.api.realestates.dataUploader.model.RealEstateTransaction;
-import site.lghtsg.api.realestates.dataUploader.model.RegionName;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Set;
 
 @Repository
 public class RealEstateDao {
@@ -55,7 +50,6 @@ public class RealEstateDao {
                         "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
                         "  and re.iconImageIdx = ii.iconImageIdx";
 
-
         return this.jdbcTemplate.query(getRealEstateBoxesQuery, realEstateBoxRowMapper());
     }
 
@@ -87,41 +81,15 @@ public class RealEstateDao {
                 "  and re.legalTownCodeIdx in (" +
                 findAreaQuery + ")";
 
-        Object[] getRealEstateBoxParams = new Object[]{area}; // 주입될 값들
-
-        return this.jdbcTemplate.query(getRealEstateBoxesInAreaQuery, getRealEstateBoxParams, realEstateBoxRowMapper());
+        return this.jdbcTemplate.query(getRealEstateBoxesInAreaQuery, realEstateBoxRowMapper(), area);
     }
 
-    /**
-     * TODO : FOR USER API
-     * @brief
-     * 단일 부동산의 box 반환 - 리스트에 들어가야 하는 데이터 + 정렬용 데이터
-     * RealEstateBox(realEstateIdx, name, rateOfChange, rateCalDateDiff, iconImage, price)
-     * @param realEstateIdx long
-     * @return RealEstateBox
-     */
-    public RealEstateBox getRealEstateBox(long realEstateIdx) {
-        String getRealEstateBoxQuery =
-                "select re.realEstateIdx, re.name, ret.price, ret.transactionTime, II.iconImage\n" +
-                "from RealEstate as re\n" +
-                "INNER JOIN RealEstateTransaction as ret\n" +
-                "ON re.realEstateIdx = ret.realEstateIdx and re.realEstateIdx = ? and ret.transactionTime = (\n" +
-                "    select max(transactionTime) from RealEstateTransaction where realEstateIdx = ?\n" +
-                "    )\n" +
-                "INNER JOIN IconImage II on re.iconImageIdx = II.iconImageIdx\n" +
-                "group by re.realEstateIdx;";
-        Object[] getRealEstateBoxParams = new Object[]{realEstateIdx, realEstateIdx}; // 주입될 값들
-
-        return this.jdbcTemplate.query(getRealEstateBoxQuery, getRealEstateBoxParams, realEstateBoxRowMapper()).get(0);
-    }
 
     /**
-     * 이거 안되면 ㄹㅇ 앱 포기각
+     * 이게 왜 필요하지?
      * @return
      */
     public List<RealEstateTransactionData> getAllTransactionData(){
-        long start = System.currentTimeMillis();
-        System.out.println(start);
         String getTransactionData =
                 "select ret.realEstateTransactionIdx, ret.realEstateIdx, ret.price, ret.transactionTime\n" +
                 "from RealEstateTransaction as ret;";
@@ -153,24 +121,33 @@ public class RealEstateDao {
 
     /**
      * TODO : RealEstateBox와 RealEstateInfo 상호간 관계를 명확히해야 중복되는 코드 제거하는 리팩토링
+     * -> wrapping 하는 것으로 대체
      * @brief
      * 특정 부동산 정보 전달 - api 명세서 작성되어 있는 반환 데이터
      * RealEstateInfo(realEstateIdx, name, rateOfChange, rateCalDateDiff, iconImage, price)
      * @return RealEstateInfo
      */
-    public RealEstateInfo getRealEstateInfo(long realEstateIdx) {
+    public RealEstateBox getRealEstateBox(long realEstateIdx) {
         String getRealEstateBoxQuery =
-                "select re.realEstateIdx, re.name, ret.price, ret.transactionTime, II.iconImage\n" +
-                        "from RealEstate as re\n" +
-                        "INNER JOIN RealEstateTransaction as ret\n" +
-                        "ON re.realEstateIdx = ret.realEstateIdx and re.realEstateIdx = ? and ret.transactionTime = (\n" +
-                        "    select max(transactionTime) from RealEstateTransaction where realEstateIdx = ?\n" +
-                        "    )\n" +
-                        "INNER JOIN IconImage II on re.iconImageIdx = II.iconImageIdx\n" +
-                        "group by re.realEstateIdx;";
-        Object[] getRealEstateInfoParams = new Object[]{realEstateIdx, realEstateIdx}; // 주입될 값들
+                "select re.realEstateIdx,\n" +
+                        "       re.name,\n" +
+                        "       ret.price,\n" +
+                        "       ret2.price           as s2LastPrice,\n" +
+                        "       ret.transactionTime,\n" +
+                        "       ret2.transactionTime as s2TransactionTime,\n" +
+                        "       ii.iconImage\n" +
+                        "from RealEstate as re,\n" +
+                        "     RealEstateTransaction as ret,\n" +
+                        "     RealEstateTransaction as ret2,\n" +
+                        "     IconImage as ii,\n" +
+                        "     RegionName as rn\n" +
+                        "where ret.realEstateTransactionIdx = re.lastTransactionIdx\n" +
+                        "  and ret2.realEstateTransactionIdx = re.s2LastTransactionIdx\n" +
+                        "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
+                        "  and re.iconImageIdx = ii.iconImageIdx\n" +
+                        "  and re.realEstateIdx = ?";
 
-        return this.jdbcTemplate.query(getRealEstateBoxQuery, getRealEstateInfoParams, realEstateInfoRowMapper()).get(0);
+        return this.jdbcTemplate.queryForObject(getRealEstateBoxQuery, realEstateBoxRowMapper(), realEstateIdx);
     }
 
     /**
@@ -182,12 +159,11 @@ public class RealEstateDao {
     public List<RealEstateTransactionData> getRealEstatePrices(long realEstateIdx){
         String getRealEstatePricesQuery =
                 "select re.realEstateIdx, re.name, ret.price, ret.transactionTime\n" +
-                "from RealEstate as re\n" +
-                "INNER JOIN RealEstateTransaction as ret\n" +
-                "ON re.realEstateIdx = ret.realEstateIdx and re.realEstateIdx = ?;";
+                        "                from RealEstate as re\n" +
+                        "                JOIN RealEstateTransaction as ret\n" +
+                        "                ON re.realEstateIdx = ? and re.realEstateIdx = ret.realEstateIdx;";
 
-        Object[] getRealEstatePricesParams = new Object[]{realEstateIdx}; // 주입될 값들
-        return this.jdbcTemplate.query(getRealEstatePricesQuery, getRealEstatePricesParams, transactionRowMapper());
+        return this.jdbcTemplate.query(getRealEstatePricesQuery, transactionRowMapper(), realEstateIdx);
     }
 
     /**
@@ -201,13 +177,12 @@ public class RealEstateDao {
     public List<RealEstateTransactionData> getRealEstatePricesInArea(String area){
         String findAreaQuery = getFindAreaQuery(area);
         String getRealEstatesAreaPrices = "select re.realEstateIdx, re.name, ret.price, ret.transactionTime\n" +
-                "from RealEstate as re\n" +
-                "         INNER JOIN ("+findAreaQuery+") as rn\n" +
-                "                    on re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
-                "         INNER JOIN RealEstateTransaction as ret\n" +
-                "                    ON re.realEstateIdx = ret.realEstateIdx;";
-        Object[] getRealEstateAreaPricesParams = new Object[]{area}; // 주입될 값들
-        return this.jdbcTemplate.query(getRealEstatesAreaPrices, getRealEstateAreaPricesParams, transactionRowMapper());
+                "                from RealEstate as re\n" +
+                "                JOIN RealEstateTransaction as ret\n" +
+                "                ON re.realEstateIdx = ret.realEstateIdx\n" +
+                "where re.legalTownCodeIdx in ("
+                + findAreaQuery + ")";
+        return this.jdbcTemplate.query(getRealEstatesAreaPrices, transactionRowMapper(), area);
     }
 
 
@@ -238,20 +213,6 @@ public class RealEstateDao {
                 getRealEstateBox.setTransactionTime(rs.getString("transactionTime"));
                 getRealEstateBox.setS2TransactionTime(rs.getString("s2TransactionTime"));
                 return getRealEstateBox;
-            }
-        };
-    }
-
-    private RowMapper<RealEstateInfo> realEstateInfoRowMapper(){
-        return new RowMapper<RealEstateInfo>() {
-            @Override
-            public RealEstateInfo mapRow(ResultSet rs, int rowNum) throws SQLException {
-                RealEstateInfo getRealEstateInfo = new RealEstateInfo();
-                getRealEstateInfo.setIdx(rs.getLong("realEstateIdx"));
-                getRealEstateInfo.setName(rs.getString("name"));
-                getRealEstateInfo.setIconImage(rs.getString("iconImage"));
-                getRealEstateInfo.setPrice(rs.getLong("price"));
-                return getRealEstateInfo;
             }
         };
     }

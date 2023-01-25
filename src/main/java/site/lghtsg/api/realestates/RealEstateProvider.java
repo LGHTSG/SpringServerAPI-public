@@ -151,6 +151,16 @@ public class RealEstateProvider {
         return null;
     }
 
+    static RealEstateInfo boxToInfoWrapper(RealEstateBox realEstateBox){
+        return new RealEstateInfo(
+                realEstateBox.getIdx(),
+                realEstateBox.getName(),
+                realEstateBox.getRateOfChange(),
+                realEstateBox.getRateCalDateDiff(),
+                realEstateBox.getIconImage(),
+                realEstateBox.getPrice());
+    }
+
     /**
      * ==========================================================================================
      * 하나의 부동산 정보를 반환
@@ -161,11 +171,17 @@ public class RealEstateProvider {
     public RealEstateInfo getRealEstateInfo(long realEstateIdx) throws BaseException {
         // 가지고 있는 realEstateIdx 인지 validation - REQUESTED_DATA_FAIL_TO_EXIST
         RealEstateInfo realEstateInfo;
+        List<RealEstateBox> realEstateBoxes = new ArrayList<>();
         try {
-             realEstateInfo = realEstateDao.getRealEstateInfo(realEstateIdx);
-            if(realEstateInfo == null) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+             realEstateBoxes.add(realEstateDao.getRealEstateBox(realEstateIdx));
+            if(realEstateBoxes.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+
+            // 데이터 없는 경우 처리했으니 리스트로 계산 후 반환
+            realEstateBoxes = calculateRateOfChange(realEstateBoxes);
+            realEstateInfo = boxToInfoWrapper(realEstateBoxes.get(0));
         }
         catch(Exception ignored){
+            System.out.println(ignored.getMessage());
             throw new BaseException(DATABASE_ERROR);
         }
         return realEstateInfo;
@@ -181,7 +197,7 @@ public class RealEstateProvider {
         List<RealEstateTransactionData> realEstateTransactionData;
         try {
             realEstateTransactionData = realEstateDao.getRealEstatePricesInArea(area);
-            if(realEstateTransactionData == null) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+            if(realEstateTransactionData.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
         }
         catch(Exception e){
             throw new BaseException(DATABASE_ERROR);
@@ -200,7 +216,7 @@ public class RealEstateProvider {
         List<RealEstateTransactionData> realEstateTransactionData;
         try {
             realEstateTransactionData = realEstateDao.getRealEstatePrices(realEstateIdx);
-            if(realEstateTransactionData == null) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+            if(realEstateTransactionData.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
         }
         catch(Exception e){
             throw new BaseException(DATABASE_ERROR);
@@ -219,7 +235,7 @@ public class RealEstateProvider {
         try {
             if(keyword.equals(PARAM_DEFAULT)) regionNames = realEstateDao.getAllRegionNames();
             else regionNames = realEstateDao.getRegionNamesWithKeyword(keyword);
-            if(regionNames == null) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+            if(regionNames.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
         }
         catch (Exception e) {
             throw new BaseException(DATABASE_ERROR);
