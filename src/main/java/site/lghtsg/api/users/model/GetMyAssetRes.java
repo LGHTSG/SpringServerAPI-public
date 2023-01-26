@@ -14,8 +14,8 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 public class GetMyAssetRes {
     private String assetName;
-    private int price;
-    private float rateOfChange;
+    private long price;
+    private double rateOfChange;
     private String rateCalDateDiff;
     private String iconImage;
     private int saleCheck;

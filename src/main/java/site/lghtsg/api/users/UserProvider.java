@@ -1,13 +1,22 @@
 package site.lghtsg.api.users;
 
+import org.apache.commons.collections4.Get;
+import org.checkerframework.checker.units.qual.A;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import site.lghtsg.api.common.Wrapper;
 import site.lghtsg.api.config.BaseException;
 import static site.lghtsg.api.config.BaseResponseStatus.*;
 
 import site.lghtsg.api.config.Secret.Secret;
+import site.lghtsg.api.realestates.RealEstateProvider;
+import site.lghtsg.api.realestates.model.RealEstateBox;
+import site.lghtsg.api.resells.ResellProvider;
+import site.lghtsg.api.resells.model.GetResellBoxRes;
+import site.lghtsg.api.stocks.StockProvider;
+import site.lghtsg.api.stocks.model.StockBox;
 import site.lghtsg.api.utils.AES128;
 import site.lghtsg.api.utils.JwtService;
 import site.lghtsg.api.users.model.*;
@@ -21,6 +30,12 @@ public class UserProvider {
 
     private final UserDao userDao;
     private final JwtService jwtService;
+    @Autowired
+    private RealEstateProvider realEstateProvider;
+    @Autowired
+    private StockProvider stockProvider;
+    @Autowired
+    private ResellProvider resellProvider;
 
     final Logger loger = LoggerFactory.getLogger(this.getClass());
 
@@ -75,10 +90,14 @@ public class UserProvider {
     // 주식 자산 조회
     public List<GetMyAssetRes> myAsset(int userIdx) throws BaseException {
         try {
-            List<GetMyAssetRes> stockAsset = userDao.getStockAsset(userIdx);
-            List<GetMyAssetRes> resellAsset = userDao.getResellAsset(userIdx);
-            List<GetMyAssetRes> realEstateAsset = userDao.getRealEstateAsset(userIdx);
-            // list 병합 -> stockAsset으로 합침
+            // 새로운 방식
+            System.out.println("myAsset");
+            System.out.println(userIdx);
+            Wrapper wrapper = new Wrapper();
+            List<GetMyAssetRes> realEstateAsset = wrapper.realEstateBoxToAssetWrapper(realEstateProvider.getUserRealEstateBoxes(userIdx));
+            List<GetMyAssetRes> resellAsset = wrapper.resellBoxToAssertWrapper(resellProvider.getUserResellBoxes(userIdx));
+            List<GetMyAssetRes> stockAsset = wrapper.stockBoxToAssertWrapper(stockProvider.getUserStockBoxes(userIdx));
+
             stockAsset.addAll(resellAsset);
             stockAsset.addAll(realEstateAsset);
             // updatedAt 기준으로 정렬
@@ -86,7 +105,6 @@ public class UserProvider {
 
             return stockAsset;
         } catch (Exception exception) {
-            //System.out.println(exception);
             throw new BaseException(DATABASE_ERROR);
         }
     }

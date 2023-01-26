@@ -42,6 +42,28 @@ public class StockDao {
 
     }
 
+    public List<StockBox> getUserStockBoxes(long userIdx){
+        String getUserStockBoxesQuery =
+                "select S.stockIdx,\n" +
+                        "       S.name,\n" +
+                        "       ST.price,\n" +
+                        "       ST2.price           as closingPrice,\n" +
+                        "       ST.transactionTime,\n" +
+                        "       SUT.updatedAt,\n" +
+                        "       SUT.saleCheck,\n" +
+                        "       II.iconImage\n" +
+                        "from Stock as S\n" +
+                        "         join StockTransaction ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
+                        "         join StockTransaction ST2 on ST2.stockTransactionIdx = S.s2LastTransactionIdx\n" +
+                        "         join IconImage as II on S.iconImageIdx = II.iconImageIdx\n" +
+                        "         join StockUserTransaction SUT on S.stockIdx = (select st.stockIdx\n" +
+                        "                                                           from StockTransaction as st\n" +
+                        "                                                           where st.stockTransactionIdx = SUT.stockTransactionIdx)\n" +
+                        "where SUT.userIdx = ?\n" +
+                        "  and SUT.transactionStatus = 1;";
+        return this.jdbcTemplate.query(getUserStockBoxesQuery, stockBoxRowMapper(), userIdx);
+    }
+
     //특정 주식 정보 조회
     public StockBox getStockInfo(long stockIdx) {
 
@@ -65,50 +87,6 @@ public class StockDao {
         }
     }
 
-    //오늘 종가
-    /*
-    public int getClosingPriceToday(long stockIdx) {
-        try {
-            String getClosingPriceTodayQuery = "select price from StockTransaction where stockIdx = ? order by stockTransactionIdx DESC limit 1";
-            long getClosingPriceTodayParam = stockIdx;
-            return this.jdbcTemplate.queryForObject(getClosingPriceTodayQuery, int.class, getClosingPriceTodayParam);
-        }catch (NullPointerException e) { // 쿼리문에 해당하는 결과가 없을 때
-            return 0;
-        }
-    }*/
-
-    //어제 종가
-    /*
-    public int getClosingPriceYesterday(long stockIdx) {
-        try {
-            String getClosingPriceYesterdayQuery = "select price from StockTransaction where date(transactionTime) = curdate() - 1 " +
-                    "and stockIdx = ? order by stockTransactionIdx DESC limit 1";
-            long getClosingPriceYesterdayParam = stockIdx;
-            return this.jdbcTemplate.queryForObject(getClosingPriceYesterdayQuery, int.class, getClosingPriceYesterdayParam);
-        }catch (NullPointerException e) { // 쿼리문에 해당하는 결과가 없을 때
-            return 0;
-        }
-    }
-*/
-    //등락폭 계산
-    /*
-    public String calculateRateOfChange(long stockIdx){
-        double ClosingPriceToday = getClosingPriceToday(stockIdx);
-        double ClosingPriceYesterday = getClosingPriceYesterday(stockIdx);
-        double result = (ClosingPriceToday - ClosingPriceYesterday) / ClosingPriceYesterday * 100;
-        //System.out.println(ClosingPriceToday);
-        //System.out.println(ClosingPriceYesterday);
-        //System.out.println(result);
-        String RateOfChange = String.format("%.1f", result);
-
-        if(result > 0){
-            RateOfChange = "+" + RateOfChange;
-        }
-        //System.out.println(RateOfChange);
-        return RateOfChange;
-    }*/
-
-
     //특정 주식 누적 가격 조회 (그래프용)
     public List<StockTransactionData> getStockPrices(long stockIdx) {
         String getStockPricesQuery = "select price, transactionTime from StockTransaction where stockIdx = ?";
@@ -130,6 +108,7 @@ public class StockDao {
                 stockBox.setIconImage(rs.getString("iconImage"));
                 stockBox.setTransactionTime(rs.getString("transactionTime"));
                 stockBox.setClosingPrice(rs.getLong("closingPrice"));
+                stockBox.setUpdatedAt(rs.getString("updatedAt"));
                 return stockBox;
             }
         };

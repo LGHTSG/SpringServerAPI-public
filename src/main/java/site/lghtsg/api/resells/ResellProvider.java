@@ -7,6 +7,7 @@ import site.lghtsg.api.common.model.CompareByIdx;
 import site.lghtsg.api.common.model.CompareByRate;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponseStatus;
+import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.resells.model.GetResellInfoRes;
 import site.lghtsg.api.resells.model.GetResellTransactionRes;
 import site.lghtsg.api.resells.model.GetResellBoxRes;
@@ -41,6 +42,19 @@ public class ResellProvider {
             e.printStackTrace();
             throw new BaseException(BaseResponseStatus.DATABASE_ERROR);
         }
+    }
+
+    public List<GetResellBoxRes> getUserResellBoxes(long userIdx) throws BaseException{
+        System.out.println("getUserResellBoxes");
+        List<GetResellBoxRes> getResellBoxRes;
+        try{
+            getResellBoxRes = resellDao.getUserResellBoxes(userIdx);
+            getResellBoxRes = calculateResellBoxesPriceAndRateOFChange(getResellBoxRes);
+        }
+        catch(Exception e){
+            throw new BaseException(DATALIST_SORTING_ERROR);
+        }
+        return getResellBoxRes;
     }
 
     public List<GetResellBoxRes> calculateResellBoxesPriceAndRateOFChange(List<GetResellBoxRes> getResellBoxesRes) {

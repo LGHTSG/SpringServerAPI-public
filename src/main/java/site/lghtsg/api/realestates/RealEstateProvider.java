@@ -93,6 +93,18 @@ public class RealEstateProvider {
             throw new BaseException(DATALIST_SORTING_ERROR);
         }
     }
+    public List<RealEstateBox> getUserRealEstateBoxes(long userIdx) throws BaseException{
+        List<RealEstateBox> realEstateBoxes;
+        try{
+            realEstateBoxes = realEstateDao.getUserRealEstateBoxes(userIdx);
+            System.out.println("getUserRealEstateBoxes");
+            realEstateBoxes = calculateRateOfChange(realEstateBoxes);
+        }
+        catch(Exception e){
+            throw new BaseException(DATALIST_SORTING_ERROR);
+        }
+        return realEstateBoxes;
+    }
 
     static List<RealEstateBox> calculateRateOfChange(List<RealEstateBox> realEstateBoxes) throws BaseException {
         try {
@@ -101,7 +113,6 @@ public class RealEstateProvider {
             long divideBy = (long)MILLISECONDS * SECONDS * MINUTES * HOURS * DAYS;
             Date s2Date;
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
             for (int i = 0, lim = realEstateBoxes.size(); i < lim; i++) {
                 // 거래 기록이 1개만 있는 경우
                 if(realEstateBoxes.get(i).getS2TransactionTime() == null){
