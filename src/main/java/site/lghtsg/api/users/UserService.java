@@ -120,9 +120,13 @@ public class UserService {
     // 자산 구매
     public void postMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
         try {
+            // 리스트 상태 변경 Dao
+            userDao.changeMyAssetList(userIdx, postMyAssetReq);
+            // 자산 구매 Dao
             int result = userDao.postMyAsset(userIdx, postMyAssetReq);
+
             if(result == 0) {
-                throw new BaseException(DELETE_FAIL_USER);
+                throw new BaseException(PURCHASE_FAIL_ASSET);
             }
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
@@ -130,5 +134,30 @@ public class UserService {
     }
 
     // 자산 판매
+    public void saleMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+        try {
+            // 리스트 상태 변경 Dao
+            userDao.changeMyAssetList(userIdx, postMyAssetReq);
+            // 자산 판매 Dao
+            int result = userDao.saleMyAsset(userIdx, postMyAssetReq);
 
+            if(result == 0) {
+                throw new BaseException(SALE_FAIL_ASSET);
+            }
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    // 자산 리스트에서 제거
+    public void deleteMyAssetList(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+        try {
+            int result = userDao.deleteMyAssetList(userIdx, postMyAssetReq);
+            if(result == 0) {
+                throw new BaseException(DELETE_FAIL_ASSET_LIST);
+            }
+        }catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
 }

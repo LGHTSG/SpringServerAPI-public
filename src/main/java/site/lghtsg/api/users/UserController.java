@@ -64,10 +64,10 @@ public class UserController {
 
     /**
      * Email 인증 API
-     * [Post] /users/sign-up/emailCheck
+     * [Post] /users/sign-up/email-check
      */
     @ResponseBody
-    @PostMapping("/sign-up/emailCheck")
+    @PostMapping("/sign-up/email-check")
     public BaseResponse<String> EmailCheck(@RequestBody EmailCheckReq emailCheckReq) throws MessagingException, UnsupportedEncodingException  {
         String authCode = emailService.sendEmail(emailCheckReq.getEmail());
         return new BaseResponse<>(authCode);
@@ -189,8 +189,37 @@ public class UserController {
 
     /**
      * 자산 판매 API
-     * [PATCH] /users/my-asset/sale
+     * [POST] /users/my-asset/sale
      */
+    @ResponseBody
+    @PostMapping("/my-asset/sale")
+    public BaseResponse<String> saleMyAsset(@RequestBody PostMyAssetReq postMyAssetReq) {
+        try {
+            int userIdx = jwtService.getUserIdx();
+            userService.saleMyAsset(userIdx, postMyAssetReq);
+            String result = "구매 완료";
+            return new BaseResponse<>(result);
+        } catch (BaseException exception) {
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+    /**
+     * 리스트 제거 API
+     * [PATCH] /users/my-asset/delete-list
+     */
+    @ResponseBody
+    @PatchMapping("/my-asset/delete-list")
+    public BaseResponse<String> deleteMyAssetList(@RequestBody PostMyAssetReq postMyAssetReq) {
+        try {
+            int userIdx = jwtService.getUserIdx();
+            userService.deleteMyAssetList(userIdx, postMyAssetReq);
+            String result = "리스트에서 제거 완료";
+            return new BaseResponse<>(result);
+        } catch (BaseException exception) {
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
 }
 
 
