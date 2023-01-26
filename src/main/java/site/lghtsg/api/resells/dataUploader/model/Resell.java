@@ -1,4 +1,4 @@
-package site.lghtsg.api.resells.dataUploader;
+package site.lghtsg.api.resells.dataUploader.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
