@@ -84,7 +84,6 @@ public class UserProvider {
     // 주식 자산 조회
     public List<GetMyAssetRes> myAsset(int userIdx) throws BaseException {
         try {
-            // 새로운 방식
             List<GetMyAssetRes> realEstateAsset = userDao.getRealEstateAsset(userIdx);
             realEstateAsset.stream().forEach(GetMyAssetRes -> GetMyAssetRes.setCategory("realEstate"));
 

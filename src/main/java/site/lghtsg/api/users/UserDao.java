@@ -24,7 +24,7 @@ public class UserDao {
     // 회원가입
     public int createUser(PostUserReq postUserReq) {
         String createUserQuery = "insert into User" +
-                "(userName, email, emailCheck, password, profileImg)" +
+                "(userName, email, emailCheck, password, profileImg) " +
                 "values (?,?,?,?,?)";
         Object[] createUserParams = new Object[]{postUserReq.getUserName(), postUserReq.getEmail(),
                 postUserReq.getEmailCheck(), postUserReq.getPassword(), postUserReq.getProfileImg()};
@@ -180,20 +180,19 @@ public class UserDao {
     public int postMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
         String postMyAssetQuery = "";
         switch(postMyAssetReq.getCategory()) {
-            case "stocks": // stock
+            case "stock": // stock
                 postMyAssetQuery = "insert into StockUserTransaction(userIdx, stockTransactionIdx) values (?,?)";
                 break;
-            case "resells": // resell
+            case "resell": // resell
                 postMyAssetQuery = "insert into ResellUserTransaction(userIdx, resellTransactionIdx) values (?,?)";
                 break;
-            case "realestates": // realestate
+            case "realestate": // realestate
                 postMyAssetQuery = "insert into RealEstateUserTransaction(userIdx, realEstateTransactionIdx) values (?,?)";
                 break;
             default:
                 break;
         }
-        Object[] postMyAssetParams =
-                new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
+        Object[] postMyAssetParams = new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
         return this.jdbcTemplate.update(postMyAssetQuery, postMyAssetParams);
     }
 
@@ -216,5 +215,48 @@ public class UserDao {
         };
     }
 
+
+}
+    // 자산 판매
+    public int saleMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
+        String saleMyAssetQuery = "";
+        // 판매
+        // 이 곳에서는 복수의 s가 붙지 않습니다. (GET에서 category를 단수형으로 보내줌)
+        switch(postMyAssetReq.getCategory()) {
+            case "stock":
+                saleMyAssetQuery = "INSERT INTO StockUserTransaction(userIdx, stockTransactionIdx, saleCheck) VALUES (?,?,1);";
+                break;
+            case "resell":
+                saleMyAssetQuery = "INSERT INTO ResellUserTransaction(userIdx, resellTransactionIdx, saleCheck) VALUES (?,?,1);";
+                break;
+            case "realestate":
+                saleMyAssetQuery = "INSERT INTO RealEstateUserTransaction(userIdx, realEstateTransactionIdx, saleCheck) VALUES (?,?,1);";
+                break;
+            default:
+                break;
+        }
+        Object[] saleMyAssetParams = new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
+        return this.jdbcTemplate.update(saleMyAssetQuery, saleMyAssetParams);
+    }
+
+    // 리스트 노출 상태 변경
+    public int changeMyAssetList(int userIdx, PostMyAssetReq postMyAssetReq) {
+        String changeMyAssetListQuery = "";
+        switch (postMyAssetReq.getCategory()) {
+            case "stock":
+                changeMyAssetListQuery = "UPDATE StockUserTransaction SET transactionStatus=0 WHERE userIdx=? AND stockTransactionIdx = ? AND transactionStatus=1";
+                break;
+            case "resell":
+                changeMyAssetListQuery = "UPDATE ResellUserTransaction SET transactionStatus=0 WHERE userIdx=? AND resellTransactionIdx = ? AND transactionStatus=1";
+                break;
+            case "realestate":
+                changeMyAssetListQuery = "UPDATE RealEstatelUserTransaction SET transactionStatus=0 WHERE userIdx=? AND realEstateTransactionIdx = ? AND transactionStatus=1";
+                break;
+            default:
+                break;
+        }
+        Object[] saleMyAssetParams = new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
+        return this.jdbcTemplate.update(changeMyAssetListQuery, saleMyAssetParams);
+    }
 
 }
