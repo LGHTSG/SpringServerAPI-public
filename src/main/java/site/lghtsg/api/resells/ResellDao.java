@@ -34,7 +34,7 @@ public class ResellDao {
     }
 
     public List<GetResellBoxRes> getResellBoxes() {
-        String getResellBoxesQuery = "select rs.resellIdx, rs.name, rst.price, rst2.price, ii.iconImage\n" +
+        String getResellBoxesQuery = "select rs.resellIdx, rs.name, rst.price as price, rst2.price as s2Price, ii.iconImage\n" +
                 "from Resell as rs,\n" +
                 "     ResellTransaction as rst,\n" +
                 "     ResellTransaction as rst2,\n" +
@@ -50,12 +50,13 @@ public class ResellDao {
     public List<GetResellBoxRes> getUserResellBoxes(long userIdx) {
         String getUserResellBoxesQuery = "select RS.resellIdx,\n" +
                 "       RS.name,\n" +
-                "       RST.price,\n" +
-                "       RST2.price           as s2LastPrice,\n" +
+                "       RST.price as price,\n" +
+                "       RST2.price as s2Price,\n" +
                 "       RST.transactionTime,\n" +
                 "       RUT.updatedAt,\n" +
                 "       RUT.saleCheck,\n" +
-                "       II.iconImage\n" +
+                "       II.iconImage,\n" +
+                "       RS.updatedAt\n" +
                 "from Resell as RS\n" +
                 "         join ResellTransaction as RST on RST.resellTransactionIdx = RS.lastTransactionIdx\n" +
                 "         join ResellTransaction as RST2 on RST2.resellTransactionIdx = RS.s2LastTransactionIdx\n" +
@@ -123,8 +124,9 @@ public class ResellDao {
                 getResellBoxRes.setName(rs.getString("name"));
                 getResellBoxRes.setRateCalDateDiff("최근 거래가 기준");
                 getResellBoxRes.setIconImage(rs.getString("iconImage"));
-                getResellBoxRes.setPrice(rs.getLong("rst.price"));
-                getResellBoxRes.setLastPrice(rs.getLong("rst2.price"));
+                getResellBoxRes.setPrice(rs.getLong("price"));
+                getResellBoxRes.setLastPrice(rs.getLong("s2Price"));
+                getResellBoxRes.setUpdatedAt(rs.getString("updatedAt"));
                 return getResellBoxRes;
             }
         };

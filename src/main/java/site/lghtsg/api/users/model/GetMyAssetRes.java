@@ -13,6 +13,7 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GetMyAssetRes {
+//    private int transactionIdx;
     private String assetName;
     private long price;
     private double rateOfChange;
@@ -20,4 +21,5 @@ public class GetMyAssetRes {
     private String iconImage;
     private int saleCheck;
     private String updatedAt;
+//    private String category;
 }

@@ -91,7 +91,6 @@ public class UserProvider {
     public List<GetMyAssetRes> myAsset(int userIdx) throws BaseException {
         try {
             // 새로운 방식
-            System.out.println("myAsset");
             System.out.println(userIdx);
             Wrapper wrapper = new Wrapper();
             List<GetMyAssetRes> realEstateAsset = wrapper.realEstateBoxToAssetWrapper(realEstateProvider.getUserRealEstateBoxes(userIdx));
