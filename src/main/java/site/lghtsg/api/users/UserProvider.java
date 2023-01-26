@@ -1,19 +1,26 @@
 package site.lghtsg.api.users;
 
+import org.apache.commons.collections4.Get;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import site.lghtsg.api.config.BaseException;
 import static site.lghtsg.api.config.BaseResponseStatus.*;
+import static site.lghtsg.api.config.Constant.*;
+import static site.lghtsg.api.config.Constant.SINGLE_TRANSACTION_HISTORY;
+import static site.lghtsg.api.realestates.RealEstateProvider.processDateDiffOutput;
 
 import site.lghtsg.api.config.Secret.Secret;
+import site.lghtsg.api.realestates.RealEstateProvider;
 import site.lghtsg.api.utils.AES128;
 import site.lghtsg.api.utils.JwtService;
 import site.lghtsg.api.users.model.*;
 
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -21,6 +28,8 @@ public class UserProvider {
 
     private final UserDao userDao;
     private final JwtService jwtService;
+    @Autowired
+    private RealEstateProvider realEstateProvider;
 
     final Logger loger = LoggerFactory.getLogger(this.getClass());
 
@@ -65,7 +74,7 @@ public class UserProvider {
         if (postLoginReq.getPassword().equals(password)) {  // password가 일치하는 지 확인 (encryption된 password)
             int userIdx = userDao.getPassword(postLoginReq).getUserIdx();
             String jwt = jwtService.createJwt(userIdx);     // userIdx를 바탕으로 jwt 발급
-            return new PostLoginRes(userIdx,jwt);
+            return new PostLoginRes(userIdx, jwt);
 
         } else { // 비밀번호가 다르다면 에러메세지를 출력한다.
             throw new BaseException(FAILED_TO_LOGIN);
@@ -75,21 +84,24 @@ public class UserProvider {
     // 주식 자산 조회
     public List<GetMyAssetRes> myAsset(int userIdx) throws BaseException {
         try {
-            List<GetMyAssetRes> stockAsset = userDao.getStockAsset(userIdx);
-            stockAsset.stream().forEach(getMyAssetRes -> getMyAssetRes.setCategory("stock"));
-            List<GetMyAssetRes> resellAsset = userDao.getResellAsset(userIdx);
-            stockAsset.stream().forEach(getMyAssetRes -> getMyAssetRes.setCategory("resell"));
             List<GetMyAssetRes> realEstateAsset = userDao.getRealEstateAsset(userIdx);
-            stockAsset.stream().forEach(getMyAssetRes -> getMyAssetRes.setCategory("realestate"));
-            // list 병합 -> stockAsset으로 합침
+            realEstateAsset.stream().forEach(GetMyAssetRes -> GetMyAssetRes.setCategory("realEstate"));
+
+            List<GetMyAssetRes> resellAsset = userDao.getResellAsset(userIdx);
+            resellAsset.stream().forEach(GetMyAssetRes -> GetMyAssetRes.setCategory("resell"));
+
+            List<GetMyAssetRes> stockAsset = userDao.getStockAsset(userIdx);
+            stockAsset.stream().forEach(GetMyAssetRes -> GetMyAssetRes.setCategory("stock"));
+
             stockAsset.addAll(resellAsset);
             stockAsset.addAll(realEstateAsset);
+            stockAsset = calculateRateOfChange(stockAsset);
+
             // updatedAt 기준으로 정렬
             Collections.sort(stockAsset, new ListComparator());
 
             return stockAsset;
         } catch (Exception exception) {
-            //System.out.println(exception);
             throw new BaseException(DATABASE_ERROR);
         }
     }
@@ -98,9 +110,55 @@ public class UserProvider {
     public class ListComparator implements Comparator {
         @Override
         public int compare(Object o1, Object o2) {
-            String testString1 = ((GetMyAssetRes)o1).getUpdatedAt();
-            String testString2 = ((GetMyAssetRes)o2).getUpdatedAt();
+            String testString1 = ((GetMyAssetRes) o1).getUpdatedAt();
+            String testString2 = ((GetMyAssetRes) o2).getUpdatedAt();
             return testString1.compareTo(testString2);
         }
+    }
+
+    public static List<GetMyAssetRes> calculateRateOfChange(List<GetMyAssetRes> assetList) throws BaseException{
+        try {
+            double price, s2Price;
+            long currentTime, s2DateTime, timeDiff, diffMonth;
+            long divideBy = (long) MILLISECONDS * SECONDS * MINUTES * HOURS * DAYS;
+            Date s2Date;
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            for (int i = 0, lim = assetList.size(); i < lim; i++) {
+                // 거래 기록이 1개만 있는 경우
+                if (assetList.get(i).getS2TransactionTime().isEmpty()) {
+                    assetList.get(i).setRateOfChange(0.0);
+                    assetList.get(i).setRateCalDateDiff(SINGLE_TRANSACTION_HISTORY);
+                    continue;
+                }
+                System.out.println(assetList.get(i).getS2TransactionTime());
+
+                // 증감울 계산
+                price = assetList.get(i).getPrice();
+                s2Price = assetList.get(i).getS2Price();
+
+                assetList.get(i).setRateOfChange(Math.round((price - s2Price) / s2Price * 100 * 10) / 10.0);
+
+                if (assetList.get(i).getCategory().equals("stock")) {
+                    assetList.get(i).setRateCalDateDiff("어제");
+                    continue;
+                } else if (assetList.get(i).getCategory().equals("resell")) {
+                    assetList.get(i).setRateCalDateDiff("이전 거래 대비");
+                    continue;
+                }
+
+                // 증감율 게산 기간 계산 (부동산 단독 기능)
+                s2Date = sdf.parse(assetList.get(i).getS2TransactionTime());
+
+                currentTime = System.currentTimeMillis();
+                s2DateTime = s2Date.getTime();
+
+                timeDiff = currentTime - s2DateTime;
+                diffMonth = timeDiff / divideBy;
+                assetList.get(i).setRateCalDateDiff(processDateDiffOutput(diffMonth));
+            }
+        } catch (Exception e) {
+            throw new BaseException(DATALIST_CAL_RATE_ERROR);
+        }
+        return assetList;
     }
 }
