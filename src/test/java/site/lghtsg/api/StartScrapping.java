@@ -12,9 +12,9 @@ public class StartScrapping {
     @Autowired
     private ResellDao resellDao;
 
-    @Test
-    void 스크래핑(){
-      resellDao.scraping();
-    }
+//    @Test
+//    void 스크래핑(){
+//      resellDao.scraping();
+//    }
 
 }
