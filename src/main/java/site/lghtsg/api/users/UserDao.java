@@ -216,7 +216,6 @@ public class UserDao {
     }
 
 
-}
     // 자산 판매
     public int saleMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
         String saleMyAssetQuery = "";
