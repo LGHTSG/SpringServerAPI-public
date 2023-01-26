@@ -44,19 +44,6 @@ public class ResellProvider {
         }
     }
 
-    public List<GetResellBoxRes> getUserResellBoxes(long userIdx) throws BaseException{
-        System.out.println("getUserResellBoxes");
-        List<GetResellBoxRes> getResellBoxRes;
-        try{
-            getResellBoxRes = resellDao.getUserResellBoxes(userIdx);
-            getResellBoxRes = calculateResellBoxesPriceAndRateOFChange(getResellBoxRes);
-        }
-        catch(Exception e){
-            throw new BaseException(DATALIST_SORTING_ERROR);
-        }
-        return getResellBoxRes;
-    }
-
     public List<GetResellBoxRes> calculateResellBoxesPriceAndRateOFChange(List<GetResellBoxRes> getResellBoxesRes) {
         for (GetResellBoxRes getResellBoxRes : getResellBoxesRes) {
             Long lastPrice = getResellBoxRes.getPrice();

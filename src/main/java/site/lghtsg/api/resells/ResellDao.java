@@ -47,28 +47,6 @@ public class ResellDao {
         return this.jdbcTemplate.query(getResellBoxesQuery,resellBoxResRowMapper());
     }
 
-    public List<GetResellBoxRes> getUserResellBoxes(long userIdx) {
-        String getUserResellBoxesQuery = "select RS.resellIdx,\n" +
-                "       RS.name,\n" +
-                "       RST.price as price,\n" +
-                "       RST2.price as s2Price,\n" +
-                "       RST.transactionTime,\n" +
-                "       RUT.updatedAt,\n" +
-                "       RUT.saleCheck,\n" +
-                "       II.iconImage,\n" +
-                "       RS.updatedAt\n" +
-                "from Resell as RS\n" +
-                "         join ResellTransaction as RST on RST.resellTransactionIdx = RS.lastTransactionIdx\n" +
-                "         join ResellTransaction as RST2 on RST2.resellTransactionIdx = RS.s2LastTransactionIdx\n" +
-                "         join IconImage as II on RS.iconImageIdx = II.iconImageIdx\n" +
-                "         join ResellUserTransaction RUT on RS.resellIdx = (select rst.resellIdx\n" +
-                "                                                           from ResellTransaction as rst\n" +
-                "                                                           where rst.resellTransactionIdx = RUT.resellTransactionIdx)\n" +
-                "where RUT.userIdx = ?\n" +
-                "  and RUT.transactionStatus = 1;";
-        return this.jdbcTemplate.query(getUserResellBoxesQuery, resellBoxResRowMapper(), userIdx);
-    }
-
     public GetResellInfoRes getResellInfo(long resellIdx) {
         String getResellQuery = "select rs.resellIdx,\n" +
                 "       rs.name,\n" +
@@ -126,7 +104,6 @@ public class ResellDao {
                 getResellBoxRes.setIconImage(rs.getString("iconImage"));
                 getResellBoxRes.setPrice(rs.getLong("price"));
                 getResellBoxRes.setLastPrice(rs.getLong("s2Price"));
-                getResellBoxRes.setUpdatedAt(rs.getString("updatedAt"));
                 return getResellBoxRes;
             }
         };

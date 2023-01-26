@@ -39,8 +39,7 @@ public class RealEstateDao {
                         "       ret2.price as s2LastPrice,\n" +
                         "       ret.transactionTime,\n" +
                         "       ret2.transactionTime as s2TransactionTime,\n" +
-                        "       ii.iconImage,\n" +
-                        "       re.updatedAt\n" +
+                        "       ii.iconImage\n" +
                         "from RealEstate as re,\n" +
                         "     RealEstateTransaction as ret,\n" +
                         "     RealEstateTransaction as ret2,\n" +
@@ -69,8 +68,7 @@ public class RealEstateDao {
                         "       ret2.price as s2LastPrice,\n" +
                         "       ret.transactionTime,\n" +
                         "       ret2.transactionTime as s2TransactionTime,\n" +
-                        "       ii.iconImage,\n" +
-                        "       re.updatedAt\n" +
+                        "       ii.iconImage\n" +
                         "from RealEstate as re,\n" +
                         "     RealEstateTransaction as ret,\n" +
                         "     RealEstateTransaction as ret2,\n" +
@@ -84,27 +82,6 @@ public class RealEstateDao {
                 findAreaQuery + ")";
 
         return this.jdbcTemplate.query(getRealEstateBoxesInAreaQuery, realEstateBoxRowMapper(), area);
-    }
-
-    public List<RealEstateBox> getUserRealEstateBoxes(long userIdx){
-        String getUserRealEstateBoxesQuery = "select RE.realEstateIdx,\n" +
-                "       RE.name,\n" +
-                "       RET.price,\n" +
-                "       RET2.price           as s2LastPrice,\n" +
-                "       RET.transactionTime,\n" +
-                "       RET2.transactionTime as s2TransactionTime,\n" +
-                "       REUT.updatedAt,\n" +
-                "       II.iconImage\n" +
-                "from RealEstate as RE\n" +
-                "         join RealEstateTransaction as RET on RET.realEstateTransactionIdx = RE.lastTransactionIdx\n" +
-                "         join RealEstateTransaction as RET2 on RET2.realEstateTransactionIdx = RE.s2LastTransactionIdx\n" +
-                "         join IconImage as II on RE.iconImageIdx = II.iconImageIdx\n" +
-                "         join RealEstateUserTransaction REUT on RE.realEstateIdx = (select ret.realEstateIdx\n" +
-                "                                                                    from RealEstateTransaction as ret\n" +
-                "                                                                    where ret.realEstateTransactionIdx = REUT.realEstateTransactionIdx)\n" +
-                "where REUT.userIdx = ?\n" +
-                "  and REUT.transactionStatus = 1;";
-        return this.jdbcTemplate.query(getUserRealEstateBoxesQuery, realEstateBoxRowMapper(), userIdx);
     }
 
 
@@ -158,8 +135,7 @@ public class RealEstateDao {
                         "       ret2.price           as s2LastPrice,\n" +
                         "       ret.transactionTime,\n" +
                         "       ret2.transactionTime as s2TransactionTime,\n" +
-                        "       ii.iconImage,\n" +
-                        "       re.updatedAt\n" +
+                        "       ii.iconImage\n" +
                         "from RealEstate as re,\n" +
                         "     RealEstateTransaction as ret,\n" +
                         "     RealEstateTransaction as ret2,\n" +
@@ -236,7 +212,6 @@ public class RealEstateDao {
                 getRealEstateBox.setS2Price(rs.getLong("s2LastPrice"));
                 getRealEstateBox.setTransactionTime(rs.getString("transactionTime"));
                 getRealEstateBox.setS2TransactionTime(rs.getString("s2TransactionTime"));
-                getRealEstateBox.setUpdatedAt(rs.getString("updatedAt"));
                 return getRealEstateBox;
             }
         };

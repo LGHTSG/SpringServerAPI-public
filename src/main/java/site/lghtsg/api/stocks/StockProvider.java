@@ -43,19 +43,6 @@ public class StockProvider {
         return stockBoxes;
     }
 
-    public List<StockBox> getUserStockBoxes(long userIdx) throws BaseException{
-        System.out.println("getUserStockBoxes");
-        List<StockBox> stockBoxes;
-        try{
-            stockBoxes = stockDao.getUserStockBoxes(userIdx);
-            stockBoxes = calculateRateOfChange(stockBoxes);
-        }
-        catch(Exception e){
-            throw new BaseException(DATABASE_ERROR);
-        }
-        return stockBoxes;
-    }
-
     static List<StockBox> sortStockBoxes(List<StockBox> stockBoxes, String sort, String order) throws BaseException {
         try {
             // 1. 정렬

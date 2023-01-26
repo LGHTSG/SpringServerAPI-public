@@ -15,6 +15,4 @@ public class Box {
     private String iconImage;
     private String transactionTime;
     private long price;
-    private int saleCheck;
-    private String updatedAt;
 }

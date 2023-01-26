@@ -26,15 +26,15 @@ public class StockDao {
     // 전체 리스트 조회
     public List<StockBox> getAllStockBoxes() {
 
-        String getStockBoxesQuery = "select S.stockIdx,\n" +
+        String getStockBoxesQuery =
+                "select S.stockIdx,\n" +
                 "       S.name,\n" +
                 "       S.issuedShares,\n" +
                 "       ST.tradingVolume,\n" +
                 "       ST.price,\n" +
                 "       ST2.price           as closingPrice,\n" +
                 "       ST.transactionTime,\n" +
-                "       II.iconImage,\n" +
-                "       S.updatedAt\n" +
+                "       II.iconImage\n" +
                 "from Stock as S\n" +
                 "         join StockTransaction ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
                 "         join StockTransaction ST2 on ST2.stockTransactionIdx = S.s2LastTransactionIdx\n" +
@@ -44,42 +44,18 @@ public class StockDao {
 
     }
 
-    public List<StockBox> getUserStockBoxes(long userIdx){
-        String getUserStockBoxesQuery =
-                "select S.stockIdx,\n" +
-                        "                               S.name,\n" +
-                        "                               ST.price,\n" +
-                        "                               ST.tradingVolume,\n" +
-                        "                               S.issuedShares,\n" +
-                        "                               ST2.price           as closingPrice,\n" +
-                        "                               ST.transactionTime,\n" +
-                        "                               SUT.updatedAt,\n" +
-                        "                              SUT.saleCheck,\n" +
-                        "                               II.iconImage\n" +
-                        "                        from Stock as S\n" +
-                        "                                 join StockTransaction ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
-                        "                                join StockTransaction ST2 on ST2.stockTransactionIdx = S.s2LastTransactionIdx\n" +
-                        "                                 join IconImage as II on S.iconImageIdx = II.iconImageIdx\n" +
-                        "                                 join StockUserTransaction SUT on S.stockIdx = (select st.stockIdx\n" +
-                        "                                                                                  from StockTransaction as st\n" +
-                        "                                                                                   where st.stockTransactionIdx = SUT.stockTransactionIdx)\n" +
-                        "                        where SUT.userIdx = ?\n" +
-                        "                          and SUT.transactionStatus = 1;";
-        return this.jdbcTemplate.query(getUserStockBoxesQuery, stockBoxRowMapper(), userIdx);
-    }
-
     //특정 주식 정보 조회
     public StockBox getStockInfo(long stockIdx) {
 
-        String getStockInfoQuery = "select S.stockIdx,\n" +
+        String getStockInfoQuery =
+                "select S.stockIdx,\n" +
                 "       S.name,\n" +
                 "       S.issuedShares,\n" +
                 "       ST.tradingVolume,\n" +
                 "       ST.price,\n" +
                 "       ST2.price           as closingPrice,\n" +
                 "       ST.transactionTime,\n" +
-                "       II.iconImage,\n" +
-                "       S.updatedAt\n" +
+                "       II.iconImage\n" +
                 "from Stock as S\n" +
                 "         join StockTransaction ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
                 "         join StockTransaction ST2 on ST2.stockTransactionIdx = S.s2LastTransactionIdx\n" +
@@ -115,7 +91,6 @@ public class StockDao {
                 stockBox.setIconImage(rs.getString("iconImage"));
                 stockBox.setTransactionTime(rs.getString("transactionTime"));
                 stockBox.setClosingPrice(rs.getLong("closingPrice"));
-                stockBox.setUpdatedAt(rs.getString("updatedAt"));
                 return stockBox;
             }
         };

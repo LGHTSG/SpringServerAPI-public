@@ -3,10 +3,14 @@ package site.lghtsg.api.users;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.users.model.*;
 
 import javax.sql.DataSource;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.List;
 
 
@@ -95,76 +99,81 @@ public class UserDao {
     // 주식 자산 조회
     public List<GetMyAssetRes> getStockAsset(int userIdx) {
         String getStockAssetQuery =
-                "SELECT S.name AS assetName, ST.price, ST.price*100 AS rateOfChange," +
-                        "ST.price-100 AS rateCalDateDiff, II.iconImage," +
-                        "SUT.saleCheck, SUT.updatedAt " +
-                        "FROM StockUserTransaction AS SUT " +
-                        "INNER JOIN StockTransaction AS ST ON ST.stockTransactionIdx = SUT.stockTransactionIdx " +
-                        "INNER JOIN Stock AS S ON S.stockIdx = ST.stockIdx " +
-                        "INNER JOIN IconImage AS II ON II.iconImageIdx = S.iconImageIdx " +
-                        "WHERE userIdx = ?";
+                "select ST.stockTransactionIdx as idx,\n" +
+                        "       S.name,\n" +
+                        "       ST.price,\n" +
+                        "       ST2.price           as s2Price,\n" +
+                        "       ST.transactionTime,\n" +
+                        "       ST2.transactionTime as s2TransactionTime,\n" +
+                        "       SUT.updatedAt,\n" +
+                        "       SUT.saleCheck,\n" +
+                        "       II.iconImage\n" +
+                        "from Stock as S\n" +
+                        "         join StockTransaction ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
+                        "         join StockTransaction ST2 on ST2.stockTransactionIdx = S.s2LastTransactionIdx\n" +
+                        "         join IconImage as II on S.iconImageIdx = II.iconImageIdx\n" +
+                        "         join StockUserTransaction SUT on S.stockIdx = (select st.stockIdx\n" +
+                        "                                                           from StockTransaction as st\n" +
+                        "                                                           where st.stockTransactionIdx = SUT.stockTransactionIdx)\n" +
+                        "where SUT.userIdx = ?\n" +
+                        "  and SUT.transactionStatus = 1;";
         int getStockAssetParams = userIdx;
 
-        return this.jdbcTemplate.query(getStockAssetQuery,
-                (rs, rowNum) -> new GetMyAssetRes(
-                        rs.getString("assetName"),
-                        rs.getInt("price"),
-                        rs.getFloat("rateOfChange"),
-                        rs.getString("rateCalDateDiff"),
-                        rs.getString("iconImage"),
-                        rs.getInt("saleCheck"),
-                        rs.getString("updatedAt")),
-                getStockAssetParams);
+        return this.jdbcTemplate.query(getStockAssetQuery, assetRowMapper(), getStockAssetParams);
     }
 
     // 리셀 자산 조회
     public List<GetMyAssetRes> getResellAsset(int userIdx) {
         String getResellAssetQuery =
-                "SELECT R.name AS assetName, RT.price, RT.price*100 AS rateOfChange, " +
-                        "RT.price-100 AS rateCalDateDiff, II.iconImage, " +
-                        "RUT.saleCheck, RUT.updatedAt " +
-                        "FROM ResellUserTransaction AS RUT " +
-                        "INNER JOIN ResellTransaction AS RT ON RT.resellTransactionIdx = RUT.resellTransactionIdx " +
-                        "INNER JOIN Resell AS R ON R.resellIdx = RT.resellIdx " +
-                        "INNER JOIN IconImage AS II ON II.iconImageIdx = R.iconImageIdx " +
-                        "WHERE userIdx = ?";
+                "select RS.resellIdx as idx,\n" +
+                        "       RS.name,\n" +
+                        "       RST.price,\n" +
+                        "       RST2.price           as s2Price,\n" +
+                        "       RST.transactionTime,\n" +
+                        "       RST2.transactionTime as s2TransactionTime,\n" +
+                        "       RUT.updatedAt,\n" +
+                        "       RUT.saleCheck,\n" +
+                        "       II.iconImage\n" +
+                        "from Resell as RS\n" +
+                        "         join ResellTransaction as RST on RST.resellTransactionIdx = RS.lastTransactionIdx\n" +
+                        "         join ResellTransaction as RST2 on RST2.resellTransactionIdx = RS.s2LastTransactionIdx\n" +
+                        "         join IconImage as II on RS.iconImageIdx = II.iconImageIdx\n" +
+                        "         join ResellUserTransaction RUT on RS.resellIdx = (select rst.resellIdx\n" +
+                        "                                                           from ResellTransaction as rst\n" +
+                        "                                                           where rst.resellTransactionIdx = RUT.resellTransactionIdx)\n" +
+                        "where RUT.userIdx = ?\n" +
+                        "  and RUT.transactionStatus = 1;";
+
         int getResellBoxParams = userIdx;
 
-        return this.jdbcTemplate.query(getResellAssetQuery,
-                (rs, rowNum) -> new GetMyAssetRes(
-                        rs.getString("assetName"),
-                        rs.getInt("price"),
-                        rs.getFloat("rateOfChange"),
-                        rs.getString("rateCalDateDiff"),
-                        rs.getString("iconImage"),
-                        rs.getInt("saleCheck"),
-                        rs.getString("updatedAt")),
-                getResellBoxParams);
+        return this.jdbcTemplate.query(getResellAssetQuery, assetRowMapper(), getResellBoxParams);
     }
 
     // 부동산 자산 조회
     public List<GetMyAssetRes> getRealEstateAsset(int userIdx) {
         String getRealEstateAssetQuery =
-                "SELECT RE.name AS assetName, RET.price, RET.price*100 AS rateOfChange, " +
-                        "RET.price-100 AS rateCalDateDiff, II.iconImage," +
-                        "REUT.saleCheck, REUT.updatedAt " +
-                        "FROM RealEstateUserTransaction AS REUT " +
-                        "INNER JOIN RealEstateTransaction AS RET ON RET.realEstateTransactionIdx = REUT.realEstateTransactionIdx " +
-                        "INNER JOIN RealEstate AS RE ON RE.realEstateIdx = RET.realEstateIdx " +
-                        "INNER JOIN IconImage AS II ON II.iconImageIdx = RE.iconImageIdx " +
-                        "WHERE userIdx = ?";
+                "select RET.realEstateTransactionIdx as idx,\n" +
+                        "       RE.name,\n" +
+                        "       RET.price,\n" +
+                        "       RET2.price           as s2Price,\n" +
+                        "       RET.transactionTime,\n" +
+                        "       RET2.transactionTime as s2TransactionTime,\n" +
+                        "       REUT.updatedAt,\n" +
+                        "       REUT.saleCheck,\n" +
+                        "       II.iconImage\n" +
+                        "from RealEstate as RE\n" +
+                        "         join RealEstateTransaction as RET on RET.realEstateTransactionIdx = RE.lastTransactionIdx\n" +
+                        "         join RealEstateTransaction as RET2 on RET2.realEstateTransactionIdx = RE.s2LastTransactionIdx\n" +
+                        "         join IconImage as II on RE.iconImageIdx = II.iconImageIdx\n" +
+                        "         join RealEstateUserTransaction REUT on RE.realEstateIdx = (select ret.realEstateIdx\n" +
+                        "                                                                    from RealEstateTransaction as ret\n" +
+                        "                                                                    where ret.realEstateTransactionIdx = REUT.realEstateTransactionIdx)\n" +
+                        "where REUT.userIdx = ?\n" +
+                        "  and REUT.transactionStatus = 1;";
+
         int getRealEstateParams = userIdx;
 
-        return this.jdbcTemplate.query(getRealEstateAssetQuery,
-                (rs, rowNum) -> new GetMyAssetRes(
-                        rs.getString("assetName"),
-                        rs.getInt("price"),
-                        rs.getFloat("rateOfChange"),
-                        rs.getString("rateCalDateDiff"),
-                        rs.getString("iconImage"),
-                        rs.getInt("saleCheck"),
-                        rs.getString("updatedAt")),
-                getRealEstateParams);
+        return this.jdbcTemplate.query(getRealEstateAssetQuery, assetRowMapper(), getRealEstateParams);
     }
 
     // 자산 구매
@@ -187,5 +196,25 @@ public class UserDao {
                 new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
         return this.jdbcTemplate.update(postMyAssetQuery, postMyAssetParams);
     }
+
+    private RowMapper<GetMyAssetRes> assetRowMapper(){
+        return new RowMapper<GetMyAssetRes>() {
+            @Override
+            public GetMyAssetRes mapRow(ResultSet rs, int rowNum) throws SQLException {
+                GetMyAssetRes getMyAssetRes = new GetMyAssetRes();
+                getMyAssetRes.setTransactionIdx(rs.getInt("idx"));
+                getMyAssetRes.setAssetName(rs.getString("name"));
+                getMyAssetRes.setPrice(rs.getLong("price"));
+                getMyAssetRes.setS2Price(rs.getLong("s2Price"));
+                getMyAssetRes.setIconImage(rs.getString("iconImage"));
+                getMyAssetRes.setSaleCheck(rs.getInt("saleCheck"));
+                getMyAssetRes.setUpdatedAt(rs.getString("updatedAt"));
+                getMyAssetRes.setTransactionTime(rs.getString("transactionTime"));
+                getMyAssetRes.setS2TransactionTime(rs.getString("s2TransactionTime"));
+                return getMyAssetRes;
+            }
+        };
+    }
+
 
 }

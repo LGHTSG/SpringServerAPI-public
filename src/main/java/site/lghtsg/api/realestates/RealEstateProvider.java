@@ -93,18 +93,6 @@ public class RealEstateProvider {
             throw new BaseException(DATALIST_SORTING_ERROR);
         }
     }
-    public List<RealEstateBox> getUserRealEstateBoxes(long userIdx) throws BaseException{
-        List<RealEstateBox> realEstateBoxes;
-        try{
-            realEstateBoxes = realEstateDao.getUserRealEstateBoxes(userIdx);
-            System.out.println("getUserRealEstateBoxes");
-            realEstateBoxes = calculateRateOfChange(realEstateBoxes);
-        }
-        catch(Exception e){
-            throw new BaseException(DATALIST_SORTING_ERROR);
-        }
-        return realEstateBoxes;
-    }
 
     static List<RealEstateBox> calculateRateOfChange(List<RealEstateBox> realEstateBoxes) throws BaseException {
         try {
@@ -144,7 +132,7 @@ public class RealEstateProvider {
         return realEstateBoxes;
     }
 
-    static String processDateDiffOutput(long diffMonth){
+    public static String processDateDiffOutput(long diffMonth){
         if(diffMonth <= 3) return WITHIN_3_MONTHS;
         else if(diffMonth <= 6) return WITHIN_6_MONTHS;
         else if(diffMonth <= 12) return WITHIN_1_YEAR;
