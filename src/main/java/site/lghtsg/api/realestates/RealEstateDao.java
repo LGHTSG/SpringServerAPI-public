@@ -39,7 +39,8 @@ public class RealEstateDao {
                         "       ret2.price as s2LastPrice,\n" +
                         "       ret.transactionTime,\n" +
                         "       ret2.transactionTime as s2TransactionTime,\n" +
-                        "       ii.iconImage\n" +
+                        "       ii.iconImage,\n" +
+                        "       re.updatedAt\n" +
                         "from RealEstate as re,\n" +
                         "     RealEstateTransaction as ret,\n" +
                         "     RealEstateTransaction as ret2,\n" +
@@ -68,7 +69,8 @@ public class RealEstateDao {
                         "       ret2.price as s2LastPrice,\n" +
                         "       ret.transactionTime,\n" +
                         "       ret2.transactionTime as s2TransactionTime,\n" +
-                        "       ii.iconImage\n" +
+                        "       ii.iconImage,\n" +
+                        "       re.updatedAt\n" +
                         "from RealEstate as re,\n" +
                         "     RealEstateTransaction as ret,\n" +
                         "     RealEstateTransaction as ret2,\n" +
