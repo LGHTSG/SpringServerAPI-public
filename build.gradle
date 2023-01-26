@@ -36,6 +36,9 @@ dependencies {
 	// [데옹] : email 인증 관련
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
 
+	// [데옹] : redis 의존성 추가
+	implementation 'org.springframework.boot:spring-boot-starter-data-redis'
+
 	// [준] : 스크래핑을 위한 Selenium Dependency
 	// https://mvnrepository.com/artifact/org.seleniumhq.selenium/selenium-java
 	implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '4.7.2'
