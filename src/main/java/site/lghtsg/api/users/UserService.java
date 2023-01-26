@@ -152,7 +152,7 @@ public class UserService {
     // 자산 리스트에서 제거
     public void deleteMyAssetList(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
         try {
-            int result = userDao.deleteMyAssetList(userIdx, postMyAssetReq);
+            int result = userDao.changeMyAssetList(userIdx, postMyAssetReq);
             if(result == 0) {
                 throw new BaseException(DELETE_FAIL_ASSET_LIST);
             }

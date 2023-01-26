@@ -235,23 +235,4 @@ public class UserDao {
         return this.jdbcTemplate.update(changeMyAssetListQuery, saleMyAssetParams);
     }
 
-    // 자산 리스트에서 안보이게
-    public int deleteMyAssetList(int userIdx, PostMyAssetReq postMyAssetReq) {
-        String deleteListQuery = "";
-        switch (postMyAssetReq.getCategory()) {
-            case "stock":
-                deleteListQuery = "UPDATE StockUserTransaction SET transactionStatus=0 WHERE userIdx=? AND stockTransactionIdx = ? AND transactionStatus=1";
-                break;
-            case "resell":
-                deleteListQuery = "UPDATE ResellUserTransaction SET transactionStatus=0 WHERE userIdx=? AND resellTransactionIdx = ? AND transactionStatus=1";
-                break;
-            case "realestate":
-                deleteListQuery = "UPDATE RealEstatelUserTransaction SET transactionStatus=0 WHERE userIdx=? AND realEstateTransactionIdx = ? AND transactionStatus=1";
-                break;
-            default:
-                break;
-        }
-        Object[] saleMyAssetParams = new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
-        return this.jdbcTemplate.update(deleteListQuery, saleMyAssetParams);
-    }
 }
