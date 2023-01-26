@@ -43,11 +43,15 @@ public enum BaseResponseStatus {
     NOT_MATCH_PASTPASSWORD(2020,"이전 비밀번호가 일치하지 않습니다."),
     NOT_MATCH_PASSWORD(2021,"비밀번호가 일치하지 않습니다."),
 
+    // Asset
+    NOT_EXIST_ASSET(2030, "해당 자산을 보유하지 않았습니다."),
+
     // [POST] /users/log-in
     WITHDRAW_USER(2030,"존재하지 않거나 탈퇴한 유저입니다."),
 
     // [GET] /realestates/area-realation-list
     GET_REGIONS_EMPTY_KEYWORD(2201, "검색어를 입력해주세요."),
+
 
     /**
      * 3000 : Response 오류

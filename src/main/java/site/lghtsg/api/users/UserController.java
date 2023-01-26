@@ -196,9 +196,17 @@ public class UserController {
     public BaseResponse<String> saleMyAsset(@RequestBody PostMyAssetReq postMyAssetReq) {
         try {
             int userIdx = jwtService.getUserIdx();
-            userService.saleMyAsset(userIdx, postMyAssetReq);
-            String result = "구매 완료";
-            return new BaseResponse<>(result);
+            // 이 전에 구매한 자산이 있는지 확인 ->
+            //      numOfAsset이 1일 때만 진행 가능, 나머지는 오류
+            int numOfAsset = userProvider.checkMyAsset(userIdx, postMyAssetReq);
+            if(numOfAsset == 1) {
+                // 판매 코드
+                userService.saleMyAsset(userIdx, postMyAssetReq);
+                String result = "판매 완료";
+                return new BaseResponse<>(result);
+            } else {
+                throw new BaseException(NOT_EXIST_ASSET);
+            }
         } catch (BaseException exception) {
             return new BaseResponse<>(exception.getStatus());
         }

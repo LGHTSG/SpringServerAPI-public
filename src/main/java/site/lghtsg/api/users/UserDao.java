@@ -197,7 +197,6 @@ public class UserDao {
     public int saleMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
         String saleMyAssetQuery = "";
         // 판매
-        // 이 곳에서는 복수의 s가 붙지 않습니다. (GET에서 category를 단수형으로 보내줌)
         switch(postMyAssetReq.getCategory()) {
             case "stock":
                 saleMyAssetQuery = "INSERT INTO StockUserTransaction(userIdx, stockTransactionIdx, saleCheck) VALUES (?,?,1);";
@@ -213,6 +212,29 @@ public class UserDao {
         }
         Object[] saleMyAssetParams = new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
         return this.jdbcTemplate.update(saleMyAssetQuery, saleMyAssetParams);
+    }
+
+    // 자산 보유 확인
+    public int checkMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
+        String checkMyAssetQuery = "";
+        switch (postMyAssetReq.getCategory()) {
+            case "stock":
+                checkMyAssetQuery = "SELECT count(*) AS numOfAsset FROM StockUserTransaction " +
+                                    "WHERE userIdx=? AND stockTransactionIdx=? AND saleCheck=0 AND transactionStatus=1";
+                break;
+            case "resell":
+                checkMyAssetQuery = "SELECT count(*) AS numOfAsset FROM ResellUserTransaction " +
+                                    "WHERE userIdx=? AND resellTransactionIdx=? AND saleCheck=0 AND transactionStatus=1";
+                break;
+            case "realestate":
+                checkMyAssetQuery = "SELECT count(*) AS numOfAsset FROM RealEstateUserTransaction " +
+                                    "WHERE userIdx=? AND realEstateTransactionIdx=? AND saleCheck=0 AND transactionStatus=1";
+                break;
+            default:
+                break;
+        }
+        Object[] saleMyAssetParams = new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
+        return this.jdbcTemplate.update(checkMyAssetQuery, saleMyAssetParams);
     }
 
     // 리스트 노출 상태 변경

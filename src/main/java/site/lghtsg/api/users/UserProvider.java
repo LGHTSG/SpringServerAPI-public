@@ -94,6 +94,15 @@ public class UserProvider {
         }
     }
 
+    public int checkMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+        try {
+            int numOfAsset = userDao.checkMyAsset(userIdx, postMyAssetReq);
+            return numOfAsset;
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
     // 정렬을 위한 class
     public class ListComparator implements Comparator {
         @Override
