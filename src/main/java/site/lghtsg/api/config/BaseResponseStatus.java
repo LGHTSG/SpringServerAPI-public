@@ -70,6 +70,10 @@ public enum BaseResponseStatus {
     MODIFY_FAIL_PASSWORD(4002,"비밀번호 변경 실패"),
     MODIFY_FAIL_PROFILEIMAGE(4003,"프로필 사진 변경 실패"),
     DELETE_FAIL_USER(4004,"회원 탈퇴 실패"),
+    PURCHASE_FAIL_ASSET(4005,"자산 구매 실패"),
+    SALE_FAIL_ASSET(4006,"자산 판매 실패"),
+    DELETE_FAIL_ASSET_LIST(4007,"자산 리스트 삭제 실패"),
+
 
     // 삭제
 

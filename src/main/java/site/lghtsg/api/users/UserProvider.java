@@ -76,8 +76,11 @@ public class UserProvider {
     public List<GetMyAssetRes> myAsset(int userIdx) throws BaseException {
         try {
             List<GetMyAssetRes> stockAsset = userDao.getStockAsset(userIdx);
+            stockAsset.stream().forEach(getMyAssetRes -> getMyAssetRes.setCategory("stock"));
             List<GetMyAssetRes> resellAsset = userDao.getResellAsset(userIdx);
+            stockAsset.stream().forEach(getMyAssetRes -> getMyAssetRes.setCategory("resell"));
             List<GetMyAssetRes> realEstateAsset = userDao.getRealEstateAsset(userIdx);
+            stockAsset.stream().forEach(getMyAssetRes -> getMyAssetRes.setCategory("realestate"));
             // list 병합 -> stockAsset으로 합침
             stockAsset.addAll(resellAsset);
             stockAsset.addAll(realEstateAsset);
