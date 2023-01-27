@@ -51,6 +51,7 @@ public class JwtService {
     public int getUserIdx() throws BaseException{
         //1. JWT 추출
         String accessToken = getJwt();
+        // jwt 오류 처리 부분
         if(accessToken == null || accessToken.length() == 0){
             throw new BaseException(EMPTY_JWT);
         }

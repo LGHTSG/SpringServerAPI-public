@@ -25,9 +25,12 @@ public class UserDao {
     public int createUser(PostUserReq postUserReq) {
         String createUserQuery = "insert into User" +
                 "(userName, email, emailCheck, password, profileImg) " +
-                "values (?,?,?,?,?)";
+                "values (?,?,?,?,?); ";
+        String createSales = "INSERT INTO Sales VALUES ()";
         Object[] createUserParams = new Object[]{postUserReq.getUserName(), postUserReq.getEmail(),
                 postUserReq.getEmailCheck(), postUserReq.getPassword(), postUserReq.getProfileImg()};
+        this.jdbcTemplate.update(createSales);
+        System.out.println("테스트");
         return this.jdbcTemplate.update(createUserQuery, createUserParams);
     }
 
@@ -279,5 +282,6 @@ public class UserDao {
         Object[] saleMyAssetParams = new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
         return this.jdbcTemplate.update(changeMyAssetListQuery, saleMyAssetParams);
     }
+
 
 }
