@@ -160,4 +160,16 @@ public class UserService {
             throw new BaseException(DATABASE_ERROR);
         }
     }
+
+    // 수익율 입력
+    public void insertTableSales(int userIdx) throws BaseException {
+        try {
+            int result = userDao.insertTableSales(userIdx);
+            if(result == 0) {
+                throw new BaseException(FAIL_TO_INSERT_SALES);
+            }
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
 }

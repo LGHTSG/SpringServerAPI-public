@@ -77,6 +77,7 @@ public enum BaseResponseStatus {
     PURCHASE_FAIL_ASSET(4005,"자산 구매 실패"),
     SALE_FAIL_ASSET(4006,"자산 판매 실패"),
     DELETE_FAIL_ASSET_LIST(4007,"자산 리스트 삭제 실패"),
+    FAIL_TO_INSERT_SALES(4008,"수익율 기록 실패"),
 
 
     // 삭제

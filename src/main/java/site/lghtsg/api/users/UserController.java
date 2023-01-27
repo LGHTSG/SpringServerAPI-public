@@ -202,6 +202,9 @@ public class UserController {
             if(numOfAsset == 1) {
                 // 판매 코드
                 userService.saleMyAsset(userIdx, postMyAssetReq);
+                // 수익율 기록
+                userService.insertTableSales(userIdx);
+
                 String result = "판매 완료";
                 return new BaseResponse<>(result);
             } else {

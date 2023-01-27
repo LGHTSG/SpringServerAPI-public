@@ -283,5 +283,10 @@ public class UserDao {
         return this.jdbcTemplate.update(changeMyAssetListQuery, saleMyAssetParams);
     }
 
+    public int insertTableSales(int userIdx) {
+        String insertTableSalesQuery = "";
+        Object[] insertTableSalesParams = new Object[]{userIdx};
+        return this.jdbcTemplate.update(insertTableSalesQuery,insertTableSalesParams);
+    }
 
 }
