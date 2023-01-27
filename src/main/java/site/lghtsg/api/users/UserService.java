@@ -152,19 +152,6 @@ public class UserService {
         }
     }
 
-    // 자산 리스트에서 제거
-    public void deleteMyAssetList(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
-        try {
-            int result = userDao.changeMyAssetList(userIdx, postMyAssetReq);
-            if(result == 0) {
-                throw new BaseException(DELETE_FAIL_ASSET_LIST);
-            }
-        }catch (Exception exception) {
-            throw new BaseException(DATABASE_ERROR);
-        }
-    }
-
-    // TODO : 수정 필요
     // Sales 갱신
     public void updateTableSales(int userIdx, PostMyAssetReq postMyAssetReq, Asset asset, int purchaseTransactionIdx) throws BaseException {
         try {
@@ -179,6 +166,18 @@ public class UserService {
                 throw new BaseException(FAIL_TO_INSERT_SALES);
             }
         } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    // 자산 리스트에서 제거
+    public void deleteMyAssetList(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+        try {
+            int result = userDao.changeMyAssetList(userIdx, postMyAssetReq);
+            if(result == 0) {
+                throw new BaseException(DELETE_FAIL_ASSET_LIST);
+            }
+        }catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
     }
