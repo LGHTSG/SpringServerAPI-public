@@ -134,16 +134,19 @@ public class UserService {
     }
 
     // 자산 판매
-    public void saleMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+    public Asset saleMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
         try {
+            Asset asset = userProvider.checkMyAssetIdx(postMyAssetReq);
             // 리스트 상태 변경 Dao
             userDao.changeMyAssetList(userIdx, postMyAssetReq);
+            // 판매 transactionIdx를 가장 최신 transactionIdx로 setting
+            postMyAssetReq.setTransactionIdx(asset.getTransactionIdx());
             // 자산 판매 Dao
             int result = userDao.saleMyAsset(userIdx, postMyAssetReq);
-
             if(result == 0) {
                 throw new BaseException(SALE_FAIL_ASSET);
             }
+            return asset;
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
@@ -161,11 +164,16 @@ public class UserService {
         }
     }
 
+    // TODO : 수정 필요
     // Sales 갱신
-    public void updateTableSales(int userIdx) throws BaseException {
+    public void updateTableSales(int userIdx, PostMyAssetReq postMyAssetReq, Asset asset, int purchaseTransactionIdx) throws BaseException {
         try {
-            // TODO : sales에 대한 방법 고안 (수익율 or 손익율)
-            double sales = 0;
+            long purchasePrice = userProvider.getPrice(purchaseTransactionIdx, postMyAssetReq.getCategory());
+            long sellPrice = asset.getPrice();
+
+            // 수익율 계산- (판매가격 - 구매가격) / 구매가격 * 100 %
+            double sales = ((sellPrice-purchasePrice)/purchasePrice)*100;
+
             int result = userDao.updateTableSales(userIdx, sales);
             if(result == 0) {
                 throw new BaseException(FAIL_TO_INSERT_SALES);

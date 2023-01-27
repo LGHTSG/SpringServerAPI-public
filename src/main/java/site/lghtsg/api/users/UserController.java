@@ -201,10 +201,11 @@ public class UserController {
             //      numOfAsset이 1일 때만 진행 가능, 나머지는 오류
             int numOfAsset = userProvider.checkMyAsset(userIdx, postMyAssetReq);
             if(numOfAsset == 1) {
+                int purchaseTransactionIdx = postMyAssetReq.getTransactionIdx();
                 // 판매 코드
-                userService.saleMyAsset(userIdx, postMyAssetReq);
+                Asset asset = userService.saleMyAsset(userIdx, postMyAssetReq);
                 // Sales 갱신
-                userService.updateTableSales(userIdx);
+                userService.updateTableSales(userIdx, postMyAssetReq, asset, purchaseTransactionIdx);
 
                 String result = "판매 완료";
                 return new BaseResponse<>(result);

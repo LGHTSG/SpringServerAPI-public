@@ -1,5 +1,6 @@
 package site.lghtsg.api.users;
 
+import com.fasterxml.jackson.databind.ser.Serializers;
 import org.apache.commons.collections4.Get;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,6 +107,7 @@ public class UserProvider {
         }
     }
 
+    // 자산 확인
     public int checkMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
         try {
             int numOfAsset = userDao.checkMyAsset(userIdx, postMyAssetReq);
@@ -115,6 +117,35 @@ public class UserProvider {
         }
     }
 
+    // 자산 index 확인
+    public Asset checkMyAssetIdx(PostMyAssetReq postMyAssetReq) throws BaseException {
+        try {
+            Asset asset = userDao.checkMyAssetIdx(postMyAssetReq);
+            return asset;
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    // transactionIdx에 해당하는 price 가져오기
+    public long getPrice(int index, String category) throws BaseException {
+        try {
+            long price = userDao.getPrice(index, category);
+            return price;
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+/*
+    // 수익율 계산
+    public double getProfitRate(PostMyAssetReq postMyAssetReq) throws BaseException {
+        try {
+            int price = userDao.getPriceOfAsset(postMyAssetReq);
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+*/
     // 정렬을 위한 class
     public class ListComparator implements Comparator {
         @Override

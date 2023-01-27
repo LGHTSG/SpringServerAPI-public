@@ -259,8 +259,38 @@ public class UserDao {
             default:
                 break;
         }
-        Object[] saleMyAssetParams = new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
-        return this.jdbcTemplate.update(checkMyAssetQuery, saleMyAssetParams);
+        Object[] checkMyAssetParams = new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
+        return this.jdbcTemplate.update(checkMyAssetQuery, checkMyAssetParams);
+    }
+
+    // 자산 index 확인
+    public Asset checkMyAssetIdx(PostMyAssetReq postMyAssetReq) {
+        String checkMyAssetQuery = "";
+        switch (postMyAssetReq.getCategory()) {
+            case "stock":
+                checkMyAssetQuery =
+                        "SELECT MAX(stockTransactionIdx), stockIdx, price FROM StockTransaction WHERE " +
+                                "stockIdx = (SELECT stockIdx FROM StockTransaction WHERE stockTransactionIdx = ?)";
+                break;
+            case "resell":
+                checkMyAssetQuery = "SELECT MAX(resellTransactionIdx), resellIdx, price FROM ResellTransaction WHERE " +
+                        "resellIdx = (SELECT resellIdx FROM ResellTransaction WHERE resellTransactionIdx = ?)";
+                break;
+            case "realestate":
+                checkMyAssetQuery = "SELECT MAX(realEstateTransactionIdx), realEstateIdx, price FROM realEstateTransaction WHERE " +
+                        "realEstateIdx = (SELECT realEstateIdx FROM realEstateTransaction WHERE realEstateTransactionIdx = ?)";
+                break;
+            default:
+                break;
+        }
+        int transactionIdx = postMyAssetReq.getTransactionIdx();
+        return this.jdbcTemplate.queryForObject(checkMyAssetQuery,
+                (rs, rowNum) -> new Asset(
+                        rs.getInt("transactionIdx"),
+                        rs.getInt("index"),
+                        rs.getLong("price")),
+                transactionIdx
+        );
     }
 
     // 리스트 노출 상태 변경
@@ -281,6 +311,24 @@ public class UserDao {
         }
         Object[] saleMyAssetParams = new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
         return this.jdbcTemplate.update(changeMyAssetListQuery, saleMyAssetParams);
+    }
+
+    public long getPrice(int index, String category) {
+        String query = "";
+        switch (category) {
+            case "stock":
+                query = "SELECT price FROM StockTransaction WHERE stockTransactionIdx = ?";
+                break;
+            case "resell":
+                query = "SELECT price FROM ResellTransaction WHERE resellTransactionIdx = ?";
+                break;
+            case "realestate":
+                query = "SELECT price FROM RealEstataeTransaction WHERE realEstateTransactionIdx = ?";
+                break;
+            default:
+                break;
+        }
+        return this.jdbcTemplate.queryForObject(query, long.class, index);
     }
 
     public int updateTableSales(int userIdx, double sales) {
