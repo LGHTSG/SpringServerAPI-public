@@ -283,10 +283,12 @@ public class UserDao {
         return this.jdbcTemplate.update(changeMyAssetListQuery, saleMyAssetParams);
     }
 
-    public int insertTableSales(int userIdx) {
-        String insertTableSalesQuery = "";
-        Object[] insertTableSalesParams = new Object[]{userIdx};
-        return this.jdbcTemplate.update(insertTableSalesQuery,insertTableSalesParams);
+    public int updateTableSales(int userIdx, double sales) {
+        String updateTableSalesQuery =
+                "UPDATE SET totalSale = totalSale + ?, numOfTransaction = numOfTransaction + 1 " +
+                        "WHERE userIdx = ?";
+        Object[] updateTableSalesParams = new Object[]{sales, userIdx};
+        return this.jdbcTemplate.update(updateTableSalesQuery,updateTableSalesParams);
     }
 
 }

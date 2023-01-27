@@ -161,10 +161,12 @@ public class UserService {
         }
     }
 
-    // 수익율 입력
-    public void insertTableSales(int userIdx) throws BaseException {
+    // Sales 갱신
+    public void updateTableSales(int userIdx) throws BaseException {
         try {
-            int result = userDao.insertTableSales(userIdx);
+            // TODO : sales에 대한 방법 고안 (수익율 or 손익율)
+            double sales = 0;
+            int result = userDao.updateTableSales(userIdx, sales);
             if(result == 0) {
                 throw new BaseException(FAIL_TO_INSERT_SALES);
             }

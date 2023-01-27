@@ -188,6 +188,7 @@ public class UserController {
     }
 
     /**
+     * TODO : sales라는 변수 - 현재 거래에서 발생한 손익(수익)율을 따져서 받아와야 함. Service까지 대충 작업 완료
      * 자산 판매 API
      * [POST] /users/my-asset/sale
      */
@@ -202,8 +203,8 @@ public class UserController {
             if(numOfAsset == 1) {
                 // 판매 코드
                 userService.saleMyAsset(userIdx, postMyAssetReq);
-                // 수익율 기록
-                userService.insertTableSales(userIdx);
+                // Sales 갱신
+                userService.updateTableSales(userIdx);
 
                 String result = "판매 완료";
                 return new BaseResponse<>(result);
