@@ -34,7 +34,7 @@ public class ResellDao {
     }
 
     public List<GetResellBoxRes> getResellBoxes() {
-        String getResellBoxesQuery = "select rs.resellIdx, rs.name, rst.price, rst2.price, ii.iconImage\n" +
+        String getResellBoxesQuery = "select rs.resellIdx, rs.name, rst.price as price, rst2.price as s2Price, ii.iconImage\n" +
                 "from Resell as rs,\n" +
                 "     ResellTransaction as rst,\n" +
                 "     ResellTransaction as rst2,\n" +
@@ -102,8 +102,8 @@ public class ResellDao {
                 getResellBoxRes.setName(rs.getString("name"));
                 getResellBoxRes.setRateCalDateDiff("최근 거래가 기준");
                 getResellBoxRes.setIconImage(rs.getString("iconImage"));
-                getResellBoxRes.setPrice(rs.getLong("rst.price"));
-                getResellBoxRes.setLastPrice(rs.getLong("rst2.price"));
+                getResellBoxRes.setPrice(rs.getLong("price"));
+                getResellBoxRes.setLastPrice(rs.getLong("s2Price"));
                 return getResellBoxRes;
             }
         };

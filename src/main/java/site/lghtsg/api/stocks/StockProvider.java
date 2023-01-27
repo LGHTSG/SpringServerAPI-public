@@ -29,14 +29,13 @@ public class StockProvider {
 
         try {
             stockBoxes = stockDao.getAllStockBoxes();
-            if(stockBoxes == null){
+            if(stockBoxes.size() == 0){
                 throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
             }
         }
         catch (Exception ignored) {
             throw new BaseException(DATABASE_ERROR);
         }
-
         stockBoxes = calculateRateOfChange(stockBoxes);
 
         stockBoxes = sortStockBoxes(stockBoxes, sort, order);
@@ -57,7 +56,7 @@ public class StockProvider {
                 stockBoxes.sort(new CompareByTradingVolume()); // 거래량 기준
             } else if (sort.equals(PARAM_DEFAULT)) { // idx 기준
                 stockBoxes.sort(new CompareByIdx());
-            } else if(!sort.equals(PARAM_DEFAULT)){     // 기준이 없는(잘못 입력) 경우
+            } else {     // 기준이 없는(잘못 입력) 경우
                 throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
             }
 
@@ -72,7 +71,6 @@ public class StockProvider {
             return stockBoxes;
         }
         catch(Exception e) {
-            System.out.println(e);
             throw new BaseException(DATALIST_SORTING_ERROR);
         }
     }
@@ -97,7 +95,6 @@ public class StockProvider {
                 double rateOfChange = (double) (stockBox.getPrice() - stockBox.getClosingPrice()) / stockBox.getClosingPrice() * 100;
                 rateOfChange = Math.round(rateOfChange * 10) / 10.0;
                 stockBox.setRateOfChange(rateOfChange);
-
         }
         catch (Exception e){
             throw new BaseException(DATALIST_SORTING_ERROR);

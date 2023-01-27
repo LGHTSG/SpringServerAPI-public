@@ -101,7 +101,6 @@ public class RealEstateProvider {
             long divideBy = (long)MILLISECONDS * SECONDS * MINUTES * HOURS * DAYS;
             Date s2Date;
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
             for (int i = 0, lim = realEstateBoxes.size(); i < lim; i++) {
                 // 거래 기록이 1개만 있는 경우
                 if(realEstateBoxes.get(i).getS2TransactionTime() == null){
@@ -133,7 +132,7 @@ public class RealEstateProvider {
         return realEstateBoxes;
     }
 
-    static String processDateDiffOutput(long diffMonth){
+    public static String processDateDiffOutput(long diffMonth){
         if(diffMonth <= 3) return WITHIN_3_MONTHS;
         else if(diffMonth <= 6) return WITHIN_6_MONTHS;
         else if(diffMonth <= 12) return WITHIN_1_YEAR;

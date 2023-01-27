@@ -7,6 +7,7 @@ import site.lghtsg.api.common.model.CompareByIdx;
 import site.lghtsg.api.common.model.CompareByRate;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponseStatus;
+import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.resells.model.GetResellInfoRes;
 import site.lghtsg.api.resells.model.GetResellTransactionRes;
 import site.lghtsg.api.resells.model.GetResellBoxRes;

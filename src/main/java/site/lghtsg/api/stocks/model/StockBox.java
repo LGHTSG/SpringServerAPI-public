@@ -13,4 +13,5 @@ public class StockBox extends Box {
     private long issuedShares;
     private int tradingVolume;
     private long closingPrice;
+    private String updatedAt;
 }

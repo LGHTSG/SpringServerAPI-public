@@ -26,17 +26,19 @@ public class StockDao {
     // 전체 리스트 조회
     public List<StockBox> getAllStockBoxes() {
 
-        String getStockBoxesQuery = "select S.stockIdx, S.name, I.iconImage, ST.transactionTime, " +
-                "ST.price, S.issuedShares, ST.tradingVolume, F.price as closingPrice\n" +
-                "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx\n" +
-                "    left join StockTransaction ST on S.stockIdx = ST.stockIdx\n" +
-                "    inner join (select S.name, max(ST.transactionTime) as maxtime\n" +
-                "                from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) dt\n" +
-                "        on S.name = dt.name and ST.transactionTime = dt.maxtime\n" +
-                "    left join (select * from (select stockIdx, price\n" +
-                "                              from StockTransaction where date(transactionTime) = curdate() - 1\n" +
-                "                                                    order by stockTransactionIdx desc limit 18446744073709551615) res group by stockIdx) as F\n" +
-                "        on ST.stockIdx = F.stockIdx";
+        String getStockBoxesQuery =
+                "select S.stockIdx,\n" +
+                "       S.name,\n" +
+                "       S.issuedShares,\n" +
+                "       ST.tradingVolume,\n" +
+                "       ST.price,\n" +
+                "       ST2.price           as closingPrice,\n" +
+                "       ST.transactionTime,\n" +
+                "       II.iconImage\n" +
+                "from Stock as S\n" +
+                "         join StockTransaction ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
+                "         join StockTransaction ST2 on ST2.stockTransactionIdx = S.s2LastTransactionIdx\n" +
+                "         join IconImage as II on S.iconImageIdx = II.iconImageIdx;";
 
         return this.jdbcTemplate.query(getStockBoxesQuery, stockBoxRowMapper());
 
@@ -45,17 +47,20 @@ public class StockDao {
     //특정 주식 정보 조회
     public StockBox getStockInfo(long stockIdx) {
 
-        String getStockInfoQuery = "select S.stockIdx, S.name, I.iconImage, ST.transactionTime, " +
-                "ST.price, S.issuedShares, ST.tradingVolume, F.price as closingPrice\n" +
-                "from Stock as S left join IconImage I on S.iconImageIdx = I.iconImageIdx\n" +
-                "    left join StockTransaction ST on S.stockIdx = ST.stockIdx\n" +
-                "    inner join (select S.name, max(ST.transactionTime) as maxtime\n" +
-                "                from Stock as S join StockTransaction ST on S.stockIdx = ST.stockIdx group by S.name) dt\n" +
-                "        on S.name = dt.name and ST.transactionTime = dt.maxtime\n" +
-                "    left join (select * from (select stockIdx, price\n" +
-                "                              from StockTransaction where date(transactionTime) = curdate() - 1\n" +
-                "                                                    order by stockTransactionIdx desc limit 18446744073709551615) res group by stockIdx) as F\n" +
-                "        on ST.stockIdx = F.stockIdx where S.stockIdx = ?";
+        String getStockInfoQuery =
+                "select S.stockIdx,\n" +
+                "       S.name,\n" +
+                "       S.issuedShares,\n" +
+                "       ST.tradingVolume,\n" +
+                "       ST.price,\n" +
+                "       ST2.price           as closingPrice,\n" +
+                "       ST.transactionTime,\n" +
+                "       II.iconImage\n" +
+                "from Stock as S\n" +
+                "         join StockTransaction ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
+                "         join StockTransaction ST2 on ST2.stockTransactionIdx = S.s2LastTransactionIdx\n" +
+                "         join IconImage as II on S.iconImageIdx = II.iconImageIdx\n" +
+                "where S.stockIdx = ?;";
 
         long getStockInfoParams = stockIdx;
         try {
@@ -64,50 +69,6 @@ public class StockDao {
             return null;
         }
     }
-
-    //오늘 종가
-    /*
-    public int getClosingPriceToday(long stockIdx) {
-        try {
-            String getClosingPriceTodayQuery = "select price from StockTransaction where stockIdx = ? order by stockTransactionIdx DESC limit 1";
-            long getClosingPriceTodayParam = stockIdx;
-            return this.jdbcTemplate.queryForObject(getClosingPriceTodayQuery, int.class, getClosingPriceTodayParam);
-        }catch (NullPointerException e) { // 쿼리문에 해당하는 결과가 없을 때
-            return 0;
-        }
-    }*/
-
-    //어제 종가
-    /*
-    public int getClosingPriceYesterday(long stockIdx) {
-        try {
-            String getClosingPriceYesterdayQuery = "select price from StockTransaction where date(transactionTime) = curdate() - 1 " +
-                    "and stockIdx = ? order by stockTransactionIdx DESC limit 1";
-            long getClosingPriceYesterdayParam = stockIdx;
-            return this.jdbcTemplate.queryForObject(getClosingPriceYesterdayQuery, int.class, getClosingPriceYesterdayParam);
-        }catch (NullPointerException e) { // 쿼리문에 해당하는 결과가 없을 때
-            return 0;
-        }
-    }
-*/
-    //등락폭 계산
-    /*
-    public String calculateRateOfChange(long stockIdx){
-        double ClosingPriceToday = getClosingPriceToday(stockIdx);
-        double ClosingPriceYesterday = getClosingPriceYesterday(stockIdx);
-        double result = (ClosingPriceToday - ClosingPriceYesterday) / ClosingPriceYesterday * 100;
-        //System.out.println(ClosingPriceToday);
-        //System.out.println(ClosingPriceYesterday);
-        //System.out.println(result);
-        String RateOfChange = String.format("%.1f", result);
-
-        if(result > 0){
-            RateOfChange = "+" + RateOfChange;
-        }
-        //System.out.println(RateOfChange);
-        return RateOfChange;
-    }*/
-
 
     //특정 주식 누적 가격 조회 (그래프용)
     public List<StockTransactionData> getStockPrices(long stockIdx) {

@@ -28,9 +28,7 @@ public class StockController {
     public BaseResponse<List<StockBox>> getStockBoxes(@RequestParam(required = false) String sort, @RequestParam(required = false) String order) {
 
         if (sort == null) sort = PARAM_DEFAULT;
-        if (order == null) sort = PARAM_DEFAULT;
-        if (sort != null && order == null)  // order이 null 이면 기본값 ascending
-            order = ASCENDING_PARAM;
+        if (order == null) order = PARAM_DEFAULT;
         try {
             List<StockBox> stockBox = stockProvider.getStockBoxes(sort, order);
             return new BaseResponse<>(stockBox);
