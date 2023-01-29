@@ -1,11 +1,9 @@
 package site.lghtsg.api.users;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.users.model.*;
 
 import javax.sql.DataSource;
@@ -106,7 +104,7 @@ public class UserDao {
                         "       ST.transactionTime,\n" +
                         "       ST2.transactionTime as s2TransactionTime,\n" +
                         "       SUT.updatedAt,\n" +
-                        "       SUT.saleCheck,\n" +
+                        "       SUT.Check,\n" +
                         "       II.iconImage\n" +
                         "from Stock as S\n" +
                         "         join StockTodayTrans ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
@@ -132,7 +130,7 @@ public class UserDao {
                         "       RST.transactionTime,\n" +
                         "       RST2.transactionTime as s2TransactionTime,\n" +
                         "       RUT.updatedAt,\n" +
-                        "       RUT.saleCheck,\n" +
+                        "       RUT.sellCheck,\n" +
                         "       II.iconImage\n" +
                         "from Resell as RS\n" +
                         "         join ResellTodayTrans as RST on RST.resellTransactionIdx = RS.lastTransactionIdx\n" +
@@ -159,7 +157,7 @@ public class UserDao {
                         "       RET.transactionTime,\n" +
                         "       RET2.transactionTime as s2TransactionTime,\n" +
                         "       REUT.updatedAt,\n" +
-                        "       REUT.saleCheck,\n" +
+                        "       REUT.sellCheck,\n" +
                         "       II.iconImage\n" +
                         "from RealEstate as RE\n" +
                         "         join RealEstateTodayTrans as RET on RET.realEstateTransactionIdx = RE.lastTransactionIdx\n" +
@@ -205,7 +203,7 @@ public class UserDao {
                 getMyAssetRes.setPrice(rs.getLong("price"));
                 getMyAssetRes.setS2Price(rs.getLong("s2Price"));
                 getMyAssetRes.setIconImage(rs.getString("iconImage"));
-                getMyAssetRes.setSaleCheck(rs.getInt("saleCheck"));
+                getMyAssetRes.setSellCheck(rs.getInt("sellCheck"));
                 getMyAssetRes.setUpdatedAt(rs.getString("updatedAt"));
                 getMyAssetRes.setTransactionTime(rs.getString("transactionTime"));
                 getMyAssetRes.setS2TransactionTime(rs.getString("s2TransactionTime"));
@@ -222,18 +220,18 @@ public class UserDao {
         // 이 곳에서는 복수의 s가 붙지 않습니다. (GET에서 category를 단수형으로 보내줌)
         switch (postMyAssetReq.getCategory()){
             case "stock":
-                sellMyAssetQuery = "INSERT INTO StockUserTransaction(userIdx, stockIdx, price, saleCheck) VALUES (?,?,?,1);";
+                sellMyAssetQuery = "INSERT INTO StockUserTransaction(userIdx, stockIdx, price, sellCheck) VALUES (?,?,?,1);";
                 break;
             case "resell":
-                sellMyAssetQuery = "INSERT INTO ResellUserTransaction(userIdx, resellIdx, price, saleCheck) VALUES (?,?,?,1);";
+                sellMyAssetQuery = "INSERT INTO ResellUserTransaction(userIdx, resellIdx, price, sellCheck) VALUES (?,?,?,1);";
                 break;
             case "realestate":
-                sellMyAssetQuery = "INSERT INTO RealEstateUserTransaction(userIdx, realEstateIdx, price, saleCheck) VALUES (?,?,?,1);";
+                sellMyAssetQuery = "INSERT INTO RealEstateUserTransaction(userIdx, realEstateIdx, price, sellCheck) VALUES (?,?,?,1);";
                 break;
         }
 
-        Object[] saleMyAssetParams = new Object[]{userIdx, postMyAssetReq.getAssetIdx(), postMyAssetReq.getPrice()};
-        return this.jdbcTemplate.update(sellMyAssetQuery, saleMyAssetParams);
+        Object[] sellMyAssetParams = new Object[]{userIdx, postMyAssetReq.getAssetIdx(), postMyAssetReq.getPrice()};
+        return this.jdbcTemplate.update(sellMyAssetQuery, sellMyAssetParams);
     }
 
     // 리스트 노출 상태 변경
@@ -252,8 +250,62 @@ public class UserDao {
             default:
                 break;
         }
-        Object[] saleMyAssetParams = new Object[]{userIdx, postMyAssetReq.getAssetIdx()};
-        return this.jdbcTemplate.update(changeMyAssetListQuery, saleMyAssetParams);
+        Object[] sellMyAssetParams = new Object[]{userIdx, postMyAssetReq.getAssetIdx()};
+        return this.jdbcTemplate.update(changeMyAssetListQuery, sellMyAssetParams);
     }
+
+
+    // 단일 자산 화면 개인 거래 내역 조회
+    public List<GetUserTransactionHistoryRes> getStockTransactionHistory(long stockIdx, int userIdx){
+        String getTransactionHistoryQuery =
+                "select createdAt as transactionTime,\n" +
+                "       price,\n" +
+                "       sellCheck\n" +
+                "from StockUserTransaction as SUT\n" +
+                "where SUT.stockIdx = ?\n" +
+                "and SUT.userIdx = ?;";
+        Object[] getTransactionHistoryParams = new Object[] {stockIdx, userIdx};
+        return this.jdbcTemplate.query(getTransactionHistoryQuery, transactionHistoryRowMapper(), getTransactionHistoryParams);
+    }
+
+    public List<GetUserTransactionHistoryRes> getRealEstateTransactionHistory(long realestateIdx, int userIdx){
+        String getTransactionHistoryQuery =
+                "select createdAt as transactionTime,\n" +
+                "       price,\n" +
+                "       sellCheck\n" +
+                "from RealEstateUserTransaction as REUT\n" +
+                "where REUT.realEstateIdx = ?\n" +
+                "and REUT.userIdx = ?;";
+        Object[] getTransactionHistoryParams = new Object[] {realestateIdx, userIdx};
+        return this.jdbcTemplate.query(getTransactionHistoryQuery, transactionHistoryRowMapper(), getTransactionHistoryParams);
+    }
+
+    public List<GetUserTransactionHistoryRes> getResellTransactionHistory(long resellIdx, int userIdx){
+        String getTransactionHistoryQuery =
+                "select createdAt as transactionTime,\n" +
+                "       price,\n" +
+                "       sellCheck\n" +
+                "from ResellUserTransaction as RUT\n" +
+                "where RUT.resellIdx = ?\n" +
+                "and RUT.userIdx = ?;";
+        Object[] getTransactionHistoryParams = new Object[] {resellIdx, userIdx};
+        return this.jdbcTemplate.query(getTransactionHistoryQuery, transactionHistoryRowMapper(), getTransactionHistoryParams);
+    }
+
+    private RowMapper<GetUserTransactionHistoryRes> transactionHistoryRowMapper(){
+        return new RowMapper<GetUserTransactionHistoryRes>() {
+            @Override
+            public GetUserTransactionHistoryRes mapRow(ResultSet rs, int rowNum) throws SQLException {
+                GetUserTransactionHistoryRes getUserTransactionHistoryRes = new GetUserTransactionHistoryRes();
+                getUserTransactionHistoryRes.setPrice(rs.getLong("price"));
+                getUserTransactionHistoryRes.setTransactionTime(rs.getString("transactionTime"));
+                getUserTransactionHistoryRes.setSellCheck(rs.getInt("sellCheck"));
+                return getUserTransactionHistoryRes;
+            }
+        };
+    }
+
+
+
 
 }

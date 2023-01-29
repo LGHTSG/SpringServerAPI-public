@@ -1,5 +1,6 @@
 package site.lghtsg.api.users;
 
+import org.apache.commons.collections4.Get;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,7 +70,7 @@ public class UserController {
      */
     @ResponseBody
     @PostMapping("/sign-up/email-check")
-    public BaseResponse<String> EmailCheck(@RequestBody EmailCheckReq emailCheckReq) throws MessagingException, UnsupportedEncodingException  {
+    public BaseResponse<String> EmailCheck(@RequestBody EmailCheckReq emailCheckReq) throws MessagingException, UnsupportedEncodingException {
         String authCode = emailService.sendEmail(emailCheckReq.getEmail());
         return new BaseResponse<>(authCode);
     }
@@ -228,14 +229,39 @@ public class UserController {
         }
     }
 
-    public int validatePostMyAssetReq(PostMyAssetReq postMyAssetReq){
-        if(postMyAssetReq.getAssetIdx() == 0) return 0;
-        if(postMyAssetReq.getCategory() == null) {
-            postMyAssetReq.setCategory(PARAM_DEFAULT); return 0;
+    public int validatePostMyAssetReq(PostMyAssetReq postMyAssetReq) {
+        if (postMyAssetReq.getAssetIdx() == 0) return 0;
+        if (postMyAssetReq.getCategory() == null) {
+            postMyAssetReq.setCategory(PARAM_DEFAULT);
+            return 0;
         }
-        if(postMyAssetReq.getPrice() == 0L) return 0;
+        if (postMyAssetReq.getPrice() == 0L) return 0;
         return 1;
     }
-}
 
+    /**
+     * 단일 자산 화면 사용자 거래 이력 제공 API - 주식
+     * parameters : category = { stock, realestate, resell }
+     *              assetIdx = { 1, ... }
+     * [GET] /users/transactionHistory?category=stock&assetIdx={idx}
+     * [GET] /users/transactionHistory?category=realestate&assetIdx={idx}
+     * [GET] /users/transactionHistory?category=resell&assetIdx={idx}
+     */
+    @ResponseBody
+    @GetMapping("/transactionHistory")
+    public BaseResponse<List<GetUserTransactionHistoryRes>> userTransactionHistory(@RequestParam String category, @RequestParam long assetIdx){
+        // TODO : assetIdx : 존재하는 idx 인지 validation, 혹은 잘못된 idx 왔을 때 에러 구분 필요
+        try {
+            // category validation
+            if(category == null) category = PARAM_DEFAULT;
+
+            int userIdx = jwtService.getUserIdx();
+            return new BaseResponse<>(userProvider.getUserTransactionHistory(category, userIdx, assetIdx));
+        }
+        catch(BaseException exception){
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+}
 

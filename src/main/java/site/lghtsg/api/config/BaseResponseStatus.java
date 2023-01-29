@@ -71,8 +71,9 @@ public enum BaseResponseStatus {
     MODIFY_FAIL_PROFILEIMAGE(4003,"프로필 사진 변경 실패"),
     DELETE_FAIL_USER(4004,"회원 탈퇴 실패"),
     PURCHASE_FAIL_ASSET(4005,"자산 구매 실패"),
-    SALE_FAIL_ASSET(4006,"자산 판매 실패"),
+    SELL_FAIL_ASSET(4006,"자산 판매 실패"),
     DELETE_FAIL_ASSET_LIST(4007,"자산 리스트 삭제 실패"),
+    WRONG_PARAMETER_INPUT(4010,"잘못된 변수 입력입니다"),
 
 
     // 삭제

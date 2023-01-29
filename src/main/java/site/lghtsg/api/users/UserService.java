@@ -141,7 +141,7 @@ public class UserService {
             int result = userDao.sellMyAsset(userIdx, postMyAssetReq);
 
             if(result == 0) {
-                throw new BaseException(SALE_FAIL_ASSET);
+                throw new BaseException(SELL_FAIL_ASSET);
             }
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);

@@ -4,12 +4,16 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.users.UserController;
 import site.lghtsg.api.users.UserDao;
 import site.lghtsg.api.users.UserProvider;
 import site.lghtsg.api.users.UserService;
+import site.lghtsg.api.users.model.GetUserTransactionHistoryRes;
 import site.lghtsg.api.users.model.PostMyAssetReq;
+
+import java.util.List;
 //import site.lghtsg.api.users.model.GetMyAssetRes;
 
 
@@ -59,6 +63,22 @@ public class UserTest {
         }
         catch(Exception e){
             System.out.println(e.getMessage());
+        }
+    }
+
+    @Test
+    void 사용자_거래이력(){
+        int userIdx = 1;
+        try{
+            String category = "realestat";
+            int assetIdx = 1;
+            List<GetUserTransactionHistoryRes> getUserTransactionHistoryResList = userProvider.getUserTransactionHistory(category, userIdx, assetIdx);
+            for(GetUserTransactionHistoryRes elem : getUserTransactionHistoryResList){
+                System.out.println(elem.getPrice());
+            }
+        }
+        catch (BaseException e){
+            System.out.println(e.getStatus());
         }
     }
 

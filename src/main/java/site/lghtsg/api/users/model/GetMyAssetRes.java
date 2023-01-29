@@ -6,8 +6,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.sql.Timestamp;
-
 @Getter
 @Setter
 @NoArgsConstructor
@@ -22,7 +20,7 @@ public class GetMyAssetRes {
     private double rateOfChange;
     private String rateCalDateDiff;
     private String iconImage;
-    private int saleCheck;
+    private int sellCheck;
     private String updatedAt;
     private String category;
 }

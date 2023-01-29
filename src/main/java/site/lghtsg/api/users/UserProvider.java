@@ -18,10 +18,7 @@ import site.lghtsg.api.utils.JwtService;
 import site.lghtsg.api.users.model.*;
 
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class UserProvider {
@@ -160,5 +157,30 @@ public class UserProvider {
             throw new BaseException(DATALIST_CAL_RATE_ERROR);
         }
         return assetList;
+    }
+
+    /**
+     * 사용자 자산 거래 기록 반환
+     */
+    public List<GetUserTransactionHistoryRes> getUserTransactionHistory(String category, int userIdx, long assetIdx) throws BaseException{
+        List<GetUserTransactionHistoryRes> getUserTransactionHistoryRes;
+
+        if(!category.equals("stock") && !category.equals("realestate") && !category.equals("resell")){
+            throw new BaseException(WRONG_PARAMETER_INPUT);
+        }
+
+        try{
+            if(category.equals("stock")){
+                getUserTransactionHistoryRes = userDao.getStockTransactionHistory(assetIdx, userIdx);
+            } else if(category.equals("realestate")){
+                getUserTransactionHistoryRes = userDao.getRealEstateTransactionHistory(assetIdx, userIdx);
+            } else {
+                getUserTransactionHistoryRes = userDao.getResellTransactionHistory(assetIdx, userIdx);
+            }
+        }
+        catch(Exception e){
+            throw new BaseException(DATABASE_ERROR);
+        }
+        return getUserTransactionHistoryRes;
     }
 }
