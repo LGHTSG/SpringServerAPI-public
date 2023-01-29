@@ -22,22 +22,22 @@ public class UserTest {
     @Autowired
     private UserProvider userProvider;
 
-    @Test
-    void Test1(){
-        int userIdx = 1;
-        try {
-            List<GetMyAssetRes> getMyAssetRes = userProvider.myAsset(userIdx);
-//            getMyAssetRes.addAll(getMyAssetRes2);
-//            getMyAssetRes.addAll(getMyAssetRes3);
-            for (int i = 0; i < getMyAssetRes.size(); i++){
-                System.out.println(getMyAssetRes.get(i).getAssetName());
-            }
-        }
-        catch(Exception e){
-            System.out.println(e.getMessage());
-        }
-
-    }
+//    @Test
+//    void Test1(){
+//        int userIdx = 1;
+//        try {
+//            List<GetMyAssetRes> getMyAssetRes = userProvider.myAsset(userIdx);
+////            getMyAssetRes.addAll(getMyAssetRes2);
+////            getMyAssetRes.addAll(getMyAssetRes3);
+//            for (int i = 0; i < getMyAssetRes.size(); i++){
+//                System.out.println(getMyAssetRes.get(i).getAssetName());
+//            }
+//        }
+//        catch(Exception e){
+//            System.out.println(e.getMessage());
+//        }
+//
+//    }
 
 }
 

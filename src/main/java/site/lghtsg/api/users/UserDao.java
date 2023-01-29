@@ -109,7 +109,7 @@ public class UserDao {
                         "       SUT.saleCheck,\n" +
                         "       II.iconImage\n" +
                         "from Stock as S\n" +
-                        "         join StockTransaction ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
+                        "         join StockTodayTrans ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
                         "         join StockTransaction ST2 on ST2.stockTransactionIdx = S.s2LastTransactionIdx\n" +
                         "         join IconImage as II on S.iconImageIdx = II.iconImageIdx\n" +
                         "         join StockUserTransaction SUT on S.stockIdx = (select st.stockIdx\n" +
@@ -135,7 +135,7 @@ public class UserDao {
                         "       RUT.saleCheck,\n" +
                         "       II.iconImage\n" +
                         "from Resell as RS\n" +
-                        "         join ResellTransaction as RST on RST.resellTransactionIdx = RS.lastTransactionIdx\n" +
+                        "         join ResellTodayTrans as RST on RST.resellTransactionIdx = RS.lastTransactionIdx\n" +
                         "         join ResellTransaction as RST2 on RST2.resellTransactionIdx = RS.s2LastTransactionIdx\n" +
                         "         join IconImage as II on RS.iconImageIdx = II.iconImageIdx\n" +
                         "         join ResellUserTransaction RUT on RS.resellIdx = (select rst.resellIdx\n" +
@@ -162,7 +162,7 @@ public class UserDao {
                         "       REUT.saleCheck,\n" +
                         "       II.iconImage\n" +
                         "from RealEstate as RE\n" +
-                        "         join RealEstateTransaction as RET on RET.realEstateTransactionIdx = RE.lastTransactionIdx\n" +
+                        "         join RealEstateTodayTrans as RET on RET.realEstateTransactionIdx = RE.lastTransactionIdx\n" +
                         "         join RealEstateTransaction as RET2 on RET2.realEstateTransactionIdx = RE.s2LastTransactionIdx\n" +
                         "         join IconImage as II on RE.iconImageIdx = II.iconImageIdx\n" +
                         "         join RealEstateUserTransaction REUT on RE.realEstateIdx = (select ret.realEstateIdx\n" +

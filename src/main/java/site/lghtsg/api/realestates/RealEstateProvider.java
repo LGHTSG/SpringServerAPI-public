@@ -33,7 +33,6 @@ public class RealEstateProvider {
 
     public List<RealEstateBox> getRealEstateBoxes(String sort, String order, String area) throws BaseException {
         List<RealEstateBox> realEstateBoxes;
-        long start = System.currentTimeMillis();
         // 1. 데이터 가져오기
         try {
             if(area.equals(PARAM_DEFAULT)) realEstateBoxes = realEstateDao.getAllRealEstateBoxes();
@@ -43,8 +42,6 @@ public class RealEstateProvider {
         catch (Exception ignored) {
             throw new BaseException(DATABASE_ERROR);
         }
-        long end = System.currentTimeMillis();
-        System.out.println("데이터 가져오는데 걸린 시간 : " + (double) (end - start) / 1000 + "s");
         // 2. 증감율 계산
         realEstateBoxes = calculateRateOfChange(realEstateBoxes);
 

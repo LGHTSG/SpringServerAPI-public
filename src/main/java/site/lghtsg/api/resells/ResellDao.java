@@ -36,7 +36,7 @@ public class ResellDao {
     public List<GetResellBoxRes> getResellBoxes() {
         String getResellBoxesQuery = "select rs.resellIdx, rs.name, rst.price as price, rst2.price as s2Price, ii.iconImage\n" +
                 "from Resell as rs,\n" +
-                "     ResellTransaction as rst,\n" +
+                "     ResellTodayTrans as rst,\n" +
                 "     ResellTransaction as rst2,\n" +
                 "     IconImage as ii\n" +
                 "where rst.resellTransactionIdx = rs.lastTransactionIdx\n" +
@@ -62,7 +62,7 @@ public class ResellDao {
                 "       rst.price,\n" +
                 "       rst2.price\n" +
                 "from Resell as rs,\n" +
-                "     ResellTransaction as rst,\n" +
+                "     ResellTodayTrans as rst,\n" +
                 "     ResellTransaction as rst2,\n" +
                 "     IconImage as ii\n" +
                 "where rst.resellTransactionIdx = rs.lastTransactionIdx\n" +

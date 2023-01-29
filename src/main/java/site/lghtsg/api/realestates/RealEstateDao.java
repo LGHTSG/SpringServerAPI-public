@@ -41,7 +41,7 @@ public class RealEstateDao {
                         "       ret2.transactionTime as s2TransactionTime,\n" +
                         "       ii.iconImage\n" +
                         "from RealEstate as re,\n" +
-                        "     RealEstateTransaction as ret,\n" +
+                        "     RealEstateTodayTrans as ret,\n" +
                         "     RealEstateTransaction as ret2,\n" +
                         "     IconImage as ii,\n" +
                         "     RegionName as rn\n" +
@@ -70,7 +70,7 @@ public class RealEstateDao {
                         "       ret2.transactionTime as s2TransactionTime,\n" +
                         "       ii.iconImage\n" +
                         "from RealEstate as re,\n" +
-                        "     RealEstateTransaction as ret,\n" +
+                        "     RealEstateTodayTrans as ret,\n" +
                         "     RealEstateTransaction as ret2,\n" +
                         "     IconImage as ii,\n" +
                         "     RegionName as rn\n" +
@@ -137,7 +137,7 @@ public class RealEstateDao {
                         "       ret2.transactionTime as s2TransactionTime,\n" +
                         "       ii.iconImage\n" +
                         "from RealEstate as re,\n" +
-                        "     RealEstateTransaction as ret,\n" +
+                        "     RealEstateTodayTrans as ret,\n" +
                         "     RealEstateTransaction as ret2,\n" +
                         "     IconImage as ii,\n" +
                         "     RegionName as rn\n" +

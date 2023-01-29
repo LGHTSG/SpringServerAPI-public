@@ -85,7 +85,7 @@ public class UserProvider {
     public List<GetMyAssetRes> myAsset(int userIdx) throws BaseException {
         try {
             List<GetMyAssetRes> realEstateAsset = userDao.getRealEstateAsset(userIdx);
-            realEstateAsset.stream().forEach(GetMyAssetRes -> GetMyAssetRes.setCategory("realEstate"));
+            realEstateAsset.stream().forEach(GetMyAssetRes -> GetMyAssetRes.setCategory("realestate"));
 
             List<GetMyAssetRes> resellAsset = userDao.getResellAsset(userIdx);
             resellAsset.stream().forEach(GetMyAssetRes -> GetMyAssetRes.setCategory("resell"));
