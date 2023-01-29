@@ -10,8 +10,12 @@ import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
+import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
 
+import static java.lang.Math.min;
+import static site.lghtsg.api.config.Constant.LIST_LIMIT;
 import static site.lghtsg.api.config.Constant.PARAM_DEFAULT;
 
 @RestController
@@ -37,8 +41,12 @@ public class RealEstateController {
         if(area == null) area = PARAM_DEFAULT;
 
         try{
-           List<RealEstateBox> realEstateBoxes = realEstateProvider.getRealEstateBoxes(sort, order, area);
-            return new BaseResponse<>(realEstateBoxes);
+            List<RealEstateBox> realEstateBoxes = realEstateProvider.getRealEstateBoxes(sort, order, area);
+            List<RealEstateBox> subList = new ArrayList<>();
+            for(int i = 0, lim = min(LIST_LIMIT, realEstateBoxes.size()); i < lim; i++){
+                subList.add(realEstateBoxes.get(i));
+            }
+            return new BaseResponse<>(subList);
         }
         catch(BaseException e){
              return new BaseResponse<>((e.getStatus()));
@@ -57,7 +65,11 @@ public class RealEstateController {
     public BaseResponse<List<RealEstateTransactionData>> realEstateAreaPrices(@RequestParam String area){
         try{
             List<RealEstateTransactionData> realEstateTransactionData = realEstateProvider.getAreaRealEstatePrices(area);
-            return new BaseResponse<>(realEstateTransactionData);
+            List<RealEstateTransactionData> subList = new ArrayList<>();
+            for(int i = 0; i < LIST_LIMIT; i++){
+                subList.add(realEstateTransactionData.get(i));
+            }
+            return new BaseResponse<>(subList);
         }
         catch(BaseException e){
              return new BaseResponse<>((e.getStatus()));

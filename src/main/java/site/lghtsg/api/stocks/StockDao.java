@@ -36,7 +36,7 @@ public class StockDao {
                 "       ST.transactionTime,\n" +
                 "       II.iconImage\n" +
                 "from Stock as S\n" +
-                "         join StockTransaction ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
+                "         join StockTodayTrans ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
                 "         join StockTransaction ST2 on ST2.stockTransactionIdx = S.s2LastTransactionIdx\n" +
                 "         join IconImage as II on S.iconImageIdx = II.iconImageIdx;";
 
@@ -57,7 +57,7 @@ public class StockDao {
                 "       ST.transactionTime,\n" +
                 "       II.iconImage\n" +
                 "from Stock as S\n" +
-                "         join StockTransaction ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
+                "         join StockTodayTrans ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
                 "         join StockTransaction ST2 on ST2.stockTransactionIdx = S.s2LastTransactionIdx\n" +
                 "         join IconImage as II on S.iconImageIdx = II.iconImageIdx\n" +
                 "where S.stockIdx = ?;";

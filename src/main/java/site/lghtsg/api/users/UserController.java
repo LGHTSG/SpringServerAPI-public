@@ -189,11 +189,11 @@ public class UserController {
 
     /**
      * 자산 판매 API
-     * [POST] /users/my-asset/sale
+     * [POST] /users/my-asset/sell
      */
     @ResponseBody
-    @PostMapping("/my-asset/sale")
-    public BaseResponse<String> saleMyAsset(@RequestBody PostMyAssetReq postMyAssetReq) {
+    @PostMapping("/my-asset/sell")
+    public BaseResponse<String> sellMyAsset(@RequestBody PostMyAssetReq postMyAssetReq) {
         try {
             int userIdx = jwtService.getUserIdx();
             userService.saleMyAsset(userIdx, postMyAssetReq);
