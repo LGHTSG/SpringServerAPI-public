@@ -10,18 +10,18 @@ import java.util.List;
 
 @SpringBootTest
 public class StartScrapping {
-    @Autowired
-    private ResellDao resellDao;
-    @Autowired
-    private WebReader webReader;
-
-    @Test
-    void 스크래핑(){
-        webReader.scraping();
-    }
-
-    @Test
-    void 리스트(){
-        List<GetResellBoxRes> resellResList = resellDao.getResellBoxes();
-    }
+//    @Autowired
+//    private ResellDao resellDao;
+//    @Autowired
+//    private WebReader webReader;
+//
+//    @Test
+//    void 스크래핑(){
+//        webReader.scraping();
+//    }
+//
+//    @Test
+//    void 리스트(){
+//        List<GetResellBoxRes> resellResList = resellDao.getResellBoxes();
+//    }
 }

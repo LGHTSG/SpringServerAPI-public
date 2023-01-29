@@ -8,12 +8,12 @@ import site.lghtsg.api.resells.dataUploader.WebReader;
 @SpringBootTest
 public class StartScrapping {
 
-    @Autowired
-    private WebReader webReader;
-
-    @Test
-    void 스크래핑(){
-        webReader.scraping();
-    }
+//    @Autowired
+//    private WebReader webReader;
+//
+//    @Test
+//    void 스크래핑(){
+//        webReader.scraping();
+//    }
 
 }

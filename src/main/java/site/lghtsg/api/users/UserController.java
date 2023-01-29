@@ -190,11 +190,11 @@ public class UserController {
     /**
      * TODO : sales라는 변수 - 현재 거래에서 발생한 손익(수익)율을 따져서 받아와야 함. Service까지 대충 작업 완료
      * 자산 판매 API
-     * [POST] /users/my-asset/sale
+     * [POST] /users/my-asset/sell
      */
     @ResponseBody
-    @PostMapping("/my-asset/sale")
-    public BaseResponse<String> saleMyAsset(@RequestBody PostMyAssetReq postMyAssetReq) {
+    @PostMapping("/my-asset/sell")
+    public BaseResponse<String> sellMyAsset(@RequestBody PostMyAssetReq postMyAssetReq) {
         try {
             int userIdx = jwtService.getUserIdx();
             // 이 전에 구매한 자산이 있는지 확인 ->

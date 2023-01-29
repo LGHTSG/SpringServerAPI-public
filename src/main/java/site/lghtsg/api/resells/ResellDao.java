@@ -1,18 +1,9 @@
 package site.lghtsg.api.resells;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.PageLoadStrategy;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.chrome.ChromeOptions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
-import site.lghtsg.api.common.model.Box;
-import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.resells.model.GetResellInfoRes;
 import site.lghtsg.api.resells.model.GetResellTransactionRes;
 import site.lghtsg.api.resells.model.GetResellBoxRes;
@@ -20,7 +11,6 @@ import site.lghtsg.api.resells.model.GetResellBoxRes;
 import javax.sql.DataSource;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.*;
 
 @Repository
@@ -34,14 +24,11 @@ public class ResellDao {
     }
 
     public List<GetResellBoxRes> getResellBoxes() {
-        String getResellBoxesQuery = "select rs.resellIdx, rs.name, rst.price as price, rst2.price as s2Price, ii.iconImage\n" +
+        String getResellBoxesQuery =  "select rs.resellIdx, rs.name, rst.price as price, rst2.price as s2Price, rs.image1,  rst2.transactionTime\n" +
                 "from Resell as rs,\n" +
-                "     ResellTransaction as rst,\n" +
-                "     ResellTransaction as rst2,\n" +
-                "     IconImage as ii\n" +
-                "where rst.resellTransactionIdx = rs.lastTransactionIdx\n" +
-                "  and rst2.resellTransactionIdx = rs.s2LastTransactionIdx\n" +
-                "  and rs.iconImageIdx = ii.iconImageIdx";
+                "     ResellTodayTrans as rst,\n" +
+                "     ResellTransaction as rst2\n" +
+                "where rst.resellTransactionIdx = rs.lastTransactionIdx\n" + "  and rst2.resellTransactionIdx = rs.s2LastTransactionIdx";
 
 
         return this.jdbcTemplate.query(getResellBoxesQuery,resellBoxResRowMapper());
@@ -62,7 +49,7 @@ public class ResellDao {
                 "       rst.price,\n" +
                 "       rst2.price\n" +
                 "from Resell as rs,\n" +
-                "     ResellTransaction as rst,\n" +
+                "     ResellTodayTrans as rst,\n" +
                 "     ResellTransaction as rst2,\n" +
                 "     IconImage as ii\n" +
                 "where rst.resellTransactionIdx = rs.lastTransactionIdx\n" +
@@ -101,7 +88,8 @@ public class ResellDao {
                 getResellBoxRes.setIdx(rs.getLong("resellIdx"));
                 getResellBoxRes.setName(rs.getString("name"));
                 getResellBoxRes.setRateCalDateDiff("최근 거래가 기준");
-                getResellBoxRes.setIconImage(rs.getString("iconImage"));
+                getResellBoxRes.setTransactionTime(rs.getString("transactionTime"));
+                getResellBoxRes.setImageUrl(rs.getString("image1"));
                 getResellBoxRes.setPrice(rs.getLong("price"));
                 getResellBoxRes.setLastPrice(rs.getLong("s2Price"));
                 return getResellBoxRes;

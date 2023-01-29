@@ -18,6 +18,7 @@ public class Constant {
     public static int MINUTES = 60;
     public static int HOURS = 24;
     public static int DAYS = 30;
+    public static int LIST_LIMIT = 200;
 
     public static String WITHIN_3_MONTHS = "3개월 이내";
     public static String WITHIN_6_MONTHS = "6개월 이내";
