@@ -82,6 +82,28 @@ public class UserService {
         }
     }
 
+    // 회원정보 수정 (비밀번호 - 로그인 못했을 때)
+    public void modifyUserPasswordNotLogin(PatchUserPasswordNotLoginReq patchUserPassword) throws BaseException {
+        String password;
+        // 비밀번호 암호화
+        try {
+            // 변경할 비밀번호 암호화
+            password = new AES128(Secret.USER_INFO_PASSWORD_KEY).encrypt(patchUserPassword.getPassword());
+            patchUserPassword.setPassword(password);
+        } catch (Exception ignored) { // 암호화가 실패하였을 경우 에러 발생
+            throw new BaseException(PASSWORD_ENCRYPTION_ERROR);
+        }
+        try {
+            int result = userDao.modifyUserPasswordNotLogin(patchUserPassword);
+            // 변경 실패
+            if (result == 0) {
+                throw new BaseException(MODIFY_FAIL_PASSWORD);
+            }
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
     // 회원정보 수정 (프로필 사진)
     public void modifyUserProfileImg(PatchUserProfileImgReq patchUserProfileImgReq) throws BaseException {
         try {

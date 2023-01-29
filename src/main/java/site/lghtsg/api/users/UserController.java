@@ -108,6 +108,23 @@ public class UserController {
     }
 
     /**
+     * 비밀번호 수정 (로그인 못했을 때) API
+     * [PATCH] /users/changeInfo/pw-not-login
+     */
+    @ResponseBody
+    @PatchMapping("/changeInfo/pw-not-login")
+    public BaseResponse<String> modifyUserPasswordNotLogin(@RequestBody PatchUserPasswordNotLoginReq patchUserPassword) {
+        try {
+            userService.modifyUserPasswordNotLogin(patchUserPassword);
+
+            String result = "비밀번호 변경 완료!";
+            return new BaseResponse<>(result);
+        } catch (BaseException exception) {
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+    /**
      * 회원정보 수정 (프로필 이미지) API
      * [PATCH] /users/changeInfo/proImg
      */

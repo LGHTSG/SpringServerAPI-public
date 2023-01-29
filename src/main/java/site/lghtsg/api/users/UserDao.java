@@ -80,6 +80,16 @@ public class UserDao {
         return this.jdbcTemplate.update(modifyUserPasswordQuery, modifyUserPasswordParams);
     }
 
+    // 회원정보 수정 (비밀번호 - 로그인 안됐을 때)
+    public int modifyUserPasswordNotLogin(PatchUserPasswordNotLoginReq patchUserPasswordReq) {
+        String modifyUserPasswordQuery =
+                "update User set password = ?, updatedAt = default where email = ?";
+        Object[] modifyUserPasswordParams =
+                new Object[]{patchUserPasswordReq.getPassword(), patchUserPasswordReq.getEmail()};
+
+        return this.jdbcTemplate.update(modifyUserPasswordQuery, modifyUserPasswordParams);
+    }
+
     // 회원정보 수정 (프로필 사진)
     public int modifyUserProfileImg(PatchUserProfileImgReq patchUserProfileImgReq) {
         String modifyUserProfileImgQuery =
