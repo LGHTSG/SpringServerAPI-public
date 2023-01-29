@@ -30,7 +30,6 @@ public class UserDao {
         Object[] createUserParams = new Object[]{postUserReq.getUserName(), postUserReq.getEmail(),
                 postUserReq.getEmailCheck(), postUserReq.getPassword(), postUserReq.getProfileImg()};
         this.jdbcTemplate.update(createSales);
-        System.out.println("테스트");
         return this.jdbcTemplate.update(createUserQuery, createUserParams);
     }
 

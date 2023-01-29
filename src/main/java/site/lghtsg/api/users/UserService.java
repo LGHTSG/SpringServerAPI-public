@@ -136,16 +136,24 @@ public class UserService {
     // 자산 판매
     public Asset saleMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
         try {
+            // 가장 최근 가격의 정보를 가져옵니다. 구매했을 때의 trasactionIdx를 이용해서 assetIdx가 같은 것들을 비교해
+            // transactionIdx가 가장 높은(가장 최신) 데이터의 정보 (transactionIdx, category, price)를 Asset class 에 저장합니다.
             Asset asset = userProvider.checkMyAssetIdx(postMyAssetReq);
-            // 리스트 상태 변경 Dao
+            // 리스트 상태 변경 Dao - 기존의 transactionIdx에 해당하는 데이터의 transactionStatus를 0으로 변환합니다.
             userDao.changeMyAssetList(userIdx, postMyAssetReq);
             // 판매 transactionIdx를 가장 최신 transactionIdx로 setting
+            // Asset에 저장했던 가장 최근 가격 정보를 가지고 있는 transactionIdx를 postMyAssetReq에 저장해줍니다.
+            // 이를 추가한 것은 클라이언트가 보내주는 transactionIdx는 구매했을 때의 index이기 때문입니다.
+            // (GET 으로 받아온 데이터를 바탕으로 서버에 요청하기 때문입니다.)
             postMyAssetReq.setTransactionIdx(asset.getTransactionIdx());
             // 자산 판매 Dao
             int result = userDao.saleMyAsset(userIdx, postMyAssetReq);
+
             if(result == 0) {
                 throw new BaseException(SALE_FAIL_ASSET);
             }
+            // 결과적으로 Asset에는 가장 최근 데이터의 정보들이 들어있습니다. 수익율을 계산하기 위해 다시 return 해줍니다.
+            // asset으로 return 해준 값과 controller에서 미리 저장해둔 purchaseTransactionIdx로 계산을 수행합니다.
             return asset;
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
@@ -155,7 +163,10 @@ public class UserService {
     // Sales 갱신
     public void updateTableSales(int userIdx, PostMyAssetReq postMyAssetReq, Asset asset, int purchaseTransactionIdx) throws BaseException {
         try {
+            // 클라이언트가 보내준 request body에 있던 transactionIdx값을 미리 purchaseTransactionIdx에 저장했으니,
+            // 그 index를 가지고 그 때의 가격 정보를 받아옵니다. 그럼 구매 당시의 가격을 purchasePrice에 저장할 수 있습니다.
             long purchasePrice = userProvider.getPrice(purchaseTransactionIdx, postMyAssetReq.getCategory());
+            // 아까 저장해둔 가장 최근 데이터의 가격을 저장합니다. (Asset에 저장했었던 price)
             long sellPrice = asset.getPrice();
 
             // 수익율 계산- (판매가격 - 구매가격) / 구매가격 * 100 %

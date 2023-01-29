@@ -201,6 +201,9 @@ public class UserController {
             //      numOfAsset이 1일 때만 진행 가능, 나머지는 오류
             int numOfAsset = userProvider.checkMyAsset(userIdx, postMyAssetReq);
             if(numOfAsset == 1) {
+                // 클라이언트는 GET으로 조회한 자산 정보를 바탕으로 서버에 요청을 보냅니다.
+                // 그래서 클라이언트에서 보내준 transactionIdx는 구매 당시의 transactionIdx이고,
+                // 이를 나중에 사용해야해서 purchaseTransactionIdx에 따로 저장해주었습니다.
                 int purchaseTransactionIdx = postMyAssetReq.getTransactionIdx();
                 // 판매 코드
                 Asset asset = userService.saleMyAsset(userIdx, postMyAssetReq);
