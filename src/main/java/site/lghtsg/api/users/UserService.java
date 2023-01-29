@@ -134,12 +134,11 @@ public class UserService {
     }
 
     // 자산 판매
-    public void saleMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+    public void sellMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
         try {
             // 리스트 상태 변경 Dao
             userDao.changeMyAssetList(userIdx, postMyAssetReq);
-            // 자산 판매 Dao
-            int result = userDao.saleMyAsset(userIdx, postMyAssetReq);
+            int result = userDao.sellMyAsset(userIdx, postMyAssetReq);
 
             if(result == 0) {
                 throw new BaseException(SALE_FAIL_ASSET);

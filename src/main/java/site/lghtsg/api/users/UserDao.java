@@ -179,20 +179,19 @@ public class UserDao {
     // 자산 구매
     public int postMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
         String postMyAssetQuery = "";
-        switch(postMyAssetReq.getCategory()) {
-            case "stock": // stock
-                postMyAssetQuery = "insert into StockUserTransaction(userIdx, stockTransactionIdx) values (?,?)";
+        switch (postMyAssetReq.getCategory()){
+            case "stock":
+                postMyAssetQuery = "insert into StockUserTransaction(userIdx, stockIdx, price) values (?,?,?)";
                 break;
-            case "resell": // resell
-                postMyAssetQuery = "insert into ResellUserTransaction(userIdx, resellTransactionIdx) values (?,?)";
+            case "resell":
+                postMyAssetQuery = "insert into ResellUserTransaction(userIdx, resellIdx, price) values (?,?,?)";
                 break;
-            case "realestate": // realestate
-                postMyAssetQuery = "insert into RealEstateUserTransaction(userIdx, realEstateTransactionIdx) values (?,?)";
-                break;
-            default:
+            case "realestate":
+                postMyAssetQuery = "insert into RealEstateUserTransaction(userIdx, realEsateIdx, price) values (?,?,?)";
                 break;
         }
-        Object[] postMyAssetParams = new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
+
+        Object[] postMyAssetParams = new Object[]{userIdx, postMyAssetReq.getAssetIdx(), postMyAssetReq.getPrice()};
         return this.jdbcTemplate.update(postMyAssetQuery, postMyAssetParams);
     }
 
@@ -217,25 +216,24 @@ public class UserDao {
 
 
     // 자산 판매
-    public int saleMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
-        String saleMyAssetQuery = "";
+    public int sellMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
+        String sellMyAssetQuery = "";
         // 판매
         // 이 곳에서는 복수의 s가 붙지 않습니다. (GET에서 category를 단수형으로 보내줌)
-        switch(postMyAssetReq.getCategory()) {
+        switch (postMyAssetReq.getCategory()){
             case "stock":
-                saleMyAssetQuery = "INSERT INTO StockUserTransaction(userIdx, stockTransactionIdx, saleCheck) VALUES (?,?,1);";
+                sellMyAssetQuery = "INSERT INTO StockUserTransaction(userIdx, stockIdx, price, saleCheck) VALUES (?,?,?,1);";
                 break;
             case "resell":
-                saleMyAssetQuery = "INSERT INTO ResellUserTransaction(userIdx, resellTransactionIdx, saleCheck) VALUES (?,?,1);";
+                sellMyAssetQuery = "INSERT INTO ResellUserTransaction(userIdx, resellIdx, price, saleCheck) VALUES (?,?,?,1);";
                 break;
             case "realestate":
-                saleMyAssetQuery = "INSERT INTO RealEstateUserTransaction(userIdx, realEstateTransactionIdx, saleCheck) VALUES (?,?,1);";
-                break;
-            default:
+                sellMyAssetQuery = "INSERT INTO RealEstateUserTransaction(userIdx, realEstateIdx, price, saleCheck) VALUES (?,?,?,1);";
                 break;
         }
-        Object[] saleMyAssetParams = new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
-        return this.jdbcTemplate.update(saleMyAssetQuery, saleMyAssetParams);
+
+        Object[] saleMyAssetParams = new Object[]{userIdx, postMyAssetReq.getAssetIdx(), postMyAssetReq.getPrice()};
+        return this.jdbcTemplate.update(sellMyAssetQuery, saleMyAssetParams);
     }
 
     // 리스트 노출 상태 변경
@@ -243,18 +241,18 @@ public class UserDao {
         String changeMyAssetListQuery = "";
         switch (postMyAssetReq.getCategory()) {
             case "stock":
-                changeMyAssetListQuery = "UPDATE StockUserTransaction SET transactionStatus=0 WHERE userIdx=? AND stockTransactionIdx = ? AND transactionStatus=1";
-                break;
+                changeMyAssetListQuery = "UPDATE StockUserTransaction SET transactionStatus=0 where useridx=? and stockidx = ? and transactionstatus=1";
+            break;
             case "resell":
-                changeMyAssetListQuery = "UPDATE ResellUserTransaction SET transactionStatus=0 WHERE userIdx=? AND resellTransactionIdx = ? AND transactionStatus=1";
+                changeMyAssetListQuery = "UPDATE ResellUserTransaction SET transactionStatus=0 WHERE userIdx=? AND resellIdx = ? AND transactionStatus=1";
                 break;
             case "realestate":
-                changeMyAssetListQuery = "UPDATE RealEstatelUserTransaction SET transactionStatus=0 WHERE userIdx=? AND realEstateTransactionIdx = ? AND transactionStatus=1";
+                changeMyAssetListQuery = "UPDATE RealEstatelUserTransaction SET transactionStatus=0 WHERE userIdx=? AND realEstateIdx = ? AND transactionStatus=1";
                 break;
             default:
                 break;
         }
-        Object[] saleMyAssetParams = new Object[]{userIdx, postMyAssetReq.getTransactionIdx()};
+        Object[] saleMyAssetParams = new Object[]{userIdx, postMyAssetReq.getAssetIdx()};
         return this.jdbcTemplate.update(changeMyAssetListQuery, saleMyAssetParams);
     }
 

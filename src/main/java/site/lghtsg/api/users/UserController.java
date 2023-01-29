@@ -15,6 +15,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import static site.lghtsg.api.config.BaseResponseStatus.*;
+import static site.lghtsg.api.config.Constant.PARAM_DEFAULT;
 import static site.lghtsg.api.utils.ValidationRegex.isRegexEmail;
 
 @RestController
@@ -178,6 +179,9 @@ public class UserController {
     @PostMapping("/my-asset/purchase")
     public BaseResponse<String> postMyAsset(@RequestBody PostMyAssetReq postMyAssetReq) {
         try {
+            // validation
+            validatePostMyAssetReq(postMyAssetReq);
+
             int userIdx = jwtService.getUserIdx();
             userService.postMyAsset(userIdx, postMyAssetReq);
             String result = "구매 완료";
@@ -195,9 +199,12 @@ public class UserController {
     @PostMapping("/my-asset/sell")
     public BaseResponse<String> sellMyAsset(@RequestBody PostMyAssetReq postMyAssetReq) {
         try {
+            // validation
+            validatePostMyAssetReq(postMyAssetReq);
+
             int userIdx = jwtService.getUserIdx();
-            userService.saleMyAsset(userIdx, postMyAssetReq);
-            String result = "구매 완료";
+            userService.sellMyAsset(userIdx, postMyAssetReq);
+            String result = "판매 완료";
             return new BaseResponse<>(result);
         } catch (BaseException exception) {
             return new BaseResponse<>(exception.getStatus());
@@ -219,6 +226,15 @@ public class UserController {
         } catch (BaseException exception) {
             return new BaseResponse<>(exception.getStatus());
         }
+    }
+
+    public int validatePostMyAssetReq(PostMyAssetReq postMyAssetReq){
+        if(postMyAssetReq.getAssetIdx() == 0) return 0;
+        if(postMyAssetReq.getCategory() == null) {
+            postMyAssetReq.setCategory(PARAM_DEFAULT); return 0;
+        }
+        if(postMyAssetReq.getPrice() == 0L) return 0;
+        return 1;
     }
 }
 
