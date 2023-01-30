@@ -9,6 +9,7 @@ import site.lghtsg.api.users.UserController;
 import site.lghtsg.api.users.UserDao;
 import site.lghtsg.api.users.UserProvider;
 import site.lghtsg.api.users.UserService;
+import site.lghtsg.api.users.model.Asset;
 import site.lghtsg.api.users.model.GetUserTransactionHistoryRes;
 import site.lghtsg.api.users.model.PostMyAssetReq;
 
@@ -46,22 +47,53 @@ public class UserTest {
 //    }
 
     @Test
+    void 해당_자산_과거_거래이력(){
+        int userIdx = 1;
+        PostMyAssetReq postMyAssetReq = new PostMyAssetReq();
+        postMyAssetReq.setAssetIdx(1);
+        postMyAssetReq.setPrice(2000);
+        postMyAssetReq.setCategory("stock");
+        postMyAssetReq.setTransactionTime("2023-01-30 18:02:30");
+        try {
+            Asset previous = userProvider.getPreviousTransaction(userIdx, postMyAssetReq);
+        }
+        catch(BaseException e){
+            System.out.println(e.getStatus());
+        }
+        userDao.getPreviousTransaction(userIdx, postMyAssetReq);
+    }
+
+    @Test
     void 사용자_자산_구매(){
         int userIdx = 1;
         PostMyAssetReq postMyAssetReq = new PostMyAssetReq();
         postMyAssetReq.setAssetIdx(1);
         postMyAssetReq.setPrice(2000);
         postMyAssetReq.setCategory("stock");
-
-        int result = userDao.buyMyAsset(userIdx, postMyAssetReq);
-        System.out.println(result);
-        Assertions.assertEquals(result, 1);
+        postMyAssetReq.setTransactionTime("2023-01-30 18:02:30");
 
         try{
-//            userService.postMyAsset(userIdx, postMyAssetReq);
+            userService.buyMyAsset(userIdx, postMyAssetReq);
         }
-        catch(Exception e){
-            System.out.println(e.getMessage());
+        catch(BaseException e){
+            System.out.println(e.getStatus());
+        }
+    }
+
+    @Test
+    void 사용자_자산_판매(){
+        int userIdx = 1;
+        PostMyAssetReq postMyAssetReq = new PostMyAssetReq();
+        postMyAssetReq.setAssetIdx(1);
+        postMyAssetReq.setPrice(2000);
+        postMyAssetReq.setCategory("stock");
+        postMyAssetReq.setTransactionTime("2023-01-30 18:02:31");
+
+        try{
+            userService.sellMyAsset(userIdx, postMyAssetReq);
+        }
+        catch(BaseException e){
+            System.out.println(e.getStatus());
         }
     }
 
@@ -80,6 +112,7 @@ public class UserTest {
             System.out.println(e.getStatus());
         }
     }
+
 
 }
 

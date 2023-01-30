@@ -147,8 +147,9 @@ public class UserService {
         buyValidation(userIdx, postMyAssetReq);
 
         try {
-            // 리스트 상태 변경 Dao
+            // transactionStatus 수정
             userDao.changeMyAssetList(userIdx, postMyAssetReq);
+
             // 자산 구매 Dao
             result = userDao.buyMyAsset(userIdx, postMyAssetReq);
         } catch (Exception exception) {
@@ -167,6 +168,7 @@ public class UserService {
         // 과거 거래 기록 가지고오기
         Asset previousTransaction = userProvider.getPreviousTransaction(userIdx, postMyAssetReq);
 
+
         try {
             // 리스트 상태 변경 Dao
             userDao.changeMyAssetList(userIdx, postMyAssetReq);
@@ -175,26 +177,31 @@ public class UserService {
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
-
         // 수익율 계산
         updateTableSales(userIdx, postMyAssetReq, previousTransaction);
     }
 
     public int buyValidation(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException{
-        Asset previousTransaction = userProvider.getPreviousTransaction(userIdx, postMyAssetReq);
-        // 이전 거래가 없다면 구매가능
-        if(previousTransaction == null) return 1;
+        Asset previousTransaction;
+        // 구매는 이전 거래가 없는 경우 허용
+        try {
+            previousTransaction = userProvider.getPreviousTransaction(userIdx, postMyAssetReq);
+        } catch(BaseException e){
+            if(e.getStatus().equals(NO_PREVIOUS_USER_TRANSACTION)) return 1;
+            else throw e;
+        }
         // 이전 거래가 구매라면 구매 불가
         if(previousTransaction.getSellCheck() == 0) {
-            throw new BaseException(SELL_FAIL_ASSET);
+            throw new BaseException(PURCHASE_FAIL_ASSET);
         }
         return 1;
     }
 
     public int sellValidation(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+        // 이전 거래가 없다면 판매 불가 (getPreviousTransaction에서 오류 반환)
         Asset previousTransaction = userProvider.getPreviousTransaction(userIdx, postMyAssetReq);
-        // 이전 거래가 없다면 판매 불가 or 이전 거래가 판매라면 판매 불가
-        if(previousTransaction == null || previousTransaction.getSellCheck() == 1){
+        // 이전 거래가 판매라면 판매 불가
+        if(previousTransaction.getSellCheck() == 1){
             throw new BaseException(SELL_FAIL_ASSET);
         }
         // 판매하려는 시간이 구매 이전이라면 판매 불가
@@ -209,7 +216,9 @@ public class UserService {
     public void updateTableSales(int userIdx, PostMyAssetReq postMyAssetReq, Asset previousTransaction) throws BaseException {
         try {
             // 이번 거래 손익율
-            double profitRatio = Math.round((double)(postMyAssetReq.getPrice() - previousTransaction.getPrice()) / previousTransaction.getPrice() * 10) / 10.0;
+            double profitRatio = Math.round((double)(postMyAssetReq.getPrice() - previousTransaction.getPrice()) / previousTransaction.getPrice() * 1000) / 10.0;
+            // 출력
+            System.out.println(profitRatio);
             userDao.updateTableSales(userIdx, profitRatio);
         } catch (Exception exception) {
             throw new BaseException(FAIL_TO_INSERT_SALES);

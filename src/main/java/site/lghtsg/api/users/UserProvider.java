@@ -112,11 +112,19 @@ public class UserProvider {
      * @throws BaseException
      */
     public Asset getPreviousTransaction(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+        List<Asset> result;
         try {
-            return userDao.getPreviousTransaction(userIdx, postMyAssetReq);
+            result = userDao.getPreviousTransaction(userIdx, postMyAssetReq);
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
+        // 이전 거래가 없다면
+        if(result.size() == 0){
+            throw new BaseException(NO_PREVIOUS_USER_TRANSACTION);
+        } else if(result.size() > 1){ // transactionStatus == 1이 2개 이상이라면
+            throw new BaseException(USER_TRANSACTION_DATA_ERROR);
+        }
+        return result.get(0);
     }
 
 

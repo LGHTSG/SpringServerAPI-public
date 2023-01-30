@@ -129,7 +129,7 @@ public class UserDao {
                         "  and SUT.transactionStatus = 1;";
         int getStockAssetParams = userIdx;
 
-        return this.jdbcTemplate.query(getStockAssetQuery, assetRowMapper(), getStockAssetParams);
+        return this.jdbcTemplate.query(getStockAssetQuery, getMyAssetRowMapper(), getStockAssetParams);
     }
 
     // 리셀 자산 조회
@@ -156,7 +156,7 @@ public class UserDao {
 
         int getResellBoxParams = userIdx;
 
-        return this.jdbcTemplate.query(getResellAssetQuery, assetRowMapper(), getResellBoxParams);
+        return this.jdbcTemplate.query(getResellAssetQuery, getMyAssetRowMapper(), getResellBoxParams);
     }
 
     // 부동산 자산 조회
@@ -183,7 +183,7 @@ public class UserDao {
 
         int getRealEstateParams = userIdx;
 
-        return this.jdbcTemplate.query(getRealEstateAssetQuery, assetRowMapper(), getRealEstateParams);
+        return this.jdbcTemplate.query(getRealEstateAssetQuery, getMyAssetRowMapper(), getRealEstateParams);
     }
 
     // 자산 구매
@@ -212,13 +212,13 @@ public class UserDao {
         // 이 곳에서는 복수의 s가 붙지 않습니다. (GET에서 category를 단수형으로 보내줌)
         switch (postMyAssetReq.getCategory()){
             case "stock":
-                sellMyAssetQuery = "INSERT INTO StockUserTransaction(userIdx, stockIdx, price, transactionTime, sellCheck) VALUES (?,?,?,1);";
+                sellMyAssetQuery = "INSERT INTO StockUserTransaction(userIdx, stockIdx, price, transactionTime, sellCheck) VALUES (?,?,?,?,1);";
                 break;
             case "resell":
-                sellMyAssetQuery = "INSERT INTO ResellUserTransaction(userIdx, resellIdx, price, transactionTime, sellCheck) VALUES (?,?,?,1);";
+                sellMyAssetQuery = "INSERT INTO ResellUserTransaction(userIdx, resellIdx, price, transactionTime, sellCheck) VALUES (?,?,?,?,1);";
                 break;
             case "realestate":
-                sellMyAssetQuery = "INSERT INTO RealEstateUserTransaction(userIdx, realEstateIdx, price, transactionTime, sellCheck) VALUES (?,?,?,1);";
+                sellMyAssetQuery = "INSERT INTO RealEstateUserTransaction(userIdx, realEstateIdx, price, transactionTime, sellCheck) VALUES (?,?,?,?,1);";
                 break;
         }
 
@@ -226,7 +226,7 @@ public class UserDao {
         return this.jdbcTemplate.update(sellMyAssetQuery, sellMyAssetParams);
     }
 
-    public Asset getPreviousTransaction(int userIdx, PostMyAssetReq postMyAssetReq){
+    public List<Asset> getPreviousTransaction(int userIdx, PostMyAssetReq postMyAssetReq){
         String getPreviousTransactionQuery = "";
 
         switch (postMyAssetReq.getCategory()) {
@@ -252,13 +252,7 @@ public class UserDao {
         }
 
         Object [] getPreviousTransactionParam = new Object[] {userIdx, postMyAssetReq.getAssetIdx()};
-        return this.jdbcTemplate.queryForObject(getPreviousTransactionQuery, (rs, rowNum) -> new Asset(
-                        rs.getInt("idx"),
-                        rs.getString("transactionTime"),
-                        rs.getLong("price"),
-                        rs.getString("category"),
-                        rs.getInt("sellCheck")
-        ), getPreviousTransactionParam);
+        return this.jdbcTemplate.query(getPreviousTransactionQuery, assetRowMapper(), getPreviousTransactionParam);
     }
 
     // 리스트 노출 상태 변경
@@ -267,7 +261,7 @@ public class UserDao {
         switch (postMyAssetReq.getCategory()) {
             case "stock":
                 changeMyAssetListQuery = "UPDATE StockUserTransaction SET transactionStatus=0 where useridx=? and stockidx = ? and transactionstatus=1";
-            break;
+                break;
             case "resell":
                 changeMyAssetListQuery = "UPDATE ResellUserTransaction SET transactionStatus=0 WHERE userIdx=? AND resellIdx = ? AND transactionStatus=1";
                 break;
@@ -326,7 +320,23 @@ public class UserDao {
         return this.jdbcTemplate.query(getTransactionHistoryQuery, transactionHistoryRowMapper(), getTransactionHistoryParams);
     }
 
-    private RowMapper<GetMyAssetRes> assetRowMapper(){
+    private RowMapper<Asset> assetRowMapper(){
+        return new RowMapper<Asset>() {
+            @Override
+            public Asset mapRow(ResultSet rs, int rowNum) throws SQLException {
+                GetMyAssetRes getMyAssetRes = new GetMyAssetRes();
+                Asset asset = new Asset();
+                asset.setAssetIdx(rs.getInt("idx"));
+                asset.setSellCheck(rs.getInt("sellCheck"));
+                asset.setPrice(rs.getLong("price"));
+                asset.setTransactionTime(rs.getString("transactionTime"));
+                return asset;
+            }
+        };
+    }
+
+
+    private RowMapper<GetMyAssetRes> getMyAssetRowMapper(){
         return new RowMapper<GetMyAssetRes>() {
             @Override
             public GetMyAssetRes mapRow(ResultSet rs, int rowNum) throws SQLException {

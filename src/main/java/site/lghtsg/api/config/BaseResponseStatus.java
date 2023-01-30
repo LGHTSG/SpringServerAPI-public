@@ -80,7 +80,8 @@ public enum BaseResponseStatus {
     FAIL_TO_INSERT_SALES(4008,"수익율 기록 실패"),
     SELL_AHEAD_OF_PREVIOUS_PURCHACE(4009,"판매하려는 시기 이후에 구매하였습니다."),
     WRONG_PARAMETER_INPUT(4010,"잘못된 변수 입력입니다"),
-
+    USER_TRANSACTION_DATA_ERROR(4011,"transactionStatus == 1이 2개 이상입니다."),
+    NO_PREVIOUS_USER_TRANSACTION(4012,"해당 자산에 대해 사용자가 거래한 적이 없습니다"),
 
     // 삭제
 

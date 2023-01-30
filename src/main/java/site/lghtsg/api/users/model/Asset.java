@@ -13,6 +13,5 @@ public class Asset {
     private int assetIdx;
     private String transactionTime;
     private long price;
-    private String category;
     private int sellCheck;
 }
