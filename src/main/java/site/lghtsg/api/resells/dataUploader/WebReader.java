@@ -47,7 +47,7 @@ public class WebReader {
             Thread.sleep(1000);
 
             //스크래핑할 브랜드 url로 이동
-            String url = "https://kream.co.kr/brands/dyson";
+            String url = "https://kream.co.kr/brands/jordan";
             driver.navigate().to(url);
             Thread.sleep(1000);
 
@@ -72,13 +72,13 @@ public class WebReader {
             System.out.println("size = " + urlList.size());
 
             //스크래핑 시작
-            int resellIdx = 1039;
+            int resellIdx = 1081;
             while (!urlList.isEmpty()) {
                 driver.get(urlList.get(0));
                 //상품명, 브랜드, 이미지 url, 모델번호, 발매일자, 발매가, 색상 스크래핑
                 WebElement name = driver.findElement(By.className("sub_title"));
                 WebElement brand = driver.findElement(By.className("brand"));
-                String imageUrl = driver.findElement(By.tagName("img")).getAttribute("src");
+                List<WebElement> imageUrlList = driver.findElements(By.className("slide_item"));
                 List<WebElement> productInfo = driver.findElements(By.tagName("dd"));
 
 
@@ -88,7 +88,23 @@ public class WebReader {
                     resellIdx++;
                     System.out.println(resellIdx + "번째");
 
-                    Resell resell = new Resell(name.getText(), productInfo.get(3).getText(), productInfo.get(1).getText(), productInfo.get(2).getText(), brand.getText(), productInfo.get(0).getText(), imageUrl, 1L);
+                    Resell resell = new Resell();
+                    resell.setName(name.getText());
+                    resell.setReleasedPrice(productInfo.get(3).getText());
+                    resell.setReleasedDate(productInfo.get(1).getText());
+                    resell.setColor(productInfo.get(2).getText());
+                    resell.setBrand(brand.getText());
+                    resell.setProductNum(productInfo.get(0).getText());
+                    resell.setImage1(imageUrlList.get(0).findElement(By.tagName("img")).getAttribute("src"));
+
+                    if(imageUrlList.size() >= 2){
+                        resell.setImage2(imageUrlList.get(1).findElement(By.tagName("img")).getAttribute("src"));
+                    }
+
+                    if(imageUrlList.size() >= 3){
+                        resell.setImage3(imageUrlList.get(2).findElement(By.tagName("img")).getAttribute("src"));
+                    }
+                    resell.setIconImageIdx(1L);
 
                     //거래 내역 더보기 클릭
                     try {
@@ -127,6 +143,7 @@ public class WebReader {
                         resellUploadDao.uploadResellTransaction(resellTransaction);
                     }
                     System.out.println("————————————");
+                    break;
                 }
                 urlList.remove(0);
             }
@@ -139,4 +156,3 @@ public class WebReader {
         }
     }
 }
-
