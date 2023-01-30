@@ -116,7 +116,7 @@ public class UserDao {
                         "       ST.transactionTime,\n" +
                         "       ST2.transactionTime as s2TransactionTime,\n" +
                         "       SUT.updatedAt,\n" +
-                        "       SUT.Check,\n" +
+                        "       SUT.sellCheck,\n" +
                         "       II.iconImage\n" +
                         "from Stock as S\n" +
                         "         join StockTodayTrans ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
