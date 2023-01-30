@@ -1,12 +1,12 @@
 package site.lghtsg.api.resells.dataUploader.model;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
+@NoArgsConstructor
 public class Resell {
     private String name;
     private String releasedPrice;
@@ -15,5 +15,7 @@ public class Resell {
     private String brand;
     private String productNum;
     private String image1;
+    private String image2;
+    private String image3;
     private Long iconImageIdx;
 }
