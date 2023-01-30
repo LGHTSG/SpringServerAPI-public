@@ -19,10 +19,7 @@ import site.lghtsg.api.utils.JwtService;
 import site.lghtsg.api.users.model.*;
 
 import java.text.SimpleDateFormat;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class UserProvider {
@@ -107,35 +104,22 @@ public class UserProvider {
         }
     }
 
-    // 자산 확인
-    public int checkMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+    /**
+     * 구매하려는 자산의 과거 거래 이력을 가져옴
+     * @param userIdx
+     * @param postMyAssetReq
+     * @return
+     * @throws BaseException
+     */
+    public Asset getPreviousTransaction(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
         try {
-            int numOfAsset = userDao.checkMyAsset(userIdx, postMyAssetReq);
-            return numOfAsset;
+            return userDao.getPreviousTransaction(userIdx, postMyAssetReq);
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
     }
 
-    // 자산 index 확인
-    public Asset checkMyAssetIdx(PostMyAssetReq postMyAssetReq) throws BaseException {
-        try {
-            Asset asset = userDao.checkMyAssetIdx(postMyAssetReq);
-            return asset;
-        } catch (Exception exception) {
-            throw new BaseException(DATABASE_ERROR);
-        }
-    }
 
-    // transactionIdx에 해당하는 price 가져오기
-    public long getPrice(int index, String category) throws BaseException {
-        try {
-            long price = userDao.getPrice(index, category);
-            return price;
-        } catch (Exception exception) {
-            throw new BaseException(DATABASE_ERROR);
-        }
-    }
 /*
     // 수익율 계산
     public double getProfitRate(PostMyAssetReq postMyAssetReq) throws BaseException {
@@ -200,5 +184,30 @@ public class UserProvider {
             throw new BaseException(DATALIST_CAL_RATE_ERROR);
         }
         return assetList;
+    }
+
+    /**
+     * 사용자 자산 거래 기록 반환
+     */
+    public List<GetUserTransactionHistoryRes> getUserTransactionHistory(String category, int userIdx, long assetIdx) throws BaseException{
+        List<GetUserTransactionHistoryRes> getUserTransactionHistoryRes;
+
+        if(!category.equals("stock") && !category.equals("realestate") && !category.equals("resell")){
+            throw new BaseException(WRONG_PARAMETER_INPUT);
+        }
+
+        try{
+            if(category.equals("stock")){
+                getUserTransactionHistoryRes = userDao.getStockTransactionHistory(assetIdx, userIdx);
+            } else if(category.equals("realestate")){
+                getUserTransactionHistoryRes = userDao.getRealEstateTransactionHistory(assetIdx, userIdx);
+            } else {
+                getUserTransactionHistoryRes = userDao.getResellTransactionHistory(assetIdx, userIdx);
+            }
+        }
+        catch(Exception e){
+            throw new BaseException(DATABASE_ERROR);
+        }
+        return getUserTransactionHistoryRes;
     }
 }

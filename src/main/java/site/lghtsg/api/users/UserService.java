@@ -1,5 +1,6 @@
 package site.lghtsg.api.users;
 
+import org.apache.commons.codec.binary.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -140,78 +141,87 @@ public class UserService {
     }
 
     // 자산 구매
-    public void postMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+    public void buyMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+        int result;
+        // 구매 가능한 자산인지 validation
+        buyValidation(userIdx, postMyAssetReq);
+
         try {
             // 리스트 상태 변경 Dao
             userDao.changeMyAssetList(userIdx, postMyAssetReq);
             // 자산 구매 Dao
-            int result = userDao.postMyAsset(userIdx, postMyAssetReq);
-
-            if(result == 0) {
-                throw new BaseException(PURCHASE_FAIL_ASSET);
-            }
+            result = userDao.buyMyAsset(userIdx, postMyAssetReq);
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
+        }
+        if(result == 0) { // 자산 구매에서 실패했다면
+            throw new BaseException(PURCHASE_FAIL_ASSET);
         }
     }
 
     // 자산 판매
-    public Asset saleMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
-        try {
-            // 가장 최근 가격의 정보를 가져옵니다. 구매했을 때의 trasactionIdx를 이용해서 assetIdx가 같은 것들을 비교해
-            // transactionIdx가 가장 높은(가장 최신) 데이터의 정보 (transactionIdx, category, price)를 Asset class 에 저장합니다.
-            Asset asset = userProvider.checkMyAssetIdx(postMyAssetReq);
-            // 리스트 상태 변경 Dao - 기존의 transactionIdx에 해당하는 데이터의 transactionStatus를 0으로 변환합니다.
-            userDao.changeMyAssetList(userIdx, postMyAssetReq);
-            // 판매 transactionIdx를 가장 최신 transactionIdx로 setting
-            // Asset에 저장했던 가장 최근 가격 정보를 가지고 있는 transactionIdx를 postMyAssetReq에 저장해줍니다.
-            // 이를 추가한 것은 클라이언트가 보내주는 transactionIdx는 구매했을 때의 index이기 때문입니다.
-            // (GET 으로 받아온 데이터를 바탕으로 서버에 요청하기 때문입니다.)
-            postMyAssetReq.setTransactionIdx(asset.getTransactionIdx());
-            // 자산 판매 Dao
-            int result = userDao.saleMyAsset(userIdx, postMyAssetReq);
+    public void sellMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+        int result;
+        // 판매 가능한 자산인지 validation
+        sellValidation(userIdx, postMyAssetReq);
+        // 과거 거래 기록 가지고오기
+        Asset previousTransaction = userProvider.getPreviousTransaction(userIdx, postMyAssetReq);
 
-            if(result == 0) {
-                throw new BaseException(SALE_FAIL_ASSET);
-            }
-            // 결과적으로 Asset에는 가장 최근 데이터의 정보들이 들어있습니다. 수익율을 계산하기 위해 다시 return 해줍니다.
-            // asset으로 return 해준 값과 controller에서 미리 저장해둔 purchaseTransactionIdx로 계산을 수행합니다.
-            return asset;
+        try {
+            // 리스트 상태 변경 Dao
+            userDao.changeMyAssetList(userIdx, postMyAssetReq);
+            // 자산 판매 Dao
+            userDao.sellMyAsset(userIdx, postMyAssetReq);
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
+
+        // 수익율 계산
+        updateTableSales(userIdx, postMyAssetReq, previousTransaction);
+    }
+
+    public int buyValidation(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException{
+        Asset previousTransaction = userProvider.getPreviousTransaction(userIdx, postMyAssetReq);
+        // 이전 거래가 없다면 구매가능
+        if(previousTransaction == null) return 1;
+        // 이전 거래가 구매라면 구매 불가
+        if(previousTransaction.getSellCheck() == 0) {
+            throw new BaseException(SELL_FAIL_ASSET);
+        }
+        return 1;
+    }
+
+    public int sellValidation(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+        Asset previousTransaction = userProvider.getPreviousTransaction(userIdx, postMyAssetReq);
+        // 이전 거래가 없다면 판매 불가 or 이전 거래가 판매라면 판매 불가
+        if(previousTransaction == null || previousTransaction.getSellCheck() == 1){
+            throw new BaseException(SELL_FAIL_ASSET);
+        }
+        // 판매하려는 시간이 구매 이전이라면 판매 불가
+        String previousTransactionTime = previousTransaction.getTransactionTime();
+        if(previousTransactionTime.compareTo(postMyAssetReq.getTransactionTime()) > 0){
+            throw new BaseException(SELL_AHEAD_OF_PREVIOUS_PURCHACE);
+        }
+        return 1;
     }
 
     // Sales 갱신
-    public void updateTableSales(int userIdx, PostMyAssetReq postMyAssetReq, Asset asset, int purchaseTransactionIdx) throws BaseException {
+    public void updateTableSales(int userIdx, PostMyAssetReq postMyAssetReq, Asset previousTransaction) throws BaseException {
         try {
-            // 클라이언트가 보내준 request body에 있던 transactionIdx값을 미리 purchaseTransactionIdx에 저장했으니,
-            // 그 index를 가지고 그 때의 가격 정보를 받아옵니다. 그럼 구매 당시의 가격을 purchasePrice에 저장할 수 있습니다.
-            long purchasePrice = userProvider.getPrice(purchaseTransactionIdx, postMyAssetReq.getCategory());
-            // 아까 저장해둔 가장 최근 데이터의 가격을 저장합니다. (Asset에 저장했었던 price)
-            long sellPrice = asset.getPrice();
-
-            // 수익율 계산- (판매가격 - 구매가격) / 구매가격 * 100 %
-            double sales = ((sellPrice-purchasePrice)/purchasePrice)*100;
-
-            int result = userDao.updateTableSales(userIdx, sales);
-            if(result == 0) {
-                throw new BaseException(FAIL_TO_INSERT_SALES);
-            }
+            // 이번 거래 손익율
+            double profitRatio = Math.round((double)(postMyAssetReq.getPrice() - previousTransaction.getPrice()) / previousTransaction.getPrice() * 10) / 10.0;
+            userDao.updateTableSales(userIdx, profitRatio);
         } catch (Exception exception) {
-            throw new BaseException(DATABASE_ERROR);
+            throw new BaseException(FAIL_TO_INSERT_SALES);
         }
     }
 
     // 자산 리스트에서 제거
     public void deleteMyAssetList(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
         try {
-            int result = userDao.changeMyAssetList(userIdx, postMyAssetReq);
-            if(result == 0) {
-                throw new BaseException(DELETE_FAIL_ASSET_LIST);
-            }
+            userDao.changeMyAssetList(userIdx, postMyAssetReq);
         }catch (Exception exception) {
-            throw new BaseException(DATABASE_ERROR);
+            throw new BaseException(DELETE_FAIL_ASSET_LIST);
         }
     }
 

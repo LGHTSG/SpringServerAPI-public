@@ -10,7 +10,9 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Asset {
-    private int transactionIdx;
-    private int index;
+    private int assetIdx;
+    private String transactionTime;
     private long price;
+    private String category;
+    private int sellCheck;
 }

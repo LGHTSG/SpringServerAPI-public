@@ -1,18 +1,20 @@
 package site.lghtsg.api.user;
 
-import org.apache.commons.collections4.Get;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import site.lghtsg.api.realestates.RealEstateDao;
+import site.lghtsg.api.config.BaseException;
+import site.lghtsg.api.users.UserController;
 import site.lghtsg.api.users.UserDao;
 import site.lghtsg.api.users.UserProvider;
-import site.lghtsg.api.users.model.GetMyAssetRes;
-//import site.lghtsg.api.users.model.GetMyAssetRes;
+import site.lghtsg.api.users.UserService;
+import site.lghtsg.api.users.model.GetUserTransactionHistoryRes;
+import site.lghtsg.api.users.model.PostMyAssetReq;
 
 import java.util.List;
+//import site.lghtsg.api.users.model.GetMyAssetRes;
 
-import static site.lghtsg.api.users.UserProvider.calculateRateOfChange;
 
 @SpringBootTest
 public class UserTest {
@@ -21,6 +23,10 @@ public class UserTest {
     private UserDao userDao;
     @Autowired
     private UserProvider userProvider;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private UserController userController;
 
 //    @Test
 //    void Test1(){
@@ -38,6 +44,42 @@ public class UserTest {
 //        }
 //
 //    }
+
+    @Test
+    void 사용자_자산_구매(){
+        int userIdx = 1;
+        PostMyAssetReq postMyAssetReq = new PostMyAssetReq();
+        postMyAssetReq.setAssetIdx(1);
+        postMyAssetReq.setPrice(2000);
+        postMyAssetReq.setCategory("stock");
+
+        int result = userDao.buyMyAsset(userIdx, postMyAssetReq);
+        System.out.println(result);
+        Assertions.assertEquals(result, 1);
+
+        try{
+//            userService.postMyAsset(userIdx, postMyAssetReq);
+        }
+        catch(Exception e){
+            System.out.println(e.getMessage());
+        }
+    }
+
+    @Test
+    void 사용자_거래이력(){
+        int userIdx = 1;
+        try{
+            String category = "realestat";
+            int assetIdx = 1;
+            List<GetUserTransactionHistoryRes> getUserTransactionHistoryResList = userProvider.getUserTransactionHistory(category, userIdx, assetIdx);
+            for(GetUserTransactionHistoryRes elem : getUserTransactionHistoryResList){
+                System.out.println(elem.getPrice());
+            }
+        }
+        catch (BaseException e){
+            System.out.println(e.getStatus());
+        }
+    }
 
 }
 
