@@ -15,6 +15,7 @@ import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import static site.lghtsg.api.config.BaseResponseStatus.*;
+import static site.lghtsg.api.config.Constant.PARAM_DEFAULT;
 import static site.lghtsg.api.utils.ValidationRegex.isRegexEmail;
 
 @RestController
@@ -68,7 +69,7 @@ public class UserController {
      */
     @ResponseBody
     @PostMapping("/sign-up/email-check")
-    public BaseResponse<String> EmailCheck(@RequestBody EmailCheckReq emailCheckReq) throws MessagingException, UnsupportedEncodingException  {
+    public BaseResponse<String> EmailCheck(@RequestBody EmailCheckReq emailCheckReq) throws MessagingException, UnsupportedEncodingException {
         String authCode = emailService.sendEmail(emailCheckReq.getEmail());
         return new BaseResponse<>(authCode);
     }
@@ -99,6 +100,23 @@ public class UserController {
             int userIdx = jwtService.getUserIdx();
             patchUserPasswordReq.setUserIdx(userIdx);
             userService.modifyUserPassword(patchUserPasswordReq);
+
+            String result = "비밀번호 변경 완료!";
+            return new BaseResponse<>(result);
+        } catch (BaseException exception) {
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+    /**
+     * 비밀번호 수정 (로그인 못했을 때) API
+     * [PATCH] /users/changeInfo/pw-not-login
+     */
+    @ResponseBody
+    @PatchMapping("/changeInfo/pw-not-login")
+    public BaseResponse<String> modifyUserPasswordNotLogin(@RequestBody PatchUserPasswordNotLoginReq patchUserPassword) {
+        try {
+            userService.modifyUserPasswordNotLogin(patchUserPassword);
 
             String result = "비밀번호 변경 완료!";
             return new BaseResponse<>(result);
@@ -176,10 +194,14 @@ public class UserController {
      */
     @ResponseBody
     @PostMapping("/my-asset/purchase")
-    public BaseResponse<String> postMyAsset(@RequestBody PostMyAssetReq postMyAssetReq) {
+    public BaseResponse<String> buyMyAsset(@RequestBody PostMyAssetReq postMyAssetReq) {
+        // validation
+        if(validatePostMyAssetReq(postMyAssetReq) == 0){
+            return new BaseResponse<>("잘못된 입력");
+        }
         try {
             int userIdx = jwtService.getUserIdx();
-            userService.postMyAsset(userIdx, postMyAssetReq);
+            userService.buyMyAsset(userIdx, postMyAssetReq);
             String result = "구매 완료";
             return new BaseResponse<>(result);
         } catch (BaseException exception) {
@@ -188,16 +210,22 @@ public class UserController {
     }
 
     /**
+     * TODO : sales라는 변수 - 현재 거래에서 발생한 손익(수익)율을 따져서 받아와야 함. Service까지 대충 작업 완료
      * 자산 판매 API
      * [POST] /users/my-asset/sell
      */
     @ResponseBody
     @PostMapping("/my-asset/sell")
     public BaseResponse<String> sellMyAsset(@RequestBody PostMyAssetReq postMyAssetReq) {
+        // validation
+        if(validatePostMyAssetReq(postMyAssetReq) == 0){
+            return new BaseResponse<>("잘못된 입력");
+        }
         try {
             int userIdx = jwtService.getUserIdx();
-            userService.saleMyAsset(userIdx, postMyAssetReq);
-            String result = "구매 완료";
+            // 자산 판매
+            userService.sellMyAsset(userIdx, postMyAssetReq);
+            String result = "판매 완료";
             return new BaseResponse<>(result);
         } catch (BaseException exception) {
             return new BaseResponse<>(exception.getStatus());
@@ -220,6 +248,45 @@ public class UserController {
             return new BaseResponse<>(exception.getStatus());
         }
     }
-}
 
+    /**
+     * 구매 / 판매할때 클라이언트에서 받아오는 값 validation 수행
+     * @param postMyAssetReq
+     * @return
+     */
+    public int validatePostMyAssetReq(PostMyAssetReq postMyAssetReq) {
+        if (postMyAssetReq.getAssetIdx() == 0) return 0;
+        if (postMyAssetReq.getCategory() == null) {
+            postMyAssetReq.setCategory(PARAM_DEFAULT);
+            return 0;
+        }
+        if (postMyAssetReq.getPrice() == 0L) return 0;
+        return 1;
+    }
+
+    /**
+     * 단일 자산 화면 사용자 거래 이력 제공 API - 주식
+     * parameters : category = { stock, realestate, resell }
+     *              assetIdx = { 1, ... }
+     * [GET] /users/transactionHistory?category=stock&assetIdx={idx}
+     * [GET] /users/transactionHistory?category=realestate&assetIdx={idx}
+     * [GET] /users/transactionHistory?category=resell&assetIdx={idx}
+     */
+    @ResponseBody
+    @GetMapping("/transactionHistory")
+    public BaseResponse<List<GetUserTransactionHistoryRes>> userTransactionHistory(@RequestParam String category, @RequestParam long assetIdx){
+        // TODO : assetIdx : 존재하는 idx 인지 validation, 혹은 잘못된 idx 왔을 때 에러 구분 필요
+        try {
+            // category validation
+            if(category == null) category = PARAM_DEFAULT;
+
+            int userIdx = jwtService.getUserIdx();
+            return new BaseResponse<>(userProvider.getUserTransactionHistory(category, userIdx, assetIdx));
+        }
+        catch(BaseException exception){
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+}
 
