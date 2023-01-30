@@ -19,7 +19,7 @@ public class ResellUploadDao {
     }
 
     public void uploadResell(Resell resell) {
-        String createResellQuery = "insert into Resell (name, releasedPrice, releasedDate, color, brand, productNum, image1, iconImageIdx) VALUES (?,?,?,?,?,?,?,?)";// 실행될 동적 쿼리문
+        String createResellQuery = "insert into Resell (name, releasedPrice, releasedDate, color, brand, productNum, image1, image2, image3, iconImageIdx) VALUES (?,?,?,?,?,?,?,?,?,?)";// 실행될 동적 쿼리문
 
         Object[] createResellParams = new Object[]{
                 resell.getName(),
@@ -29,6 +29,8 @@ public class ResellUploadDao {
                 resell.getBrand(),
                 resell.getProductNum(),
                 resell.getImage1(),
+                resell.getImage2(),
+                resell.getImage3(),
                 resell.getIconImageIdx()
         };
 
