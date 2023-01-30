@@ -22,4 +22,14 @@ public class ResellUploadController {
         return webReader.scraping();
     }
 
+    @GetMapping("/updateByHour")
+    public BaseResponse<String> updateByHour() {
+        return webReader.updateByHour();
+    }
+
+    @GetMapping("/updateByDay")
+    public BaseResponse<String> updateByDay() {
+        return webReader.updateByDay();
+    }
+
 }
