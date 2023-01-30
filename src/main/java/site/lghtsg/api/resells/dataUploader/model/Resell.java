@@ -17,5 +17,6 @@ public class Resell {
     private String image1;
     private String image2;
     private String image3;
+    private int productCode;
     private Long iconImageIdx;
 }
