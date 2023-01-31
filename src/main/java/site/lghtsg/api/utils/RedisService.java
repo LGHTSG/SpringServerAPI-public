@@ -1,11 +1,18 @@
 package site.lghtsg.api.utils;
 
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jws;
+import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.concurrent.TimeUnit;
+
+import static site.lghtsg.api.config.Secret.Secret.JWT_SECRET_KEY;
 
 @Service
 @Transactional(readOnly = true)
@@ -31,5 +38,19 @@ public class RedisService {
     @Transactional
     public void deleteValues(String key) {
         redisTemplate.delete(key);
+    }
+
+    // token 유효성 검사
+    public boolean validateToken(String jwtToken) {
+        try {
+            Jws<Claims> claims = Jwts.parser().setSigningKey(JWT_SECRET_KEY).parseClaimsJws(jwtToken);
+            ValueOperations<String, String> logoutValueOperations = redisTemplate.opsForValue();
+            if (logoutValueOperations.get(jwtToken) != null) {
+                return false;
+            }
+            return !claims.getBody().getExpiration().before(new Date());
+        } catch (Exception e) {
+            return false;
+        }
     }
 }

@@ -7,6 +7,7 @@ import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.cache.CacheProperties;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -56,6 +57,7 @@ public class JwtService {
         String userIdxString = Integer.toString(userIdx);
         String refresh = this.createJwt(userIdx, tokenInValidTime);
         redisService.setValuesWithTimeout(userIdxString, refresh, tokenInValidTime);
+        return refresh;
     }
 
     /*
@@ -93,6 +95,5 @@ public class JwtService {
         // 3. userIdx 추출
         return claims.getBody().get("userIdx",Integer.class);  // jwt 에서 userIdx를 추출합니다.
     }
-
 
 }
