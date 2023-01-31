@@ -71,8 +71,9 @@ public class UserProvider {
         // 여기서부터 본격적인 로그인입니다.
         if (postLoginReq.getPassword().equals(password)) {  // password가 일치하는 지 확인 (encryption된 password)
             int userIdx = userDao.getPassword(postLoginReq).getUserIdx();
-            String jwt = jwtService.createJwt(userIdx);     // userIdx를 바탕으로 jwt 발급
-            return new PostLoginRes(userIdx, jwt);
+            String accessToken = jwtService.createAccessToken(userIdx);     // userIdx를 accessToken 발급
+            String refreshToken = jwtService.createRefreshToken(userIdx);   // userIdx로 refreshToken 발급
+            return new PostLoginRes(userIdx, accessToken, refreshToken);
 
         } else { // 비밀번호가 다르다면 에러메세지를 출력한다.
             throw new BaseException(FAILED_TO_LOGIN);
