@@ -109,24 +109,21 @@ public class UserDao {
     // 주식 자산 조회
     public List<GetMyAssetRes> getStockAsset(int userIdx) {
         String getStockAssetQuery =
-                "select ST.stockTransactionIdx as idx,\n" +
+                "select S.stockIdx as idx,\n" +
                         "       S.name,\n" +
-                        "       ST.price,\n" +
-                        "       ST2.price           as s2Price,\n" +
-                        "       ST.transactionTime,\n" +
-                        "       ST2.transactionTime as s2TransactionTime,\n" +
-                        "       SUT.updatedAt,\n" +
+                        "       STT.price,\n" +
+                        "       ST.price           as s2Price,\n" +
+                        "       STT.transactionTime,\n" +
+                        "       ST.transactionTime as s2TransactionTime,\n" +
                         "       SUT.sellCheck,\n" +
+                        "       SUT.updatedAt,\n" +
                         "       II.iconImage\n" +
                         "from Stock as S\n" +
-                        "         join StockTodayTrans ST on ST.stockTransactionIdx = S.lastTransactionIdx\n" +
-                        "         join StockTransaction ST2 on ST2.stockTransactionIdx = S.s2LastTransactionIdx\n" +
-                        "         join IconImage as II on S.iconImageIdx = II.iconImageIdx\n" +
-                        "         join StockUserTransaction SUT on S.stockIdx = (select st.stockIdx\n" +
-                        "                                                           from StockTransaction as st\n" +
-                        "                                                           where st.stockTransactionIdx = SUT.stockTransactionIdx)\n" +
-                        "where SUT.userIdx = ?\n" +
-                        "  and SUT.transactionStatus = 1;";
+                        "         join StockUserTransaction SUT\n" +
+                        "              on S.stockIdx = SUT.stockIdx and SUT.userIdx = ? and SUT.transactionStatus = 1\n" +
+                        "         join StockTodayTrans STT on S.lastTransactionIdx = STT.stockTransactionIdx\n" +
+                        "         join StockTransaction ST on S.s2LastTransactionIdx = ST.stockTransactionIdx\n" +
+                        "         join IconImage II on S.iconImageIdx = II.iconImageIdx;";
         int getStockAssetParams = userIdx;
 
         return this.jdbcTemplate.query(getStockAssetQuery, getMyAssetRowMapper(), getStockAssetParams);
@@ -135,24 +132,21 @@ public class UserDao {
     // 리셀 자산 조회
     public List<GetMyAssetRes> getResellAsset(int userIdx) {
         String getResellAssetQuery =
-                "select RS.resellIdx as idx,\n" +
-                        "       RS.name,\n" +
-                        "       RST.price,\n" +
-                        "       RST2.price           as s2Price,\n" +
-                        "       RST.transactionTime,\n" +
-                        "       RST2.transactionTime as s2TransactionTime,\n" +
-                        "       RUT.updatedAt,\n" +
+                "select R.resellIdx as idx,\n" +
+                        "       R.name,\n" +
+                        "       RTT.price,\n" +
+                        "       RT.price           as s2Price,\n" +
+                        "       RTT.transactionTime,\n" +
+                        "       RT.transactionTime as s2TransactionTime,\n" +
                         "       RUT.sellCheck,\n" +
+                        "       RUT.updatedAt,\n" +
                         "       II.iconImage\n" +
-                        "from Resell as RS\n" +
-                        "         join ResellTodayTrans as RST on RST.resellTransactionIdx = RS.lastTransactionIdx\n" +
-                        "         join ResellTransaction as RST2 on RST2.resellTransactionIdx = RS.s2LastTransactionIdx\n" +
-                        "         join IconImage as II on RS.iconImageIdx = II.iconImageIdx\n" +
-                        "         join ResellUserTransaction RUT on RS.resellIdx = (select rst.resellIdx\n" +
-                        "                                                           from ResellTransaction as rst\n" +
-                        "                                                           where rst.resellTransactionIdx = RUT.resellTransactionIdx)\n" +
-                        "where RUT.userIdx = ?\n" +
-                        "  and RUT.transactionStatus = 1;";
+                        "from Resell as R\n" +
+                        "         join ResellUserTransaction RUT\n" +
+                        "              on R.resellIdx = RUT.resellIdx and RUT.userIdx = ? and RUT.transactionStatus = 1\n" +
+                        "         join ResellTodayTrans RTT on R.lastTransactionIdx = RTT.resellTransactionIdx\n" +
+                        "         join ResellTransaction RT on R.s2LastTransactionIdx = RT.resellTransactionIdx\n" +
+                        "         join IconImage II on R.iconImageIdx = II.iconImageIdx;";
 
         int getResellBoxParams = userIdx;
 
@@ -162,24 +156,21 @@ public class UserDao {
     // 부동산 자산 조회
     public List<GetMyAssetRes> getRealEstateAsset(int userIdx) {
         String getRealEstateAssetQuery =
-                "select RET.realEstateTransactionIdx as idx,\n" +
+                "select RE.realEstateIdx     as idx,\n" +
                         "       RE.name,\n" +
-                        "       RET.price,\n" +
-                        "       RET2.price           as s2Price,\n" +
-                        "       RET.transactionTime,\n" +
-                        "       RET2.transactionTime as s2TransactionTime,\n" +
-                        "       REUT.updatedAt,\n" +
+                        "       RETT.price,\n" +
+                        "       RET.price           as s2Price,\n" +
+                        "       RETT.transactionTime,\n" +
+                        "       RET.transactionTime as s2TransactionTime,\n" +
                         "       REUT.sellCheck,\n" +
+                        "       REUT.updatedAt,\n" +
                         "       II.iconImage\n" +
                         "from RealEstate as RE\n" +
-                        "         join RealEstateTodayTrans as RET on RET.realEstateTransactionIdx = RE.lastTransactionIdx\n" +
-                        "         join RealEstateTransaction as RET2 on RET2.realEstateTransactionIdx = RE.s2LastTransactionIdx\n" +
-                        "         join IconImage as II on RE.iconImageIdx = II.iconImageIdx\n" +
-                        "         join RealEstateUserTransaction REUT on RE.realEstateIdx = (select ret.realEstateIdx\n" +
-                        "                                                                    from RealEstateTransaction as ret\n" +
-                        "                                                                    where ret.realEstateTransactionIdx = REUT.realEstateTransactionIdx)\n" +
-                        "where REUT.userIdx = ?\n" +
-                        "  and REUT.transactionStatus = 1;";
+                        "         join RealEstateUserTransaction REUT\n" +
+                        "              on RE.realEstateIdx = REUT.realEstateIdx and REUT.userIdx = ? and REUT.transactionStatus = 1\n" +
+                        "         join RealEstateTodayTrans RETT on RE.lastTransactionIdx = RETT.realEstateTransactionIdx\n" +
+                        "         join RealEstateTransaction RET on RE.s2LastTransactionIdx = RET.realEstateTransactionIdx\n" +
+                        "         join IconImage II on RE.iconImageIdx = II.iconImageIdx;\n";
 
         int getRealEstateParams = userIdx;
 
@@ -341,7 +332,7 @@ public class UserDao {
             @Override
             public GetMyAssetRes mapRow(ResultSet rs, int rowNum) throws SQLException {
                 GetMyAssetRes getMyAssetRes = new GetMyAssetRes();
-                getMyAssetRes.setTransactionIdx(rs.getInt("idx"));
+                getMyAssetRes.setAssetIdx(rs.getInt("idx"));
                 getMyAssetRes.setAssetName(rs.getString("name"));
                 getMyAssetRes.setPrice(rs.getLong("price"));
                 getMyAssetRes.setS2Price(rs.getLong("s2Price"));

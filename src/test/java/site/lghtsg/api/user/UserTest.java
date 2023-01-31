@@ -10,6 +10,7 @@ import site.lghtsg.api.users.UserDao;
 import site.lghtsg.api.users.UserProvider;
 import site.lghtsg.api.users.UserService;
 import site.lghtsg.api.users.model.Asset;
+import site.lghtsg.api.users.model.GetMyAssetRes;
 import site.lghtsg.api.users.model.GetUserTransactionHistoryRes;
 import site.lghtsg.api.users.model.PostMyAssetReq;
 
@@ -113,6 +114,20 @@ public class UserTest {
         }
     }
 
+    @Test
+    void 사용자_자산조회(){
+        int userIdx = 1;
+        userDao.getRealEstateAsset(userIdx);
+        try{
+            List<GetMyAssetRes> getMyAssetRes = userProvider.myAsset(userIdx);
+            for(int i = 0; i < getMyAssetRes.size(); i++){
+                System.out.println(getMyAssetRes.get(i).getAssetName());
+            }
+        }
+        catch(BaseException e){
+            System.out.println(e.getStatus());
+        }
+    }
 
 }
 
