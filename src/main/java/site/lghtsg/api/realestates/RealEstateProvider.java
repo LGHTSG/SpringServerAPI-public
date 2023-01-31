@@ -9,6 +9,9 @@ import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
 
@@ -238,5 +241,68 @@ public class RealEstateProvider {
         }
         return regionNames;
     }
+    // 매일 업데이트 되는 부동산의 거래 기록을 가져와 각 지역별 같은 날 1개의 가격만 존재할 수 있도록 처리한다.
+    // 동 단위는 불러와서 처리하고, 구, 시 단위는 해당 테이블에 미리 계산 처리해둔다.
+    // 데이터 초기화 용
+    public void areaPriceCacheUploader() throws BaseException{
+        // 1. 가격 데이터를 불러온다
+        List<String> areaList = new ArrayList<>();
+        try {
+            String path = "src/main/java/site/lghtsg/api/common/AreaPriceCacheList.txt";
+            String line = "";
+            System.out.println("check");
+            BufferedReader bufferedReader = new BufferedReader(new FileReader(path));
 
+            while( (line = bufferedReader.readLine()) != null ){
+                areaList.add(line);
+            }
+        }catch(Exception e){
+            // throw new
+            throw new BaseException(FILE_READ_ERROR);
+        }
+
+        // 쿼리문을 어떻게 날릴지...
+        // 일단 과거 데이터만 올리고 자동업로드는 추가로 하자
+        // 1. 각 지역별로 데이터 가지고 오기 / 가지고 온 데이터로 값 초기화
+        for (int i = 0, ilim = areaList.size(); i < 1; i++) {
+            String area = areaList.get(i);
+            List<RealEstateTransactionData> prices = realEstateDao.getRealEstatePricesInArea(area);
+            if(prices.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+
+            // 시간 순 정렬
+            prices.sort(new Comparator<RealEstateTransactionData>() {
+                @Override
+                public int compare(RealEstateTransactionData o1, RealEstateTransactionData o2) {
+                    return o1.getDatetime().compareTo(o2.getDatetime());
+                }
+            });
+            // 시간 순 중복 제거 (평균) - 가격 평균을...
+            // 날짜가 바뀌는 시점 누적한 평균값을 리스트에 추가한다.
+            List<RealEstateTransactionData> result = new ArrayList<>();
+            long cnt = 1, priceSum = 0;
+            String now = "", next = "";
+            for(int j = 0, jlim = prices.size(); j < jlim - 1; j++){
+                now = prices.get(j).getDatetime();
+                next = prices.get(j + 1).getDatetime();
+
+                if(now.compareTo(next) != 0) {
+                    System.out.println(cnt);
+                    RealEstateTransactionData data = new RealEstateTransactionData(now, priceSum / cnt);
+                    result.add(data);
+                    cnt = 1;
+                    priceSum = 0;
+                }
+                else{
+                    priceSum += prices.get(i).getPrice();
+                    cnt += 1;
+                }
+            }
+            RealEstateTransactionData data = new RealEstateTransactionData(prices.get(prices.size() - 1).getDatetime(), priceSum / cnt);
+            result.add(data);
+            // 각 지역별로 모든 기간에 대해 데이터를 추가한다.
+            for(RealEstateTransactionData r : result){
+                System.out.println(r.getDatetime() + " : " + r.getPrice());
+            }
+        }
+    }
 }

@@ -96,7 +96,8 @@ public enum BaseResponseStatus {
     MISSING_REQUIRED_ARGUMENT(4203, "필요한 변수가 입력되지 않았습니다"),
     INCORRECT_REQUIRED_ARGUMENT(4204, "잘못된 변수가 입력되었습니다."),
 
-    REQUESTED_DATA_FAIL_TO_EXIST(4205, "요청한 데이터가 존재하지 않습니다.");
+    REQUESTED_DATA_FAIL_TO_EXIST(4205, "요청한 데이터가 존재하지 않습니다."),
+    FILE_READ_ERROR(4206, "파일을 읽어오는 과정에서 에러가 발생했습니다.");
     // 5000 : 필요시 만들어서 쓰세요
     // 6000 : 필요시 만들어서 쓰세요
 

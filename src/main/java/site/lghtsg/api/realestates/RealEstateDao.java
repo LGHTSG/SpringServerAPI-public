@@ -144,33 +144,45 @@ public class RealEstateDao {
 
     /**
      * @brief
-     * 특정 부동산 누적 가격 정보 전달
+     * 특정 부동산 누적 가격 정보 전달 - 전체 가격
      * @param realEstateIdx long
      * @return List<RealEstateTransactionData>
      */
     public List<RealEstateTransactionData> getRealEstatePrices(long realEstateIdx){
         String getRealEstatePricesQuery =
                 "select re.realEstateIdx, re.name, ret.price, ret.transactionTime\n" +
-                        "                from RealEstate as re\n" +
-                        "                JOIN RealEstateTransaction as ret\n" +
-                        "                ON re.realEstateIdx = ? and re.realEstateIdx = ret.realEstateIdx;";
+                        "from RealEstate as re\n" +
+                        "         JOIN RealEstateTransaction ret ON re.realEstateIdx = ret.realEstateIdx and re.realEstateIdx = ?\n" +
+                        "union\n" +
+                        "select re.realEstateIdx, re.name, rett.price, rett.transactionTime\n" +
+                        "from RealEstate as re\n" +
+                        "         join RealEstateTodayTrans as rett on re.realEstateIdx = rett.realEstateIdx and re.realEstateIdx = ?\n" +
+                        "order by transactionTime;";
 
-        return this.jdbcTemplate.query(getRealEstatePricesQuery, transactionRowMapper(), realEstateIdx);
+        Object [] getRealEstatePricesParam = new Object[] {realEstateIdx, realEstateIdx};
+        return this.jdbcTemplate.query(getRealEstatePricesQuery, transactionRowMapper(), getRealEstatePricesParam);
     }
 
     /**
-     * TODO : 1. 같은 날 2번 이상의 거래 있는 경우 이는 어떻게 처리할지
-     * TODO : 2. 아파트가 다르면 가격 기준 자체가 다르다. 그 동네 가격의 추세를 표현하려고 하는 데이터가, 각 아파트마다 다른 기준가로 들쭉날쭉하게 보일 것.
-     * 수정중...
      * @brief
-     * 특정 지역 누적 가격 정보 전달 - 전달은 가능,
+     * 특정 지역 누적 가격 정보 전달 (업로드 용)
+     * 가격 캐싱 없이 모든 누적 가격 데이터를 불러옴 - 같은 날 겹치는 가격 존재
      * @param area String
      * @return List<RealEstateTransactionData>
      */
     public List<RealEstateTransactionData> getRealEstatePricesInArea(String area){
         String findAreaQuery = getFindAreaQuery(area);
-        String getRealEstatesAreaPrices = "";
-        return this.jdbcTemplate.query(getRealEstatesAreaPrices, transactionRowMapper(), area);
+        System.out.println(findAreaQuery);
+        String getRealEstatesAreaPrices =
+                "select re.realEstateIdx, re.name, ret.price, ret.transactionTime\n" +
+                        "from RealEstate as re\n" +
+                        "         JOIN RealEstateTransaction ret ON re.realEstateIdx = ret.realEstateIdx\n" +
+                        "         JOIN RegionName rn on re.legalTownCodeIdx = rn.legalTownCodeIdx and rn.name like ?;";
+        return this.jdbcTemplate.query(getRealEstatesAreaPrices, transactionRowMapper(), findAreaQuery);
+    }
+
+    public void updateAreaPriceCache(){
+
     }
 
 
@@ -208,7 +220,8 @@ public class RealEstateDao {
     // 이렇게 안쓰고 싶은데.. 눈물이 난다...
     // -> parentIdx 버리고 like로 전환. 오히려 속도가 늘었다.
     private String getFindAreaQuery(String area){
-        area.replace("+", " ");
+        area = area.replace('+', ' ');
+        area = area.replace('_', ' ');
         String findAreaQuery = area + "%";
         return findAreaQuery;
     }
