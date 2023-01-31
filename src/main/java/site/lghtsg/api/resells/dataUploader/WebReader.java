@@ -9,8 +9,10 @@ import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.resells.dataUploader.model.Resell;
 import site.lghtsg.api.resells.dataUploader.model.ResellTransaction;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @Service
 public class WebReader {
@@ -80,7 +82,7 @@ public class WebReader {
                 WebElement brand = driver.findElement(By.className("brand"));
                 List<WebElement> imageUrlList = driver.findElements(By.className("slide_item"));
                 List<WebElement> productInfo = driver.findElements(By.tagName("dd"));
-
+                System.out.println(driver.findElement(By.className("num")).getText());
 
                 if (productInfo.size() == 0) {
                     urlList.add(urlList.get(0));
@@ -96,12 +98,16 @@ public class WebReader {
                     resell.setBrand(brand.getText());
                     resell.setProductNum(productInfo.get(0).getText());
                     resell.setImage1(imageUrlList.get(0).findElement(By.tagName("img")).getAttribute("src"));
+                    int productCode = Integer.parseInt(driver.getCurrentUrl().replaceAll("[^0-9]", ""));
+                    resell.setProductCode(productCode);
 
-                    if(imageUrlList.size() >= 2){
+                    System.out.println(productCode);
+
+                    if (imageUrlList.size() >= 2) {
                         resell.setImage2(imageUrlList.get(1).findElement(By.tagName("img")).getAttribute("src"));
                     }
 
-                    if(imageUrlList.size() >= 3){
+                    if (imageUrlList.size() >= 3) {
                         resell.setImage3(imageUrlList.get(2).findElement(By.tagName("img")).getAttribute("src"));
                     }
                     resell.setIconImageIdx(1L);
@@ -140,7 +146,7 @@ public class WebReader {
                         String temp = list.get(0);
                         int price = Integer.parseInt(temp.replaceAll("[^0-9]", ""));
                         ResellTransaction resellTransaction = new ResellTransaction(resellIdx, price, list.get(1));
-                        resellUploadDao.uploadResellTransaction(resellTransaction);
+                        //resellUploadDao.uploadResellTransaction(resellTransaction);
                     }
                     System.out.println("————————————");
                     break;
@@ -151,6 +157,141 @@ public class WebReader {
         } catch (Exception e) {
             e.printStackTrace();
             return new BaseResponse<>("리셀 데이터 업로드 실패");
+        } finally {
+            driver.quit();
+        }
+    }
+
+    public BaseResponse<String> updateByHour() {
+        ChromeOptions options = new ChromeOptions();
+        WebDriver driver = new ChromeDriver(options);
+        List<Integer[]> resellIdxAndProductCodeList = resellUploadDao.getResellIdxAndProductCode();
+
+        try {
+            options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
+            options.addArguments("--disable-popup-blocking");       //팝업안띄움
+            //options.addArguments("headless");                       //브라우저 안띄움
+            options.addArguments("--disable-gpu");            //gpu 비활성화
+            options.addArguments("--blink-settings=imagesEnabled=false"); //이미지 다운 안받음
+            options.addArguments("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
+            //WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+
+            while (!resellIdxAndProductCodeList.isEmpty()) {
+                //현재는 모든 데이터의 productCode가 업로드 되어있지 않아 0일 때 예외처리
+                if (resellIdxAndProductCodeList.get(0)[1] == 0) {
+                    resellIdxAndProductCodeList.remove(0);
+                    continue;
+                }
+
+                int price;
+                int resellIdx = resellIdxAndProductCodeList.get(0)[0];
+                driver.get("https://kream.co.kr/products/" + resellIdxAndProductCodeList.get(0)[1]);
+
+                try {
+                    price = Integer.parseInt(driver.findElement(By.className("num")).getText().replaceAll("[^0-9]", ""));
+                }catch (Exception e){
+                    continue;
+                }
+
+                LocalDate now = LocalDate.now();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd");
+                String today = now.format(formatter);
+
+                //ResellTodayTrans에 가격 추가
+                resellUploadDao.updateResellTodayTransByHour(resellIdx, price, today);
+
+                List<Integer> todayTransactionList = resellUploadDao.getTransactionToday(resellIdxAndProductCodeList.get(0)[0], today);
+
+                int todayTotal = 0;
+
+                for (Integer i : todayTransactionList) {
+                    todayTotal += i;
+                }
+
+                int updatePrice = todayTotal / todayTransactionList.size();
+
+                resellUploadDao.updateResellTransactionByHour(resellIdx, updatePrice, today);
+
+                resellIdxAndProductCodeList.remove(0);
+            }
+
+            return new BaseResponse<>("한 시간 주기 업데이트 성공");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new BaseResponse<>("한 시간 주기 업데이트 실패");
+        } finally {
+            driver.quit();
+        }
+    }
+
+    public BaseResponse<String> updateByDay() {
+        ChromeOptions options = new ChromeOptions();
+        WebDriver driver = new ChromeDriver(options);
+        List<Integer[]> resellIdxAndProductCodeList = resellUploadDao.getResellIdxAndProductCode();
+
+        try {
+            options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
+            options.addArguments("--disable-popup-blocking");       //팝업안띄움
+            //options.addArguments("headless");                       //브라우저 안띄움
+            options.addArguments("--disable-gpu");            //gpu 비활성화
+            options.addArguments("--blink-settings=imagesEnabled=false"); //이미지 다운 안받음
+            options.addArguments("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
+            //WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+
+            while (!resellIdxAndProductCodeList.isEmpty()) {
+                //현재는 모든 데이터의 productCode가 업로드 되어있지 않아 0일 때 예외처리
+                if (resellIdxAndProductCodeList.get(0)[1] == 0) {
+                    resellIdxAndProductCodeList.remove(0);
+                    continue;
+                }
+
+                int price;
+                int resellIdx = resellIdxAndProductCodeList.get(0)[0];
+                driver.get("https://kream.co.kr/products/" + resellIdxAndProductCodeList.get(0)[1]);
+
+                try {
+                    price = Integer.parseInt(driver.findElement(By.className("num")).getText().replaceAll("[^0-9]", ""));
+                }catch (Exception e){
+                    continue;
+                }
+
+                Date dDate = new Date();
+                dDate = new Date(dDate.getTime() + (1000 * 60 * 60 * 24 * -1));
+                SimpleDateFormat dSdf = new SimpleDateFormat("yy/MM/dd", Locale.KOREA);
+                String yesterday = dSdf.format(dDate);
+
+                LocalDate now = LocalDate.now();
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd");
+                String today = now.format(formatter);
+
+                List<Integer> yesterdayTransactionList = resellUploadDao.getTransactionToday(resellIdxAndProductCodeList.get(0)[0], yesterday);
+
+                int yesterdayTotal = 0;
+
+                for (Integer i : yesterdayTransactionList) {
+                    yesterdayTotal += i;
+                }
+
+                int updatePrice = yesterdayTotal / yesterdayTransactionList.size();
+
+                //전날 거래 마무리
+                resellUploadDao.updateResellTransactionByHour(resellIdx, updatePrice, yesterday);
+                resellUploadDao.truncateResellTodayTrans(resellIdx, yesterday);
+
+
+                //오늘 거래 시작
+                resellUploadDao.startTodayTransaction(resellIdx, price, today);
+
+                //ResellTodayTrans에 가격 추가
+                resellUploadDao.updateResellTodayTransByHour(resellIdx, price, today);
+
+                resellIdxAndProductCodeList.remove(0);
+            }
+
+            return new BaseResponse<>("하루 주기 업데이트 성공");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return new BaseResponse<>("하루 시간 주기 업데이트 실패");
         } finally {
             driver.quit();
         }
