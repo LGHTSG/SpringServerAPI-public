@@ -61,29 +61,21 @@ public class RealEstateDao {
     public List<RealEstateBox> getRealEstateBoxesInArea(String area){
 
         String findAreaQuery = getFindAreaQuery(area);
-        String getRealEstateBoxesInAreaQuery =
-                "select re.realEstateIdx,\n" +
-                        "       re.name,\n" +
-                        "       ret.price,\n" +
-                        "       ret2.price as s2LastPrice,\n" +
-                        "       ret.transactionTime,\n" +
-                        "       ret2.transactionTime as s2TransactionTime,\n" +
-                        "       ii.iconImage\n" +
-                        "from RealEstate as re,\n" +
-                        "     RealEstateTodayTrans as ret,\n" +
-                        "     RealEstateTransaction as ret2,\n" +
-                        "     IconImage as ii,\n" +
-                        "     RegionName as rn\n" +
-                        "where ret.realEstateTransactionIdx = re.lastTransactionIdx\n" +
-                        "  and ret2.realEstateTransactionIdx = re.s2LastTransactionIdx\n" +
-                        "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
-                        "  and re.iconImageIdx = ii.iconImageIdx" +
-                "  and re.legalTownCodeIdx in (" +
-                findAreaQuery + ")";
+        String getRealEstateBoxesInAreaQuery = "select re.realEstateIdx,\n" +
+                "       re.name,\n" +
+                "       rett.price,\n" +
+                "       ret.price           as s2LastPrice,\n" +
+                "       rett.transactionTime,\n" +
+                "       ret.transactionTime as s2TransactionTime,\n" +
+                "       ii.iconImage\n" +
+                "from RealEstate as re\n" +
+                "         join RealEstateTodayTrans rett on re.lastTransactionIdx = rett.realEstateTransactionIdx\n" +
+                "         join RealEstateTransaction ret on re.s2LastTransactionIdx = ret.realEstateTransactionIdx\n" +
+                "         join RegionName rn on re.legalTownCodeIdx = rn.legalTownCodeIdx and rn.name like ?\n" +
+                "         join IconImage ii on re.iconImageIdx = ii.iconImageIdx;";
 
-        return this.jdbcTemplate.query(getRealEstateBoxesInAreaQuery, realEstateBoxRowMapper(), area);
+        return this.jdbcTemplate.query(getRealEstateBoxesInAreaQuery, realEstateBoxRowMapper(), findAreaQuery);
     }
-
 
     /**
      * 이게 왜 필요하지?
@@ -169,6 +161,7 @@ public class RealEstateDao {
     /**
      * TODO : 1. 같은 날 2번 이상의 거래 있는 경우 이는 어떻게 처리할지
      * TODO : 2. 아파트가 다르면 가격 기준 자체가 다르다. 그 동네 가격의 추세를 표현하려고 하는 데이터가, 각 아파트마다 다른 기준가로 들쭉날쭉하게 보일 것.
+     * 수정중...
      * @brief
      * 특정 지역 누적 가격 정보 전달 - 전달은 가능,
      * @param area String
@@ -176,12 +169,7 @@ public class RealEstateDao {
      */
     public List<RealEstateTransactionData> getRealEstatePricesInArea(String area){
         String findAreaQuery = getFindAreaQuery(area);
-        String getRealEstatesAreaPrices = "select re.realEstateIdx, re.name, ret.price, ret.transactionTime\n" +
-                "                from RealEstate as re\n" +
-                "                JOIN RealEstateTransaction as ret\n" +
-                "                ON re.realEstateIdx = ret.realEstateIdx\n" +
-                "where re.legalTownCodeIdx in ("
-                + findAreaQuery + ")";
+        String getRealEstatesAreaPrices = "";
         return this.jdbcTemplate.query(getRealEstatesAreaPrices, transactionRowMapper(), area);
     }
 
@@ -218,34 +206,10 @@ public class RealEstateDao {
     }
 
     // 이렇게 안쓰고 싶은데.. 눈물이 난다...
+    // -> parentIdx 버리고 like로 전환. 오히려 속도가 늘었다.
     private String getFindAreaQuery(String area){
-        String findAreaQuery;
-        area.replace('+', ' ');
-        String[] area_split = area.split(" ");
-        if(area_split.length == 3){
-            findAreaQuery =
-                    "    select rn.legalTownCodeIdx\n" +
-                            "    from RegionName as rn\n" +
-                            "    where rn.name = ?\n";
-        }
-        else if(area_split.length == 2){
-            findAreaQuery =
-                    "    select rn.legalTownCodeIdx\n" +
-                            "    from RegionName as rn\n" +
-                            "    inner join RegionName as rn2\n" +
-                            "    on rn2.legalTownCodeIdx = rn.parentIdx and rn2.name = ?\n" +
-                            "    group by rn.legalTownCodeIdx\n";
-        }
-        else {
-            findAreaQuery =
-                    "    select rn.legalTownCodeIdx\n" +
-                            "    from RegionName as rn\n" +
-                            "    inner join RegionName as rn2\n" +
-                            "    on rn2.legalTownCodeIdx = rn.parentIdx\n" +
-                            "    inner join RegionName as rn3\n" +
-                            "    on rn3.legalTownCodeIdx = rn2.parentIdx and rn3.name = ?\n" +
-                            "    group by rn.legalTownCodeIdx\n";
-        }
+        area.replace("+", " ");
+        String findAreaQuery = area + "%";
         return findAreaQuery;
     }
 }

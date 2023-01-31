@@ -37,11 +37,11 @@ public class RealEstateProvider {
         try {
             if(area.equals(PARAM_DEFAULT)) realEstateBoxes = realEstateDao.getAllRealEstateBoxes();
             else realEstateBoxes = realEstateDao.getRealEstateBoxesInArea(area);
-            if(realEstateBoxes.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
         }
         catch (Exception ignored) {
             throw new BaseException(DATABASE_ERROR);
         }
+        if(realEstateBoxes.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
         // 2. 증감율 계산
         realEstateBoxes = calculateRateOfChange(realEstateBoxes);
 
