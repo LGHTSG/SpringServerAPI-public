@@ -79,7 +79,7 @@ public class UserProvider {
             return new PostLoginRes(userIdx, jwt);
 
         } else { // 비밀번호가 다르다면 에러메세지를 출력한다.
-            throw new BaseException(WRONG_PASSWORD_REQUEST);
+            throw new BaseException(FAILED_TO_LOGIN);
         }
     }
 
