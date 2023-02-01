@@ -37,7 +37,6 @@ public enum BaseResponseStatus {
     EMPTY_PASSWORD( 2006, "비밀번호를 입력해주세요."),
     INVALID_PASSWORD( 2007, "비밀번호 형식을 확인해주세요."),
     NOT_AGREE_TERMS(2008,"약관 동의를 하지 않았습니다."),
-    NOT_EXISTING_EMAIL(2010,"존재하지 않는 이메일입니다."),
 
     // [PATCH] /users/changeInfo
     // 회원정보 수정
@@ -60,9 +59,10 @@ public enum BaseResponseStatus {
     // Common
     RESPONSE_ERROR(3000, "값을 불러오는데 실패하였습니다."),
 
+    NOT_EXISTING_EMAIL(3010,"존재하지 않는 이메일입니다."),
     // [POST] /users
     // DUPLICATED_EMAIL( 3013, "중복된 이메일입니다."),
-    FAILED_TO_LOGIN(3015,"없는 아이디거나 비밀번호가 틀렸습니다."),
+    WRONG_PASSWORD_REQUEST(3015,"비밀번호가 틀렸습니다."),
 
 
     /**

@@ -1,7 +1,5 @@
 package site.lghtsg.api.users;
 
-import com.fasterxml.jackson.databind.ser.Serializers;
-import org.apache.commons.collections4.Get;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,7 +79,7 @@ public class UserProvider {
             return new PostLoginRes(userIdx, jwt);
 
         } else { // 비밀번호가 다르다면 에러메세지를 출력한다.
-            throw new BaseException(FAILED_TO_LOGIN);
+            throw new BaseException(WRONG_PASSWORD_REQUEST);
         }
     }
 
