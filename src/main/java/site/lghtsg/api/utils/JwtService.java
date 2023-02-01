@@ -5,9 +5,6 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.cache.CacheProperties;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -18,6 +15,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 
 import static site.lghtsg.api.config.BaseResponseStatus.*;
+import static site.lghtsg.api.config.Secret.Secret.JWT_SECRET_KEY;
 
 @Service
 public class JwtService {
@@ -41,7 +39,7 @@ public class JwtService {
                 .claim("userIdx",userIdx)
                 .setIssuedAt(now)
                 .setExpiration(new Date(System.currentTimeMillis() + option))
-                .signWith(SignatureAlgorithm.HS256, Secret.JWT_SECRET_KEY)
+                .signWith(SignatureAlgorithm.HS256, JWT_SECRET_KEY)
                 .compact();
     }
 
@@ -86,7 +84,7 @@ public class JwtService {
         Jws<Claims> claims;
         try{
             claims = Jwts.parser()
-                    .setSigningKey(Secret.JWT_SECRET_KEY)
+                    .setSigningKey(JWT_SECRET_KEY)
                     .parseClaimsJws(accessToken);
         } catch (Exception ignored) {
             throw new BaseException(EMPTY_JWT);
@@ -94,6 +92,12 @@ public class JwtService {
 
         // 3. userIdx 추출
         return claims.getBody().get("userIdx",Integer.class);  // jwt 에서 userIdx를 추출합니다.
+    }
+
+    public Long getExpiration(String accessToken) {
+        Date expiration = Jwts.parser().setSigningKey(JWT_SECRET_KEY).parseClaimsJws(accessToken).getBody().getExpiration();
+        Long now = new Date().getTime();
+        return (expiration.getTime() - now);
     }
 
 }

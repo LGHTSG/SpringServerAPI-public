@@ -20,6 +20,7 @@ import static site.lghtsg.api.config.Secret.Secret.JWT_SECRET_KEY;
 @RequiredArgsConstructor
 public class RedisService {
     private final RedisTemplate<String, String> redisTemplate;
+    private final JwtService jwtService;
 
     @Transactional
     public void setValues(String key, String value){
@@ -56,9 +57,13 @@ public class RedisService {
     }
 
     // 로그아웃
-    public void logout(String account, String accessToken) {
-        long expiredAccessTokenTime = getExpiredTime(accessToken).getTime() - new Date().getTime();
-        setValues(blackList + accessToken, account, Duration.ofMillis(expiredAccessTokenTime));
-        deleteValues(account); // Redis에서 유저 리프레시 토큰 삭제
+    public void logout(String userIdx, String accessToken) {
+        if(redisTemplate.opsForValue().get(userIdx) != null){
+            redisTemplate.delete(userIdx);
+        }
+        long expiration = jwtService.getExpiration(accessToken);
+        redisTemplate.opsForValue().set(accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
+        setValues("blackList" + accessToken, userIdx, Duration.ofMillis(expiration));
+        deleteValues(userIdx); // Redis에서 유저 리프레시 토큰 삭제
     }
 }
