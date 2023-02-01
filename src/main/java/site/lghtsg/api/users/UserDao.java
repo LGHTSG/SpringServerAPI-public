@@ -40,6 +40,7 @@ public class UserDao {
                 checkEmailParams);
     }
 
+
     // 로그인 : email에 해당되는 user의 암호와 탈퇴 여부 체크
     public User getPassword(PostLoginReq postLoginReq) {
         String getPasswordQuery = "select userIdx, password, email, withdrawCheck" +

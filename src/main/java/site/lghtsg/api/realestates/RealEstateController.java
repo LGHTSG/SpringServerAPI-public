@@ -65,11 +65,11 @@ public class RealEstateController {
     public BaseResponse<List<RealEstateTransactionData>> realEstateAreaPrices(@RequestParam String area){
         try{
             List<RealEstateTransactionData> realEstateTransactionData = realEstateProvider.getAreaRealEstatePrices(area);
-            List<RealEstateTransactionData> subList = new ArrayList<>();
-            for(int i = 0; i < LIST_LIMIT; i++){
-                subList.add(realEstateTransactionData.get(i));
-            }
-            return new BaseResponse<>(subList);
+//            List<RealEstateTransactionData> subList = new ArrayList<>();
+//            for(int i = 0; i < LIST_LIMIT; i++){
+//                subList.add(realEstateTransactionData.get(i));
+//            }
+            return new BaseResponse<>(realEstateTransactionData);
         }
         catch(BaseException e){
              return new BaseResponse<>((e.getStatus()));

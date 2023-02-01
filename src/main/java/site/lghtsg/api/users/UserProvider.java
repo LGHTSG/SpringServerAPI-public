@@ -57,7 +57,13 @@ public class UserProvider {
 
     // 로그인
     public PostLoginRes logIn(PostLoginReq postLoginReq) throws BaseException {
-        User user = userDao.getPassword(postLoginReq);
+        User user;
+        try {
+            userDao.checkEmail(postLoginReq.getEmail());
+            user = userDao.getPassword(postLoginReq);
+        } catch(Exception e){
+            throw new BaseException(NOT_EXISTING_EMAIL);
+        }
         String password;
         try {
             password = new AES128(Secret.USER_INFO_PASSWORD_KEY).decrypt(user.getPassword());

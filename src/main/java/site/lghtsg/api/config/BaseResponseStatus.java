@@ -37,6 +37,7 @@ public enum BaseResponseStatus {
     EMPTY_PASSWORD( 2006, "비밀번호를 입력해주세요."),
     INVALID_PASSWORD( 2007, "비밀번호 형식을 확인해주세요."),
     NOT_AGREE_TERMS(2008,"약관 동의를 하지 않았습니다."),
+    NOT_EXISTING_EMAIL(2010,"존재하지 않는 이메일입니다."),
 
     // [PATCH] /users/changeInfo
     // 회원정보 수정
