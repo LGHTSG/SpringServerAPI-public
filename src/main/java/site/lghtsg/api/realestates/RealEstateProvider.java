@@ -10,7 +10,6 @@ import site.lghtsg.api.realestates.model.RealEstateInfo;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -264,7 +263,10 @@ public class RealEstateProvider {
         // 쿼리문을 어떻게 날릴지...
         // 일단 과거 데이터만 올리고 자동업로드는 추가로 하자
         // 1. 각 지역별로 데이터 가지고 오기 / 가지고 온 데이터로 값 초기화
-        for (int i = 0, ilim = areaList.size(); i < 1; i++) {
+
+        int test_lim = 10; // 테스트 용 지역 길이 제한 - 서울시 다음부터 시작
+        // 테이블 값 업데이트만 남았음
+        for (int i = 1, ilim = areaList.size(); i < ilim && i < test_lim; i++) {
             String area = areaList.get(i);
             List<RealEstateTransactionData> prices = realEstateDao.getRealEstatePricesInArea(area);
             if(prices.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
@@ -286,22 +288,35 @@ public class RealEstateProvider {
                 next = prices.get(j + 1).getDatetime();
 
                 if(now.compareTo(next) != 0) {
-                    System.out.println(cnt);
-                    RealEstateTransactionData data = new RealEstateTransactionData(now, priceSum / cnt);
+                    RealEstateTransactionData data = new RealEstateTransactionData();
+                    data.setDatetime(now);
+                    data.setPrice(priceSum / cnt);
+                    data.setTotalPrice(priceSum);
+                    data.setCnt(cnt);
                     result.add(data);
                     cnt = 1;
                     priceSum = 0;
                 }
                 else{
-                    priceSum += prices.get(i).getPrice();
+                    priceSum += prices.get(j).getPrice();
                     cnt += 1;
                 }
             }
-            RealEstateTransactionData data = new RealEstateTransactionData(prices.get(prices.size() - 1).getDatetime(), priceSum / cnt);
+            RealEstateTransactionData data = new RealEstateTransactionData();
+            data.setDatetime(prices.get(prices.size() - 1).getDatetime());
+            data.setPrice(priceSum / cnt);
+            data.setTotalPrice(priceSum);
+            data.setCnt(cnt);
             result.add(data);
-            // 각 지역별로 모든 기간에 대해 데이터를 추가한다.
-            for(RealEstateTransactionData r : result){
-                System.out.println(r.getDatetime() + " : " + r.getPrice());
+            // 서울시에 대해서는 계산 끝. 테이블 초기화도 완료
+//            if(i == 0) {
+//                realEstateDao.initAreaPriceCacheRow(result, area);
+//                continue;
+//            }
+
+            // 데이터 업데이트 파트 - 각 일자의 가격마다 업데이트 쿼리를 짜서 날려야한다.
+            for(RealEstateTransactionData r : result) {
+
             }
         }
     }
