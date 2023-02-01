@@ -9,6 +9,7 @@ import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -52,5 +53,12 @@ public class RedisService {
         } catch (Exception e) {
             return false;
         }
+    }
+
+    // 로그아웃
+    public void logout(String account, String accessToken) {
+        long expiredAccessTokenTime = getExpiredTime(accessToken).getTime() - new Date().getTime();
+        setValues(blackList + accessToken, account, Duration.ofMillis(expiredAccessTokenTime));
+        deleteValues(account); // Redis에서 유저 리프레시 토큰 삭제
     }
 }
