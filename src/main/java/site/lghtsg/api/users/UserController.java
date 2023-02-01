@@ -82,8 +82,6 @@ public class UserController {
     @PostMapping("/log-in")
     public BaseResponse<PostLoginRes> logIn(@RequestBody PostLoginReq postLoginReq) {
         try {
-            System.out.println(postLoginReq.getEmail());
-            System.out.println(postLoginReq.getPassword());
             PostLoginRes postLoginRes = userProvider.logIn(postLoginReq);
             return new BaseResponse<>(postLoginRes);
         } catch (BaseException exception) {

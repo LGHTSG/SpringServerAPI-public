@@ -60,7 +60,7 @@ public class UserProvider {
             userDao.checkEmail(postLoginReq.getEmail());
             user = userDao.getPassword(postLoginReq);
         } catch(Exception e){
-            throw new BaseException(NOT_EXISTING_EMAIL);
+            throw new BaseException(FAILED_TO_LOGIN);
         }
         String password;
         try {
