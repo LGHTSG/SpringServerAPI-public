@@ -26,6 +26,14 @@ public class RealEstateProvider {
     }
 
     /**
+     * @brief [Dao 로부터 반환받는 값 에러 처리 규칙]
+     * 1. Dao 에서 jdbcTemplate.query 사용하여 List<> 로 반환받는 경우 : List.size() == 0 으로 반환값 존재 여부 판단
+     * 2. Dao 에서 jdbcTemplate.queryForObject 사용하여 객체로 반환받는 경우 : 객체 == null 으로 존재 여부 판단
+     *    (Dao 에서 queryForObject 사용 시 IncorrectResultSizeDataAccessException 발생하면 null 반환하도록 하였음)
+     * 3. 그 이외 에러 (sql 문 에러 등) : BaseException(DATABASE_ERROR) 반환
+     */
+
+    /**
      * ==========================================================================================
      * 부동산 리스트 반환
      * @return List<RealEstateBox>
@@ -153,15 +161,14 @@ public class RealEstateProvider {
     public RealEstateInfo getRealEstateInfo(long realEstateIdx) throws BaseException {
         // 가지고 있는 realEstateIdx 인지 validation - REQUESTED_DATA_FAIL_TO_EXIST
         RealEstateInfo realEstateInfo;
-        List<RealEstateBox> realEstateBoxes;
+        List<RealEstateBox> realEstateBoxes = new ArrayList<>();
         try {
-             realEstateBoxes = realEstateDao.getRealEstateBox(realEstateIdx);
+             realEstateBoxes.add(realEstateDao.getRealEstateBox(realEstateIdx));
         }
         catch(Exception ignored){
             throw new BaseException(DATABASE_ERROR);
         }
-        if(realEstateBoxes.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
-        else if(realEstateBoxes.size() > 1) throw new BaseException(RETURN_EXCEEDING_REQUESTED);
+        if(realEstateBoxes.get(0) == null) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
 
         // 데이터 없는 경우 처리했으니 리스트로 계산 후 반환
         calculateRateOfChange(realEstateBoxes);
@@ -221,21 +228,17 @@ public class RealEstateProvider {
         try {
             if(keyword.equals(PARAM_DEFAULT)) regionNames = realEstateDao.getAllRegionNames();
             else regionNames = realEstateDao.getRegionNamesWithKeyword(keyword);
-            if(regionNames.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
         }
         catch (Exception e) {
             throw new BaseException(DATABASE_ERROR);
         }
+        if(regionNames.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
         return regionNames;
     }
 
     public void validateAreaInput(String inputArea) throws BaseException {
-        try{
-            realEstateDao.isInputAreaInAreaList(inputArea);
-        }
-        catch(Exception e){
+        if(realEstateDao.isInputAreaInAreaList(inputArea) == 0)
             throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
-        }
     }
 
     /**

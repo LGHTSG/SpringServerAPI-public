@@ -25,6 +25,14 @@ public class ResellProvider {
 
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
+    /**
+     * @brief [Dao 로부터 반환받는 값 에러 처리 규칙]
+     * 1. Dao 에서 jdbcTemplate.query 사용하여 List<> 로 반환받는 경우 : List.size() == 0 으로 반환값 존재 여부 판단
+     * 2. Dao 에서 jdbcTemplate.queryForObject 사용하여 객체로 반환받는 경우 : 객체 == null 으로 존재 여부 판단
+     *    (Dao 에서 queryForObject 사용 시 IncorrectResultSizeDataAccessException 발생하면 null 반환하도록 하였음)
+     * 3. 그 이외 에러 (sql 문 에러 등) : BaseException(DATABASE_ERROR) 반환
+     */
+
     public ResellProvider(site.lghtsg.api.resells.ResellDao resellDao) {
         this.resellDao = resellDao;
     }
@@ -37,9 +45,12 @@ public class ResellProvider {
             e.printStackTrace();
             throw new BaseException(DATABASE_ERROR);
         }
-        calculateResellBoxesPriceAndRateOFChange(getResellBoxesRes);
-        sortResellBoxesRes(getResellBoxesRes, sort, order);
-        if (getResellBoxesRes == null) {
+
+        calculateResellBoxesPriceAndRateOFChange(getResellBoxesRes); // 증감율 계산
+        sortResellBoxesRes(getResellBoxesRes, sort, order);          // 정렬
+
+        // 요청한 데이터가 없는 경우
+        if (getResellBoxesRes.size() == 0) {
             throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
         }
         return getResellBoxesRes;
@@ -84,52 +95,52 @@ public class ResellProvider {
     }
 
     public GetResellInfoRes getResellInfo(long resellIdx) throws BaseException {
+        GetResellInfoRes getResellInfoRes;
         try {
-            GetResellInfoRes getResellInfoRes = resellDao.getResellInfo(resellIdx);
-            getResellInfoRes = calculateResellInfoResPriceAndRateOFChange(getResellInfoRes);
-            if (getResellInfoRes == null) {
-                throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
-            }
-            return getResellInfoRes;
+            getResellInfoRes = resellDao.getResellInfo(resellIdx);
         } catch (Exception e) {
-            e.printStackTrace();
             throw new BaseException(DATABASE_ERROR);
         }
-    }
-
-    public GetResellInfoRes calculateResellInfoResPriceAndRateOFChange(GetResellInfoRes getResellInfoRes) {
-
-        Long lastPrice = getResellInfoRes.getPrice();
-        Long s2LastPrice = getResellInfoRes.getLastPrice();
-        Double rateOfChange = (double) (lastPrice - s2LastPrice) / s2LastPrice * 100;
-        rateOfChange = Math.round(rateOfChange * 10) / 10.0;
-        getResellInfoRes.setRateOfChange(rateOfChange);
+        if (getResellInfoRes == null) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+        calculateResellInfoResPriceAndRateOFChange(getResellInfoRes);
 
         return getResellInfoRes;
     }
 
-    public GetResellBoxRes getResellBox(long resellIdx) throws BaseException {
-        try {
-            GetResellBoxRes getResellBoxRes = resellDao.getResellBox(resellIdx);
-            if (getResellBoxRes == null) {
-                throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
-            }
-            return getResellBoxRes;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new BaseException(DATABASE_ERROR);
+    public GetResellInfoRes calculateResellInfoResPriceAndRateOFChange(GetResellInfoRes getResellInfoRes) throws BaseException {
+        try{
+            Long lastPrice = getResellInfoRes.getPrice();
+            Long s2LastPrice = getResellInfoRes.getLastPrice();
+            Double rateOfChange = (double) (lastPrice - s2LastPrice) / s2LastPrice * 100;
+            rateOfChange = Math.round(rateOfChange * 10) / 10.0;
+            getResellInfoRes.setRateOfChange(rateOfChange);
+            return getResellInfoRes;
+        }
+
+        catch(Exception e){
+            throw new BaseException(DATALIST_CAL_RATE_ERROR);
         }
     }
 
-    public List<GetResellTransactionRes> getResellTransaction(long resellIdx) throws BaseException {
+    public GetResellBoxRes getResellBox(long resellIdx) throws BaseException {
+        GetResellBoxRes getResellBoxRes;
         try {
-            List<GetResellTransactionRes> getResellTransactionRes = resellDao.getResellTransaction(resellIdx);
-            if (getResellTransactionRes == null) {
-                throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
-            }
-            return getResellTransactionRes;
+            getResellBoxRes = resellDao.getResellBox(resellIdx);
         } catch (Exception e) {
             throw new BaseException(DATABASE_ERROR);
         }
+        if (getResellBoxRes == null) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+        return getResellBoxRes;
+    }
+
+    public List<GetResellTransactionRes> getResellTransaction(long resellIdx) throws BaseException {
+        List<GetResellTransactionRes> getResellTransactionRes;
+        try {
+            getResellTransactionRes = resellDao.getResellTransaction(resellIdx);
+        } catch (Exception e) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+        if (getResellTransactionRes.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+        return getResellTransactionRes;
     }
 }

@@ -104,23 +104,18 @@ public class AreaPriceCacheUplaoder {
 
             List<RealEstateRemains> remains = new ArrayList<>();
             for(RealEstateTransactionData r : result) {
-                try{
-                    // 해당 row가 존재한다면
-                    realEstateDao.checkDateExists(r);
-                    // 기존 row에 추가
-                    realEstateDao.updateAreaCacheTable(r, area);
-                }catch(Exception e){ // 존재하지 않는다면
-                    // 에러 발생시 잡을 수 있는가? - 안될듯
-                    try {
-                        realEstateDao.insertAreaCacheTable(r, area);
+                try {
+                    if(realEstateDao.checkDateExists(r) == 1){
+                        realEstateDao.updateAreaCacheTable(r, area);
                     }
+                    else realEstateDao.insertAreaCacheTable(r, area);
+                }
                     catch(Exception e2){
                         RealEstateRemains rm = new RealEstateRemains();
                         rm.setArea(area);
                         rm.setDatetime(r.getDatetime());
                         rm.setPrice(r.getPrice());
                         remains.add(rm);
-                    }
                 }
             }
 

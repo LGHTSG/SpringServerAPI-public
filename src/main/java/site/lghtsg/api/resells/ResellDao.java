@@ -1,6 +1,7 @@
 package site.lghtsg.api.resells;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -58,14 +59,24 @@ public class ResellDao {
                 "  and rs.resellIdx = ?";
         long getResellParams = resellIdx;
 
-        return this.jdbcTemplate.queryForObject(getResellQuery, resellInfoResRowMapper(), getResellParams);
+        try {
+            return this.jdbcTemplate.queryForObject(getResellQuery, resellInfoResRowMapper(), getResellParams);
+        }
+        catch (IncorrectResultSizeDataAccessException error) {
+            return null;
+        }
     }
 
     public GetResellBoxRes getResellBox(long resellIdx) {
         String getResellQuery = "select * from Resell where resellIdx = ?";
         long getResellParams = resellIdx;
 
-        return this.jdbcTemplate.queryForObject(getResellQuery, resellBoxResRowMapper(), getResellParams);
+        try {
+            return this.jdbcTemplate.queryForObject(getResellQuery, resellBoxResRowMapper(), getResellParams);
+        }
+        catch (IncorrectResultSizeDataAccessException error) {
+            return null;
+        }
     }
 
     public List<GetResellTransactionRes> getResellTransaction(long resellIdx) {

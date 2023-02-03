@@ -1,6 +1,8 @@
 package site.lghtsg.api.realestates;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -115,13 +117,17 @@ public class RealEstateDao {
     /**
      * TODO : RealEstateBox와 RealEstateInfo 상호간 관계를 명확히해야 중복되는 코드 제거하는 리팩토링
      * -> wrapping 하는 것으로 대체
-     * TODO : 리스트로 반환하는 이유는 queryForObject 지양을 위함(아래에 설명 기재)
+     * 특정 부동산 정보 전달 - api 명세서 작성되어 있는 반환 데이터
+     *
+     * @brief
+     * queryForObject 는 반환값이 0이거나 2이상인 경우 IncorrectResultSizeDataAccessException 에러를 발생시킨다.
+     * 기존에는 0 / 2이상 두 에러를 구분하려고 했으나,
+     * DB 의 pk가 auto_increment 이기 때문에 2 이상의 결과가 나오는 경우가 없기에 0인 경우로만 생각하기로 하였음.
      *
      * @return RealEstateInfo
-     * @brief 특정 부동산 정보 전달 - api 명세서 작성되어 있는 반환 데이터
      * RealEstateInfo(realEstateIdx, name, rateOfChange, rateCalDateDiff, iconImage, price)
      */
-    public List<RealEstateBox> getRealEstateBox(long realEstateIdx) {
+    public RealEstateBox getRealEstateBox(long realEstateIdx)  {
         String getRealEstateBoxQuery =
                 "select re.realEstateIdx,\n" +
                         "       re.name,\n" +
@@ -140,13 +146,12 @@ public class RealEstateDao {
                         "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
                         "  and re.iconImageIdx = ii.iconImageIdx\n" +
                         "  and re.realEstateIdx = ?";
-        // queryForObject 개인적으로 별로인게 0개 혹은 2개이상일때 에러 발생시키는데
-        // 이러면 각각의 경우에 대해서 따로 에러 메시지를 구분해 출력하기 어렵다(적어도 나는 아직 방법을 모름)
-        // 원하는 데이터가 없는건지, db에 같은 상품이 2개 들어간건지 구분이 안됨.
-        // 그래서 그냥 리스트로 반환 후 Provider 에서 리스트의 길이로 각 상황을 처리하기로 하였다.
-//        return this.jdbcTemplate.queryForObject(getRealEstateBoxQuery, realEstateBoxRowMapper(), realEstateIdx);
-
-        return this.jdbcTemplate.query(getRealEstateBoxQuery, realEstateBoxRowMapper(), realEstateIdx);
+        try {
+            return this.jdbcTemplate.queryForObject(getRealEstateBoxQuery, realEstateBoxRowMapper(), realEstateIdx);
+        }
+        catch (IncorrectResultSizeDataAccessException error) {
+            return null;
+        }
     }
 
     /**
@@ -188,9 +193,15 @@ public class RealEstateDao {
         return this.jdbcTemplate.query(getRealEstatesAreaPrices, transactionRowMapper(), findAreaQuery);
     }
 
-    public void checkDateExists(RealEstateTransactionData now) {
+    public int checkDateExists(RealEstateTransactionData now) {
         String checkDateExists = "select transactionDate from RealEstateAreaPriceCache where transactionDate = ?;";
-        this.jdbcTemplate.queryForObject(checkDateExists, String.class, now.getDatetime());
+        try {
+            this.jdbcTemplate.queryForObject(checkDateExists, String.class, now.getDatetime());
+        }
+        catch(IncorrectResultSizeDataAccessException error){
+            return 0;
+        }
+        return 1;
     }
 
     public void insertAreaCacheTable(RealEstateTransactionData now, String area) {
@@ -222,11 +233,16 @@ public class RealEstateDao {
      * @return
      */
 
-    public void isInputAreaInAreaList(String area) {
+    public int isInputAreaInAreaList(String area) {
         area = getFindAreaQuery(area);
         area = area.substring(0, area.length() - 1);
         String isInputAreaInAreaListQuery = "select rn.name from RegionName as rn where rn.name = ?;";
-        this.jdbcTemplate.queryForObject(isInputAreaInAreaListQuery, String.class, area);
+        try {
+            this.jdbcTemplate.queryForObject(isInputAreaInAreaListQuery, String.class, area);
+        } catch(IncorrectResultSizeDataAccessException error){
+            return 0;
+        }
+        return 1;
     }
 
     private String getFindAreaQuery(String area) {
