@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import site.lghtsg.api.config.BaseException;
+import site.lghtsg.api.realestates.dataUploader.AreaPriceCacheUplaoder;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
 import java.util.*;
@@ -16,6 +17,8 @@ public class AreaPriceCacheTest {
     private RealEstateProvider realEstateProvider;
     @Autowired
     private RealEstateDao realEstateDao;
+    @Autowired
+    private AreaPriceCacheUplaoder areaPriceCacheUplaoder;
     @Test
     void 부동산_구_리스트(){
         String keyword = PARAM_DEFAULT;
@@ -53,7 +56,7 @@ public class AreaPriceCacheTest {
     @Test
     void 파일에서_리스트_읽어오기(){
         try {
-            realEstateProvider.areaPriceCacheUploader();
+            areaPriceCacheUplaoder.upload();
         }catch(BaseException e){
             System.out.println(e.getMessage());
         }
