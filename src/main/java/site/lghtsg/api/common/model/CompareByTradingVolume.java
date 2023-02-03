@@ -16,7 +16,7 @@ public class CompareByTradingVolume implements Comparator<StockBox> {
         double o1MarketCap = o1.getTradingVolume(), o2MarketCap = o2.getTradingVolume();
         int ret = Double.compare(o2MarketCap, o1MarketCap);
 
-        if(!order.equals(ASCENDING_PARAM)) ret *= -1;
+        if(order.equals(ASCENDING_PARAM)) ret *= -1;
         return ret;
     }
 }

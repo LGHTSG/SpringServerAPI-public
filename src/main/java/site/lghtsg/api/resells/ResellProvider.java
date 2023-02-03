@@ -62,10 +62,12 @@ public class ResellProvider {
         }
 
         // 2. sort 값 validation & comparator 초기화
-        Comparator comparator = new CompareByIdx(order);
-        if (sort.equals(SORT_FLUCTUATION_PARAM)) {
+        Comparator comparator;
+        if(sort.equals(PARAM_DEFAULT)) {
+            comparator = new CompareByIdx(order);
+        } else if (sort.equals(SORT_FLUCTUATION_PARAM)) {
             comparator = new CompareByRate(order);
-        } else if (!sort.equals(PARAM_DEFAULT)) {
+        } else {
             throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
         }
 

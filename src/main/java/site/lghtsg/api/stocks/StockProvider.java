@@ -51,8 +51,10 @@ public class StockProvider {
         }
 
         // 2. sort 값 validation & comparator 초기화
-        Comparator comparator = new CompareByIdx(order);
-        if (sort.equals(SORT_FLUCTUATION_PARAM)){   // 증감율 기준
+        Comparator comparator;
+        if(sort.equals(PARAM_DEFAULT)) {
+            comparator = new CompareByIdx(order);
+        } else if (sort.equals(SORT_FLUCTUATION_PARAM)){   // 증감율 기준
             comparator = new CompareByRate(order);
         } else if (sort.equals(SORT_PRICE_PARAM)) { // 가격 기준
             comparator = new CompareByPrice(order);

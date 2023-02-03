@@ -16,7 +16,7 @@ public class CompareByMarketCap implements Comparator<StockBox> {
         double o1MarketCap = o1.getIssuedShares() * o1.getPrice(), o2MarketCap = o2.getIssuedShares() * o2.getPrice();
         int ret = Double.compare(o2MarketCap, o1MarketCap);
 
-        if(!order.equals(ASCENDING_PARAM)) ret *= -1;
+        if(order.equals(ASCENDING_PARAM)) ret *= -1;
         return ret;
     }
 }

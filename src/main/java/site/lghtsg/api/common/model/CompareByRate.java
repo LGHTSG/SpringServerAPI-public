@@ -18,7 +18,7 @@ public class CompareByRate implements Comparator<Box> {
         double o1Rate = o1.getRateOfChange(), o2Rate = o2.getRateOfChange();
         int ret = Double.compare(o2Rate, o1Rate);
 
-        if(!order.equals(ASCENDING_PARAM)) ret *= -1;
+        if(order.equals(ASCENDING_PARAM)) ret *= -1;
         return ret;
     }
 }
