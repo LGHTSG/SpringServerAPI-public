@@ -62,9 +62,8 @@ public class StockDao {
                 "         join IconImage as II on S.iconImageIdx = II.iconImageIdx\n" +
                 "where S.stockIdx = ?;";
 
-        long getStockInfoParams = stockIdx;
         try {
-            return this.jdbcTemplate.queryForObject(getStockInfoQuery, stockBoxRowMapper(), getStockInfoParams);
+            return this.jdbcTemplate.queryForObject(getStockInfoQuery, stockBoxRowMapper(), stockIdx);
         } catch (EmptyResultDataAccessException e) { // 쿼리문에 해당하는 결과가 없을 때
             return null;
         }

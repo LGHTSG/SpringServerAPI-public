@@ -47,7 +47,7 @@ public enum BaseResponseStatus {
     NOT_EXIST_ASSET(2030, "해당 자산을 보유하지 않았습니다."),
 
     // [POST] /users/log-in
-    WITHDRAW_USER(2030,"존재하지 않거나 탈퇴한 유저입니다."),
+    WITHDRAW_USER(2031,"존재하지 않거나 탈퇴한 유저입니다."),
 
     // [GET] /realestates/area-realation-list
     GET_REGIONS_EMPTY_KEYWORD(2201, "검색어를 입력해주세요."),
@@ -59,9 +59,10 @@ public enum BaseResponseStatus {
     // Common
     RESPONSE_ERROR(3000, "값을 불러오는데 실패하였습니다."),
 
+    NOT_EXISTING_EMAIL(3010,"존재하지 않는 이메일입니다."),
     // [POST] /users
     // DUPLICATED_EMAIL( 3013, "중복된 이메일입니다."),
-    FAILED_TO_LOGIN(3015,"없는 아이디거나 비밀번호가 틀렸습니다."),
+    FAILED_TO_LOGIN(3015," 없는 아이디이거나 비밀번호가 틀렸습니다."),
 
 
     /**
@@ -96,7 +97,9 @@ public enum BaseResponseStatus {
     MISSING_REQUIRED_ARGUMENT(4203, "필요한 변수가 입력되지 않았습니다"),
     INCORRECT_REQUIRED_ARGUMENT(4204, "잘못된 변수가 입력되었습니다."),
 
-    REQUESTED_DATA_FAIL_TO_EXIST(4205, "요청한 데이터가 존재하지 않습니다.");
+    REQUESTED_DATA_FAIL_TO_EXIST(4205, "요청한 데이터가 존재하지 않습니다."),
+    RETURN_EXCEEDING_REQUESTED(4206, "반환하는 데이터가 요청값을 초과합니다.(1개 자산 요청 -> 2개 이상 반환)"),
+    FILE_READ_ERROR(4207, "파일을 읽어오는 과정에서 에러가 발생했습니다.");
     // 5000 : 필요시 만들어서 쓰세요
     // 6000 : 필요시 만들어서 쓰세요
 

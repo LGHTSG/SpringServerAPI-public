@@ -11,6 +11,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
 
+import static site.lghtsg.api.config.Constant.*;
+
 
 @Repository
 public class UserDao {
@@ -39,6 +41,7 @@ public class UserDao {
                 int.class,
                 checkEmailParams);
     }
+
 
     // 로그인 : email에 해당되는 user의 암호와 탈퇴 여부 체크
     public User getPassword(PostLoginReq postLoginReq) {
@@ -124,9 +127,8 @@ public class UserDao {
                         "         join StockTodayTrans STT on S.lastTransactionIdx = STT.stockTransactionIdx\n" +
                         "         join StockTransaction ST on S.s2LastTransactionIdx = ST.stockTransactionIdx\n" +
                         "         join IconImage II on S.iconImageIdx = II.iconImageIdx;";
-        int getStockAssetParams = userIdx;
 
-        return this.jdbcTemplate.query(getStockAssetQuery, getMyAssetRowMapper(), getStockAssetParams);
+        return this.jdbcTemplate.query(getStockAssetQuery, getMyAssetRowMapper(), userIdx);
     }
 
     // 리셀 자산 조회
@@ -148,9 +150,7 @@ public class UserDao {
                         "         join ResellTransaction RT on R.s2LastTransactionIdx = RT.resellTransactionIdx\n" +
                         "         join IconImage II on R.iconImageIdx = II.iconImageIdx;";
 
-        int getResellBoxParams = userIdx;
-
-        return this.jdbcTemplate.query(getResellAssetQuery, getMyAssetRowMapper(), getResellBoxParams);
+        return this.jdbcTemplate.query(getResellAssetQuery, getMyAssetRowMapper(), userIdx);
     }
 
     // 부동산 자산 조회
@@ -172,9 +172,7 @@ public class UserDao {
                         "         join RealEstateTransaction RET on RE.s2LastTransactionIdx = RET.realEstateTransactionIdx\n" +
                         "         join IconImage II on RE.iconImageIdx = II.iconImageIdx;\n";
 
-        int getRealEstateParams = userIdx;
-
-        return this.jdbcTemplate.query(getRealEstateAssetQuery, getMyAssetRowMapper(), getRealEstateParams);
+        return this.jdbcTemplate.query(getRealEstateAssetQuery, getMyAssetRowMapper(), userIdx);
     }
 
     // 자산 구매
@@ -188,7 +186,7 @@ public class UserDao {
                 postMyAssetQuery = "insert into ResellUserTransaction(userIdx, resellIdx, price, transactionTime) values (?,?,?,?)";
                 break;
             case "realestate":
-                postMyAssetQuery = "insert into RealEstateUserTransaction(userIdx, realEsateIdx, price, transactionTime) values (?,?,?,?)";
+                postMyAssetQuery = "insert into RealEstateUserTransaction(userIdx, realEstateIdx, price, transactionTime) values (?,?,?,?)";
                 break;
         }
 
@@ -230,7 +228,7 @@ public class UserDao {
                 getPreviousTransactionQuery =
                         "select RUT.resellIdx as idx, RUT.sellCheck, RUT.transactionTime, RUT.price\n" +
                         "from ResellUserTransaction as RUT\n" +
-                        "where RUT.userIdx = ? and RUT.transactionStatus = 1 and SUT.resellIdx = ?;";
+                        "where RUT.userIdx = ? and RUT.transactionStatus = 1 and RUT.resellIdx = ?;";
                 break;
             case "realestate":
                 getPreviousTransactionQuery =
@@ -248,20 +246,16 @@ public class UserDao {
 
     // 리스트 노출 상태 변경
     public int changeMyAssetList(int userIdx, PostMyAssetReq postMyAssetReq) {
-        String changeMyAssetListQuery = "";
-        switch (postMyAssetReq.getCategory()) {
-            case "stock":
-                changeMyAssetListQuery = "UPDATE StockUserTransaction SET transactionStatus=0 where useridx=? and stockidx = ? and transactionstatus=1";
-                break;
-            case "resell":
-                changeMyAssetListQuery = "UPDATE ResellUserTransaction SET transactionStatus=0 WHERE userIdx=? AND resellIdx = ? AND transactionStatus=1";
-                break;
-            case "realestate":
-                changeMyAssetListQuery = "UPDATE RealEstatelUserTransaction SET transactionStatus=0 WHERE userIdx=? AND realEstateIdx = ? AND transactionStatus=1";
-                break;
-            default:
-                break;
+        String changeMyAssetListQuery = "", category = postMyAssetReq.getCategory();
+
+        if(category.equals(ASSET_CATEGORY_STOCK)) {
+            changeMyAssetListQuery = "UPDATE StockUserTransaction SET transactionStatus=0 where useridx=? and stockidx = ? and transactionstatus=1";
+        } else if(category.equals(ASSET_CATEGORY_RESELL)){
+            changeMyAssetListQuery = "UPDATE ResellUserTransaction SET transactionStatus=0 WHERE userIdx=? AND resellIdx = ? AND transactionStatus=1";
+        } else {
+            changeMyAssetListQuery = "UPDATE RealEstateUserTransaction SET transactionStatus=0 WHERE userIdx=? AND realEstateIdx = ? AND transactionStatus=1";
         }
+
         Object[] sellMyAssetParams = new Object[]{userIdx, postMyAssetReq.getAssetIdx()};
         return this.jdbcTemplate.update(changeMyAssetListQuery, sellMyAssetParams);
     }

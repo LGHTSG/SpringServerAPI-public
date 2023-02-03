@@ -2,15 +2,19 @@ package site.lghtsg.api.common.model;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
 @AllArgsConstructor
+@NoArgsConstructor
 public class TransactionData implements Comparable<TransactionData>{
 
     String datetime;
     long price;
+    long totalPrice;
+    long cnt;
 
     @Override
     public int compareTo(TransactionData o) {
