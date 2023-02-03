@@ -2,7 +2,7 @@ package site.lghtsg.api.common.model;
 
 import java.util.Comparator;
 
-import static site.lghtsg.api.config.Constant.DESCENDING_PARAM;
+import static site.lghtsg.api.config.Constant.ASCENDING_PARAM;
 
 public class CompareByRate implements Comparator<Box> {
 
@@ -18,7 +18,7 @@ public class CompareByRate implements Comparator<Box> {
         double o1Rate = o1.getRateOfChange(), o2Rate = o2.getRateOfChange();
         int ret = Double.compare(o2Rate, o1Rate);
 
-        if(order.equals(DESCENDING_PARAM)) ret *= -1;
+        if(!order.equals(ASCENDING_PARAM)) ret *= -1;
         return ret;
     }
 }

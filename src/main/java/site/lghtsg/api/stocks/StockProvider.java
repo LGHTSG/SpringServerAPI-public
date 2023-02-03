@@ -8,6 +8,7 @@ import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.stocks.model.*;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import static site.lghtsg.api.config.BaseResponseStatus.*;
@@ -44,35 +45,33 @@ public class StockProvider {
     }
 
     static List<StockBox> sortStockBoxes(List<StockBox> stockBoxes, String sort, String order) throws BaseException {
+        // 1. order 값 validation
+        if (!order.equals(PARAM_DEFAULT) && !order.equals(DESCENDING_PARAM) && !order.equals(ASCENDING_PARAM)){    // 기준이 없는(잘못입력) 경우
+            throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
+        }
+
+        // 2. sort 값 validation & comparator 초기화
+        Comparator comparator = new CompareByIdx(order);
+        if (sort.equals(SORT_FLUCTUATION_PARAM)){   // 증감율 기준
+            comparator = new CompareByRate(order);
+        } else if (sort.equals(SORT_PRICE_PARAM)) { // 가격 기준
+            comparator = new CompareByPrice(order);
+        } else if (sort.equals(SORT_MARKET_CAP_PARAM)){ // 시가총액
+            comparator = new CompareByMarketCap(order);
+        } else if (sort.equals(SORT_TRADING_VOL_PARAM)){ // 거래량
+            comparator = new CompareByTradingVolume(order);
+        } else {     // 기준이 없는(잘못 입력) 경우
+            throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
+        }
+
+        // 3. 정렬
         try {
-            // 1. 정렬
-            if (sort.equals(SORT_FLUCTUATION_PARAM)){   // 증감율 기준
-                stockBoxes.sort(new CompareByRate());
-            } else if (sort.equals(SORT_PRICE_PARAM)) { // 가격 기준
-                stockBoxes.sort(new CompareByPrice());
-            } else if (sort.equals(SORT_MARKET_CAP_PARAM)){
-                stockBoxes.sort(new CompareByMarketCap()); // 시가 총액 기준
-            } else if (sort.equals(SORT_TRADING_VOL_PARAM)){
-                stockBoxes.sort(new CompareByTradingVolume()); // 거래량 기준
-            } else if (sort.equals(PARAM_DEFAULT)) { // idx 기준
-                stockBoxes.sort(new CompareByIdx());
-            } else {     // 기준이 없는(잘못 입력) 경우
-                throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
-            }
-
-            // 2. 차순
-            System.out.println(order);
-            if (order.equals(ASCENDING_PARAM)) { // 오름차순
-                Collections.reverse(stockBoxes);
-            } else if (!order.equals(PARAM_DEFAULT) && !order.equals(DESCENDING_PARAM)){    // 기준이 없는(잘못 입력) 경우
-                throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
-            }
-
-            return stockBoxes;
+            stockBoxes.sort(comparator);
         }
         catch(Exception e) {
             throw new BaseException(DATALIST_SORTING_ERROR);
         }
+        return stockBoxes;
     }
 
     //증감율 계산

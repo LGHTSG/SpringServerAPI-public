@@ -13,6 +13,7 @@ import site.lghtsg.api.resells.model.GetResellTransactionRes;
 import site.lghtsg.api.resells.model.GetResellBoxRes;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import static site.lghtsg.api.config.BaseResponseStatus.*;
@@ -56,27 +57,25 @@ public class ResellProvider {
     }
 
     public List<GetResellBoxRes> sortResellBoxesRes(List<GetResellBoxRes> resellBoxesRes, String sort, String order) throws BaseException {
+        if (!order.equals(PARAM_DEFAULT) && !order.equals(DESCENDING_PARAM) && !order.equals(ASCENDING_PARAM)){    // 기준이 없는(잘못입력) 경우
+            throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
+        }
 
+        // 2. sort 값 validation & comparator 초기화
+        Comparator comparator = new CompareByIdx(order);
+        if (sort.equals(SORT_FLUCTUATION_PARAM)) {
+            comparator = new CompareByRate(order);
+        } else if (!sort.equals(PARAM_DEFAULT)) {
+            throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
+        }
+
+        // 3. 정렬
         try {
-            if (sort.equals(PARAM_DEFAULT)) {
-                resellBoxesRes.sort(new CompareByIdx());
-            } else if (sort.equals(SORT_FLUCTUATION_PARAM)) {
-                resellBoxesRes.sort(new CompareByRate());
-            } else if (!sort.equals(PARAM_DEFAULT)) {
-                throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
-            }
-
-            if (order.equals(ASCENDING_PARAM)) {
-                Collections.reverse(resellBoxesRes);
-            } else if (!order.equals(PARAM_DEFAULT) && !order.equals(DESCENDING_PARAM)) {
-                throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
-            }
-
-            return resellBoxesRes;
+            resellBoxesRes.sort(comparator);
         } catch (Exception e) {
             throw new BaseException(DATALIST_SORTING_ERROR);
         }
-
+        return resellBoxesRes;
     }
 
     public GetResellInfoRes getResellInfo(long resellIdx) throws BaseException {
