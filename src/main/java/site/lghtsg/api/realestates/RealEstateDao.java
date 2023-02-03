@@ -180,12 +180,30 @@ public class RealEstateDao {
         return this.jdbcTemplate.query(getRealEstatesAreaPrices, transactionRowMapper(), findAreaQuery);
     }
 
+    public void checkDateExists(RealEstateTransactionData now){
+        String checkDateExists = "select transactionDate from RealEstateAreaPriceCache where transactionDate = ?;";
+        this.jdbcTemplate.queryForObject(checkDateExists, String.class, now.getDatetime());
+    }
+
+    public void insertAreaCacheTable(RealEstateTransactionData now, String area){
+        String insertAreaCacheTableQuery =
+                "insert into RealEstateAreaPriceCache\n" +
+                "(transactionDate, " + area + ") values (?, ?);";
+        Object [] insertAreaCacheTableParam = new Object[]{now.getDatetime(), now.getPrice()};
+        this.jdbcTemplate.update(insertAreaCacheTableQuery, insertAreaCacheTableParam);
+    }
+
     /**
      * 특정 위치 특정 가격 값을 update한다.
      * @param now
      */
-    public void updateAreaCacheTableQuery(RealEstateTransactionData now){
-        String updateAreaCacheTableQuery = "";
+    public void updateAreaCacheTable(RealEstateTransactionData now, String area){
+        String updateAreaCacheTableQuery =
+                "update RealEstateAreaPriceCache\n" +
+                "set " + area + " = ?\n" +
+                "where transactionDate = ?;";
+        Object [] updateAreaCacheTableParam = new Object[]{now.getPrice(), now.getDatetime()};
+        this.jdbcTemplate.update(updateAreaCacheTableQuery, updateAreaCacheTableParam);
     }
 
     /**

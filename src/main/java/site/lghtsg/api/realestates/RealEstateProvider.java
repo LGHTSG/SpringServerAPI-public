@@ -1,12 +1,11 @@
 package site.lghtsg.api.realestates;
 
 import org.springframework.stereotype.Service;
-import site.lghtsg.api.common.model.Box;
-import site.lghtsg.api.common.model.CompareByPrice;
-import site.lghtsg.api.common.model.CompareByRate;
+import site.lghtsg.api.common.model.*;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
+import site.lghtsg.api.realestates.model.RealEstateRemains;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
 import java.io.BufferedReader;
@@ -69,28 +68,29 @@ public class RealEstateProvider {
      * @throws BaseException
      */
     static List<RealEstateBox> sortRealEstateBoxes(List<RealEstateBox> realEstateBoxes, String sort, String order) throws BaseException {
+        // 1. order 값 validation
+        if (!order.equals(PARAM_DEFAULT) && !order.equals(DESCENDING_PARAM) && !order.equals(ASCENDING_PARAM)){    // 기준이 없는(잘못입력) 경우
+            throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
+        }
+
+        // 2. sort 값 validation & comparator 초기화
+        Comparator comparator = new CompareByIdx(order);
+        if (sort.equals(SORT_FLUCTUATION_PARAM)){   // 증감율 기준
+            comparator = new CompareByRate(order);
+        } else if (sort.equals(SORT_PRICE_PARAM)) { // 가격 기준
+            comparator = new CompareByPrice(order);
+        } else if(!sort.equals(PARAM_DEFAULT)){     // 기준이 없는(잘못입력) 경우
+            throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
+        }
+
+        // 3. 정렬
         try {
-            // 1. 정렬
-            if (sort.equals(SORT_FLUCTUATION_PARAM)){   // 증감율 기준
-                realEstateBoxes.sort(new CompareByRate());
-            } else if (sort.equals(SORT_PRICE_PARAM)) { // 가격 기준
-                realEstateBoxes.sort(new CompareByPrice());
-            } else if(!sort.equals(PARAM_DEFAULT)){     // 기준이 없는(잘못입력) 경우
-                throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
-            }
-
-            // 2. 차순
-            if (order.equals(ASCENDING_PARAM)) {        // 오름차순
-                Collections.reverse(realEstateBoxes);
-            } else if (!order.equals(PARAM_DEFAULT) && !order.equals(DESCENDING_PARAM)){    // 기준이 없는(잘못입력) 경우
-                throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
-            }
-
-            return realEstateBoxes;
+            realEstateBoxes.sort(comparator);
         }
         catch(Exception e) {
             throw new BaseException(DATALIST_SORTING_ERROR);
         }
+        return realEstateBoxes;
     }
 
     static List<RealEstateBox> calculateRateOfChange(List<RealEstateBox> realEstateBoxes) throws BaseException {
@@ -266,58 +266,93 @@ public class RealEstateProvider {
 
         int test_lim = 10; // 테스트 용 지역 길이 제한 - 서울시 다음부터 시작
         // 테이블 값 업데이트만 남았음
-        for (int i = 1, ilim = areaList.size(); i < ilim && i < test_lim; i++) {
+        for (int i = 10, ilim = areaList.size(); i < ilim; i++) {
             String area = areaList.get(i);
             List<RealEstateTransactionData> prices = realEstateDao.getRealEstatePricesInArea(area);
             if(prices.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
 
             // 시간 순 정렬
-            prices.sort(new Comparator<RealEstateTransactionData>() {
-                @Override
-                public int compare(RealEstateTransactionData o1, RealEstateTransactionData o2) {
-                    return o1.getDatetime().compareTo(o2.getDatetime());
-                }
-            });
+            prices.sort(Comparator.comparing(TransactionData::getDatetime));
             // 시간 순 중복 제거 (평균) - 가격 평균을...
             // 날짜가 바뀌는 시점 누적한 평균값을 리스트에 추가한다.
+            // 비교용 마지막 더미 데이터
+            RealEstateTransactionData lastData = new RealEstateTransactionData();
+            lastData.setDatetime("THIS-IS-NOT");
+            prices.add(lastData);
+            String[] area_div = area.split("_");
+            System.out.println(area_div.length);
+            int cnt_minimum = getCountMinimum(area_div.length);
+
             List<RealEstateTransactionData> result = new ArrayList<>();
-            long cnt = 1, priceSum = 0;
+            long cnt = 0, priceSum = 0;
             String now = "", next = "";
             for(int j = 0, jlim = prices.size(); j < jlim - 1; j++){
                 now = prices.get(j).getDatetime();
                 next = prices.get(j + 1).getDatetime();
 
+                priceSum += prices.get(j).getPrice();
+                cnt += 1;
+
                 if(now.compareTo(next) != 0) {
                     RealEstateTransactionData data = new RealEstateTransactionData();
                     data.setDatetime(now);
+                    if(cnt <= cnt_minimum) priceSum = 0; // 거래 기록이 너무 적을 경우 평균값과 멀어지므로 0으로 가격을 무효시킨다
                     data.setPrice(priceSum / cnt);
-                    data.setTotalPrice(priceSum);
-                    data.setCnt(cnt);
                     result.add(data);
-                    cnt = 1;
+                    cnt = 0;
                     priceSum = 0;
                 }
-                else{
-                    priceSum += prices.get(j).getPrice();
-                    cnt += 1;
-                }
             }
-            RealEstateTransactionData data = new RealEstateTransactionData();
-            data.setDatetime(prices.get(prices.size() - 1).getDatetime());
-            data.setPrice(priceSum / cnt);
-            data.setTotalPrice(priceSum);
-            data.setCnt(cnt);
-            result.add(data);
+
             // 서울시에 대해서는 계산 끝. 테이블 초기화도 완료
 //            if(i == 0) {
 //                realEstateDao.initAreaPriceCacheRow(result, area);
 //                continue;
 //            }
 
-            // 데이터 업데이트 파트 - 각 일자의 가격마다 업데이트 쿼리를 짜서 날려야한다.
-            for(RealEstateTransactionData r : result) {
+            // 서울 지역 row 초기화
+//            try {
+//                realEstateDao.initAreaPriceCacheRow(result, area);
+//            }catch(Exception e ){
+//                throw new BaseException(DATABASE_ERROR);
+//            }
 
+            // 데이터 업데이트 파트 - 각 일자의 가격마다 업데이트 쿼리를 짜서 날려야한다.
+
+            List<RealEstateRemains> remains = new ArrayList<>();
+            for(RealEstateTransactionData r : result) {
+                try{
+                    // 해당 row가 존재한다면
+                    realEstateDao.checkDateExists(r);
+                    // 기존 row에 추가
+                    realEstateDao.updateAreaCacheTable(r, area);
+                }catch(Exception e){ // 존재하지 않는다면
+                    // 에러 발생시 잡을 수 있는가? - 안될듯
+                    try {
+                        realEstateDao.insertAreaCacheTable(r, area);
+                    }
+                    catch(Exception e2){
+                        RealEstateRemains rm = new RealEstateRemains();
+                        rm.setArea(area);
+                        rm.setDatetime(r.getDatetime());
+                        rm.setPrice(r.getPrice());
+                        remains.add(rm);
+                    }
+                }
             }
+
+            for(RealEstateRemains rm : remains){
+                System.out.println(rm.getArea() + " / " + rm.getDatetime() + " : " + rm.getPrice());
+            }
+
+
+            // 아직 null 과 0이 왜 동시에 존재히는지 파악하지 못했다.
+
         }
+    }
+
+    static int getCountMinimum(int area_level){
+        if(area_level >= 2) return 0;
+        return 4;
     }
 }

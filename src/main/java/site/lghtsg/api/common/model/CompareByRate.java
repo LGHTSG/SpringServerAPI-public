@@ -2,12 +2,23 @@ package site.lghtsg.api.common.model;
 
 import java.util.Comparator;
 
+import static site.lghtsg.api.config.Constant.DESCENDING_PARAM;
+
 public class CompareByRate implements Comparator<Box> {
+
+    private String order;
+
+
+    public CompareByRate(String order) {
+        this.order = order;
+    }
+
     @Override
     public int compare(Box o1, Box o2) {
         double o1Rate = o1.getRateOfChange(), o2Rate = o2.getRateOfChange();
-        if (o1Rate < o2Rate) return 1;
-        else if (o1Rate > o2Rate) return -1;
-        return 0;
+        int ret = Double.compare(o2Rate, o1Rate);
+
+        if(order.equals(DESCENDING_PARAM)) ret *= -1;
+        return ret;
     }
 }

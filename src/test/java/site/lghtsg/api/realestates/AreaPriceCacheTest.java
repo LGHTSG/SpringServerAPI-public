@@ -4,6 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import site.lghtsg.api.config.BaseException;
+import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
 import java.util.*;
 
@@ -13,6 +14,8 @@ import static site.lghtsg.api.config.Constant.PARAM_DEFAULT;
 public class AreaPriceCacheTest {
     @Autowired
     private RealEstateProvider realEstateProvider;
+    @Autowired
+    private RealEstateDao realEstateDao;
     @Test
     void 부동산_구_리스트(){
         String keyword = PARAM_DEFAULT;
@@ -54,5 +57,12 @@ public class AreaPriceCacheTest {
         }catch(BaseException e){
             System.out.println(e.getMessage());
         }
+    }
+    @Test
+    void 일자_존재하는지_체크(){
+        RealEstateTransactionData r = new RealEstateTransactionData();
+        r.setPrice(20000);
+        r.setDatetime("2016-03-40");
+        realEstateDao.checkDateExists(r);
     }
 }
