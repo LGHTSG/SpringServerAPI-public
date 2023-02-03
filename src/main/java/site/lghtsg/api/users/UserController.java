@@ -160,7 +160,7 @@ public class UserController {
     public BaseResponse<String> logOut(@RequestBody String accessToken) {
         try {
             int userIdx = jwtService.getUserIdx();
-            redisService.logout(userIdx, accessToken);
+            userService.logout(userIdx, accessToken);
             String result = "로그아웃 완료";
             return new BaseResponse<>(result);
         } catch (BaseException exception){

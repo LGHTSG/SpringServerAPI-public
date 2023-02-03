@@ -5,18 +5,16 @@ import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import site.lghtsg.api.config.BaseException;
-import site.lghtsg.api.users.EmailService;
 import site.lghtsg.api.users.UserDao;
-import site.lghtsg.api.users.UserProvider;
-import site.lghtsg.api.users.UserService;
 import site.lghtsg.api.users.model.Token;
 
 import javax.servlet.http.HttpServletRequest;
-import java.lang.reflect.Member;
 import java.util.Date;
 
 import static site.lghtsg.api.config.BaseResponseStatus.*;
@@ -25,6 +23,7 @@ import static site.lghtsg.api.config.Secret.Secret.JWT_SECRET_KEY;
 @Service
 public class JwtService {
 
+    private final RedisTemplate<String, String> redisTemplate = new RedisTemplate<>();
     private final RedisService redisService;
     private final UserDao userDao;
 
@@ -112,11 +111,25 @@ public class JwtService {
     // 토큰 재발급
     public Token reIssueAccessToken(int userIdx, String refreshToken) {
         // String userIdxString = Integer.toString(userIdx);
-        if(redisService.validateToken(refreshToken) == false) {
+        if(!validateToken(refreshToken)) {
             throw new IllegalStateException("존재하지 않는 유저입니다.");
         }
         String accessToken = createAccessToken(userIdx);
         return new Token(accessToken, refreshToken);
+    }
+
+    // token 유효성 검사
+    public boolean validateToken(String jwtToken) {
+        try {
+            Jws<Claims> claims = Jwts.parser().setSigningKey(JWT_SECRET_KEY).parseClaimsJws(jwtToken);
+            ValueOperations<String, String> logoutValueOperations = redisTemplate.opsForValue();
+            if (logoutValueOperations.get(jwtToken) != null) {
+                return false;
+            }
+            return !claims.getBody().getExpiration().before(new Date());
+        } catch (Exception e) {
+            return false;
+        }
     }
 
 }

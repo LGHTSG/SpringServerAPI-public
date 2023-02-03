@@ -10,17 +10,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.util.Date;
 import java.util.concurrent.TimeUnit;
-
-import static site.lghtsg.api.config.Secret.Secret.JWT_SECRET_KEY;
 
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class RedisService {
     private final RedisTemplate<String, String> redisTemplate;
-    private final JwtService jwtService;
 
     @Transactional
     public void setValues(String key, String value, Duration duration){
@@ -41,7 +37,7 @@ public class RedisService {
     public void deleteValues(String key) {
         redisTemplate.delete(key);
     }
-
+/*
     // token 유효성 검사
     public boolean validateToken(String jwtToken) {
         try {
@@ -66,5 +62,5 @@ public class RedisService {
         redisTemplate.opsForValue().set(accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
         setValues("blackList" + accessToken, userIdxString, Duration.ofMillis(expiration));
         deleteValues(userIdxString); // Redis에서 유저 리프레시 토큰 삭제
-    }
+    }*/
 }
