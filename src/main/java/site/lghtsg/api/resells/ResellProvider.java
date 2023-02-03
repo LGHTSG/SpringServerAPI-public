@@ -30,33 +30,37 @@ public class ResellProvider {
     }
 
     public List<GetResellBoxRes> getResellBoxes(String sort, String order) throws BaseException {
+        List<GetResellBoxRes> getResellBoxesRes;
         try {
-            List<GetResellBoxRes> getResellBoxesRes = resellDao.getResellBoxes();
-
-            getResellBoxesRes = calculateResellBoxesPriceAndRateOFChange(getResellBoxesRes);
-            getResellBoxesRes = sortResellBoxesRes(getResellBoxesRes, sort, order);
-            if (getResellBoxesRes == null) {
-                throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
-            }
-            return getResellBoxesRes;
+            getResellBoxesRes = resellDao.getResellBoxes();
         } catch (Exception e) {
             e.printStackTrace();
-            throw new BaseException(BaseResponseStatus.DATABASE_ERROR);
+            throw new BaseException(DATABASE_ERROR);
         }
-    }
-
-    public List<GetResellBoxRes> calculateResellBoxesPriceAndRateOFChange(List<GetResellBoxRes> getResellBoxesRes) {
-        for (GetResellBoxRes getResellBoxRes : getResellBoxesRes) {
-            Long lastPrice = getResellBoxRes.getPrice();
-            Long s2LastPrice = getResellBoxRes.getLastPrice();
-            Double rateOfChange = (double) (lastPrice - s2LastPrice) / s2LastPrice * 100;
-            rateOfChange = Math.round(rateOfChange * 10) / 10.0;
-            getResellBoxRes.setRateOfChange(rateOfChange);
+        calculateResellBoxesPriceAndRateOFChange(getResellBoxesRes);
+        sortResellBoxesRes(getResellBoxesRes, sort, order);
+        if (getResellBoxesRes == null) {
+            throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
         }
         return getResellBoxesRes;
     }
 
-    public List<GetResellBoxRes> sortResellBoxesRes(List<GetResellBoxRes> resellBoxesRes, String sort, String order) throws BaseException {
+    public void calculateResellBoxesPriceAndRateOFChange(List<GetResellBoxRes> getResellBoxesRes) throws BaseException {
+        try {
+            for (GetResellBoxRes getResellBoxRes : getResellBoxesRes) {
+                Long lastPrice = getResellBoxRes.getPrice();
+                Long s2LastPrice = getResellBoxRes.getLastPrice();
+                Double rateOfChange = (double) (lastPrice - s2LastPrice) / s2LastPrice * 100;
+                rateOfChange = Math.round(rateOfChange * 10) / 10.0;
+                getResellBoxRes.setRateOfChange(rateOfChange);
+            }
+        }
+        catch(Exception e){
+            throw new BaseException(DATALIST_CAL_RATE_ERROR);
+        }
+    }
+
+    public void sortResellBoxesRes(List<GetResellBoxRes> resellBoxesRes, String sort, String order) throws BaseException {
         if (!order.equals(PARAM_DEFAULT) && !order.equals(DESCENDING_PARAM) && !order.equals(ASCENDING_PARAM)){    // 기준이 없는(잘못입력) 경우
             throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
         }
@@ -77,7 +81,6 @@ public class ResellProvider {
         } catch (Exception e) {
             throw new BaseException(DATALIST_SORTING_ERROR);
         }
-        return resellBoxesRes;
     }
 
     public GetResellInfoRes getResellInfo(long resellIdx) throws BaseException {

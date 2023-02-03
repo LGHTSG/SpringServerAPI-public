@@ -224,6 +224,7 @@ public class RealEstateDao {
 
     public void isInputAreaInAreaList(String area) {
         area = getFindAreaQuery(area);
+        area = area.substring(0, area.length() - 1);
         String isInputAreaInAreaListQuery = "select rn.name from RegionName as rn where rn.name = ?;";
         this.jdbcTemplate.queryForObject(isInputAreaInAreaListQuery, String.class, area);
     }

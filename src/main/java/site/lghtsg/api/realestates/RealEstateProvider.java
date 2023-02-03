@@ -234,7 +234,7 @@ public class RealEstateProvider {
             realEstateDao.isInputAreaInAreaList(inputArea);
         }
         catch(Exception e){
-            throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+            throw new BaseException(INCORRECT_REQUIRED_ARGUMENT);
         }
     }
 
