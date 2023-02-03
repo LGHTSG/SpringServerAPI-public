@@ -64,7 +64,7 @@ public class UserController {
     }
 
     /**
-     * Email 인증 API
+     * Email 인증 APㅌI
      * [Post] /users/sign-up/email-check
      */
     @ResponseBody
