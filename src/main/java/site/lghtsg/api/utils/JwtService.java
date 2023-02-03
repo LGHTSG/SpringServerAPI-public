@@ -9,9 +9,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import site.lghtsg.api.config.BaseException;
-import site.lghtsg.api.config.Secret.Secret;
+import site.lghtsg.api.users.EmailService;
+import site.lghtsg.api.users.UserDao;
+import site.lghtsg.api.users.UserProvider;
+import site.lghtsg.api.users.UserService;
+import site.lghtsg.api.users.model.Token;
 
 import javax.servlet.http.HttpServletRequest;
+import java.lang.reflect.Member;
 import java.util.Date;
 
 import static site.lghtsg.api.config.BaseResponseStatus.*;
@@ -21,11 +26,14 @@ import static site.lghtsg.api.config.Secret.Secret.JWT_SECRET_KEY;
 public class JwtService {
 
     private final RedisService redisService;
+    private final UserDao userDao;
 
     @Autowired
-    public JwtService(RedisService redisService) {
+    public JwtService(RedisService redisService, UserDao userDao) {
         this.redisService = redisService;
+        this.userDao = userDao;
     }
+
 
     /*
     JWT 생성
@@ -94,10 +102,21 @@ public class JwtService {
         return claims.getBody().get("userIdx",Integer.class);  // jwt 에서 userIdx를 추출합니다.
     }
 
+    // 토큰 만료
     public Long getExpiration(String accessToken) {
         Date expiration = Jwts.parser().setSigningKey(JWT_SECRET_KEY).parseClaimsJws(accessToken).getBody().getExpiration();
         Long now = new Date().getTime();
         return (expiration.getTime() - now);
+    }
+
+    // 토큰 재발급
+    public Token reIssueAccessToken(int userIdx, String refreshToken) {
+        // String userIdxString = Integer.toString(userIdx);
+        if(redisService.validateToken(refreshToken) == false) {
+            throw new IllegalStateException("존재하지 않는 유저입니다.");
+        }
+        String accessToken = createAccessToken(userIdx);
+        return new Token(accessToken, refreshToken);
     }
 
 }

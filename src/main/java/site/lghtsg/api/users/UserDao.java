@@ -40,6 +40,15 @@ public class UserDao {
                 checkEmailParams);
     }
 
+    // userIdx로 회원이 존재하는지 확인
+    public int checkUserExist(int userIdx) {
+        String checkUserExistQuery = "select exists(select userIdx from User where userIdx = ?)";
+        int checkUserExistParams = userIdx;
+        return this.jdbcTemplate.queryForObject(checkUserExistQuery,
+                int.class,
+                checkUserExistParams);
+    }
+
     // 로그인 : email에 해당되는 user의 암호와 탈퇴 여부 체크
     public User getPassword(PostLoginReq postLoginReq) {
         String getPasswordQuery = "select userIdx, password, email, withdrawCheck" +

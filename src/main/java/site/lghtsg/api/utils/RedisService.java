@@ -23,8 +23,8 @@ public class RedisService {
     private final JwtService jwtService;
 
     @Transactional
-    public void setValues(String key, String value){
-        redisTemplate.opsForValue().set(key, value);
+    public void setValues(String key, String value, Duration duration){
+        redisTemplate.opsForValue().set(key, value, duration);
     }
 
     // 만료시간 설정 -> 자동 삭제
@@ -57,13 +57,14 @@ public class RedisService {
     }
 
     // 로그아웃
-    public void logout(String userIdx, String accessToken) {
+    public void logout(int userIdx, String accessToken) {
+        String userIdxString = Integer.toString(userIdx);
         if(redisTemplate.opsForValue().get(userIdx) != null){
-            redisTemplate.delete(userIdx);
+            redisTemplate.delete(userIdxString);
         }
         long expiration = jwtService.getExpiration(accessToken);
         redisTemplate.opsForValue().set(accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
-        setValues("blackList" + accessToken, userIdx, Duration.ofMillis(expiration));
-        deleteValues(userIdx); // Redis에서 유저 리프레시 토큰 삭제
+        setValues("blackList" + accessToken, userIdxString, Duration.ofMillis(expiration));
+        deleteValues(userIdxString); // Redis에서 유저 리프레시 토큰 삭제
     }
 }

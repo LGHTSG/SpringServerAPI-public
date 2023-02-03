@@ -3,11 +3,13 @@ package site.lghtsg.api.users;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.cache.CacheProperties;
 import org.springframework.web.bind.annotation.*;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.users.model.*;
 import site.lghtsg.api.utils.JwtService;
+import site.lghtsg.api.utils.RedisService;
 
 import javax.mail.MessagingException;
 
@@ -31,12 +33,16 @@ public class UserController {
     private final JwtService jwtService;
     @Autowired
     private final EmailService emailService;
+    @Autowired
+    private final RedisService redisService;
 
-    public UserController(UserProvider userProvider, UserService userService, JwtService jwtService, EmailService emailService) {
+    public UserController(UserProvider userProvider, UserService userService, JwtService jwtService,
+                          EmailService emailService, RedisService redisService) {
         this.userProvider = userProvider;
         this.userService = userService;
         this.jwtService = jwtService;
         this.emailService = emailService;
+        this.redisService = redisService;
     }
 
     /**
@@ -149,6 +155,18 @@ public class UserController {
      * 로그아웃 API
      * [POST] /users/log-out
      */
+    @ResponseBody
+    @PostMapping("/log-out")
+    public BaseResponse<String> logOut(@RequestBody String accessToken) {
+        try {
+            int userIdx = jwtService.getUserIdx();
+            redisService.logout(userIdx, accessToken);
+            String result = "로그아웃 완료";
+            return new BaseResponse<>(result);
+        } catch (BaseException exception){
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
 
     /**
      * 회원탈퇴 API
