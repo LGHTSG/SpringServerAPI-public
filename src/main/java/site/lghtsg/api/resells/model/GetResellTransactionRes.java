@@ -9,7 +9,6 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 public class GetResellTransactionRes {
-    private int resellIdx;
     private int price;
     private String transactionTime;
 }

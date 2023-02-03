@@ -82,7 +82,7 @@ public class ResellDao {
     public List<GetResellTransactionRes> getResellTransaction(long resellIdx) {
         String getResellTransactionQuery = "select * from ResellTransaction where resellIdx = ?";
         long getResellTransactionParams = resellIdx;
-        return this.jdbcTemplate.query(getResellTransactionQuery, (rs, rowNum) -> new GetResellTransactionRes(rs.getInt("resellIdx"), rs.getInt("price"), rs.getString("transactionTime")), getResellTransactionParams);
+        return this.jdbcTemplate.query(getResellTransactionQuery, (rs, rowNum) -> new GetResellTransactionRes(rs.getInt("price"), rs.getString("transactionTime")), getResellTransactionParams);
     }
 
     public List<Integer> getResellTransactionForPriceAndRateOfChange(long resellIdx) {
