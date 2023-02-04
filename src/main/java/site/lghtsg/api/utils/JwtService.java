@@ -15,6 +15,7 @@ import site.lghtsg.api.users.UserDao;
 import site.lghtsg.api.users.model.Token;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.Duration;
 import java.util.Date;
 
 import static site.lghtsg.api.config.BaseResponseStatus.*;
@@ -59,9 +60,10 @@ public class JwtService {
     // refresh token
     public String createRefreshToken(int userIdx) {
         long tokenInValidTime = 1*(1000*60*60*24*365);
+        Duration tokenTime = Duration.ofDays(365);
         String userIdxString = Integer.toString(userIdx);
         String refresh = this.createJwt(userIdx, tokenInValidTime);
-        redisService.setValuesWithTimeout(userIdxString, refresh, tokenInValidTime);
+        redisService.setValues(userIdxString, refresh, tokenTime);
         return refresh;
     }
 
@@ -86,7 +88,7 @@ public class JwtService {
         if(accessToken == null || accessToken.length() == 0){
             throw new BaseException(EMPTY_JWT);
         }
-
+        System.out.println("여기까진 됩니다.");
         // 2. JWT parsing
         Jws<Claims> claims;
         try{
@@ -96,7 +98,7 @@ public class JwtService {
         } catch (Exception ignored) {
             throw new BaseException(EMPTY_JWT);
         }
-
+        System.out.println("여기까지도 됩니다.");
         // 3. userIdx 추출
         return claims.getBody().get("userIdx",Integer.class);  // jwt 에서 userIdx를 추출합니다.
     }
