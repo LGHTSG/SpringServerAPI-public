@@ -72,8 +72,7 @@ public class StockDao {
     //특정 주식 누적 가격 조회 (그래프용)
     public List<StockTransactionData> getStockPrices(long stockIdx) {
         String getStockPricesQuery = "select price, transactionTime from StockTransaction where stockIdx = ?";
-        long getStockPricesParam = stockIdx;
-        return this.jdbcTemplate.query(getStockPricesQuery, transactionRowMapper(), getStockPricesParam);
+        return this.jdbcTemplate.query(getStockPricesQuery, transactionRowMapper(), stockIdx);
     }
 
     private RowMapper<StockBox> stockBoxRowMapper(){

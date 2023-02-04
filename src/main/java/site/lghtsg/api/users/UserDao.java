@@ -283,7 +283,7 @@ public class UserDao {
     // 단일 자산 화면 개인 거래 내역 조회
     public List<GetUserTransactionHistoryRes> getStockTransactionHistory(long stockIdx, int userIdx){
         String getTransactionHistoryQuery =
-                "select createdAt as transactionTime,\n" +
+                "select transactionTime,\n" +
                 "       price,\n" +
                 "       sellCheck\n" +
                 "from StockUserTransaction as SUT\n" +
@@ -295,7 +295,7 @@ public class UserDao {
 
     public List<GetUserTransactionHistoryRes> getRealEstateTransactionHistory(long realestateIdx, int userIdx){
         String getTransactionHistoryQuery =
-                "select createdAt as transactionTime,\n" +
+                "select transactionTime,\n" +
                 "       price,\n" +
                 "       sellCheck\n" +
                 "from RealEstateUserTransaction as REUT\n" +
@@ -307,7 +307,7 @@ public class UserDao {
 
     public List<GetUserTransactionHistoryRes> getResellTransactionHistory(long resellIdx, int userIdx){
         String getTransactionHistoryQuery =
-                "select createdAt as transactionTime,\n" +
+                "select transactionTime,\n" +
                 "       price,\n" +
                 "       sellCheck\n" +
                 "from ResellUserTransaction as RUT\n" +

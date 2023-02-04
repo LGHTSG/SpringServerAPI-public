@@ -1,7 +1,6 @@
 package site.lghtsg.api.realestates;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataAccessException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -60,7 +59,7 @@ public class RealEstateDao {
      */
     public List<RealEstateBox> getRealEstateBoxesInArea(String area) {
 
-        String findAreaQuery = getFindAreaQuery(area);
+        String findAreaQuery = getFindAreaWithLIKEQuery(area);
         String getRealEstateBoxesInAreaQuery = "select re.realEstateIdx,\n" +
                 "       re.name,\n" +
                 "       rett.price,\n" +
@@ -173,6 +172,13 @@ public class RealEstateDao {
         Object[] getRealEstatePricesParam = new Object[]{realEstateIdx, realEstateIdx};
         return this.jdbcTemplate.query(getRealEstatePricesQuery, transactionRowMapper(), getRealEstatePricesParam);
     }
+//
+//    public List<RealEstateTransactionData> getCachedRealEstatePricesInArea(String area){
+//        // RealEstateAreaPriceCache 테이블에서 컬럼 이름
+//        String findAreaCachedQuery = getFindAreaColumnFromCacheTable(area);
+//
+//
+//    }
 
     /**
      * TODO : 캐싱된 테이블에서 가져오는 방식으로 변경 예정
@@ -183,7 +189,7 @@ public class RealEstateDao {
      * 가격 캐싱 없이 모든 누적 가격 데이터를 불러옴 - 같은 날 겹치는 가격 존재
      */
     public List<RealEstateTransactionData> getRealEstatePricesInArea(String area) {
-        String findAreaQuery = getFindAreaQuery(area);
+        String findAreaQuery = getFindAreaWithLIKEQuery(area);
         System.out.println(findAreaQuery);
         String getRealEstatesAreaPrices =
                 "select re.realEstateIdx, re.name, ret.price, ret.transactionTime\n" +
@@ -234,7 +240,7 @@ public class RealEstateDao {
      */
 
     public int isInputAreaInAreaList(String area) {
-        area = getFindAreaQuery(area);
+        area = getFindAreaWithLIKEQuery(area);
         area = area.substring(0, area.length() - 1);
         String isInputAreaInAreaListQuery = "select rn.name from RegionName as rn where rn.name = ?;";
         try {
@@ -245,7 +251,11 @@ public class RealEstateDao {
         return 1;
     }
 
-    private String getFindAreaQuery(String area) {
+    private String getFindAreaColumnFromCacheTable(String area){
+        return area.replace(' ', '_');
+    }
+
+    private String getFindAreaWithLIKEQuery(String area) {
         area = area.replace('+', ' ');
         area = area.replace('_', ' ');
         return area + "%";

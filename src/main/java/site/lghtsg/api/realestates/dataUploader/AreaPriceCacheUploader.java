@@ -18,7 +18,7 @@ import static site.lghtsg.api.config.BaseResponseStatus.FILE_READ_ERROR;
 import static site.lghtsg.api.config.BaseResponseStatus.REQUESTED_DATA_FAIL_TO_EXIST;
 
 @Service
-public class AreaPriceCacheUplaoder {
+public class AreaPriceCacheUploader {
 
     @Autowired
     private RealEstateDao realEstateDao;
