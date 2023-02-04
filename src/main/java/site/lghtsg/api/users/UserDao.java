@@ -1,6 +1,7 @@
 package site.lghtsg.api.users;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -99,6 +100,17 @@ public class UserDao {
                 new Object[]{patchUserProfileImgReq.getProfileImg(), patchUserProfileImgReq.getUserIdx()};
 
         return this.jdbcTemplate.update(modifyUserProfileImgQuery, modifyUserProfileImgParams);
+    }
+
+    // 회원 프로필 이미지 url 반환
+    public GetProfileImgRes getUserProfileImgUrl(int userIdx){
+        String getUserProfileImgUrl = "select profileImg from User where userIdx = ?;";
+        try{
+            return this.jdbcTemplate.queryForObject(getUserProfileImgUrl,
+                    (rs, row) -> new GetProfileImgRes(rs.getString("profileImg")), userIdx);
+        } catch (EmptyResultDataAccessException e) { // 쿼리문에 해당하는 결과가 없을 때
+            return null;
+        }
     }
 
     // 회원 탈퇴

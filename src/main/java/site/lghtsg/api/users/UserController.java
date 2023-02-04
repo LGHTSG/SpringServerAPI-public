@@ -1,5 +1,6 @@
 package site.lghtsg.api.users;
 
+import org.apache.commons.collections4.Get;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -320,15 +321,18 @@ public class UserController {
     }
 
 
-//    @ResponseBody
-//    @GetMapping("/proImg")
-//    public BaseResponse<String> getUserImageUrl(){
-//        try{
-//
-//        }
-//        catch(BaseException exception){
-//            return new BaseResponse<>(exception.getStatus());
-//        }
-//    }
+    @ResponseBody
+    @GetMapping("/proImg")
+    public BaseResponse<GetProfileImgRes> getUserImageUrl(){
+        try{
+            int userIdx = jwtService.getUserIdx();
+            System.out.println(userIdx);
+            GetProfileImgRes getProfileImgRes = userProvider.getUserImageUrl(userIdx);
+            return new BaseResponse<>(getProfileImgRes);
+        }
+        catch(BaseException exception){
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
 }
 
