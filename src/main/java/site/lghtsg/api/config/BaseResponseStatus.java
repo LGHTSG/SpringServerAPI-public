@@ -90,6 +90,7 @@ public enum BaseResponseStatus {
 
     PASSWORD_ENCRYPTION_ERROR( 4011, "비밀번호 암호화에 실패하였습니다."),
     PASSWORD_DECRYPTION_ERROR( 4012, "비밀번호 복호화에 실패하였습니다."),
+    IMAGE_S3_UPLOAD_ERROR( 4013, "이미지를 S3 버킷 업로드에 실패하였습니다."),
 
     // 42XX
     DATALIST_SORTING_ERROR(4201, "데이터 정렬 과정에서 오류가 발생했습니다."),

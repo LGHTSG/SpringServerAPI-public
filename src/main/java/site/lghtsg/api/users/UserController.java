@@ -1,20 +1,27 @@
 package site.lghtsg.api.users;
 
+import org.apache.commons.collections4.Get;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.users.model.*;
 import site.lghtsg.api.utils.JwtService;
+import site.lghtsg.api.utils.S3Uploader;
 
 import javax.mail.MessagingException;
+import javax.servlet.http.HttpServletRequest;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
 import static site.lghtsg.api.config.BaseResponseStatus.*;
+import static site.lghtsg.api.config.Constant.DEFAULT_PROFILE_IMG_URL;
 import static site.lghtsg.api.config.Constant.PARAM_DEFAULT;
 import static site.lghtsg.api.utils.ValidationRegex.isRegexEmail;
 
@@ -31,6 +38,8 @@ public class UserController {
     private final JwtService jwtService;
     @Autowired
     private final EmailService emailService;
+    @Autowired
+    private ImageUploadService imageUploadService;
 
     public UserController(UserProvider userProvider, UserService userService, JwtService jwtService, EmailService emailService) {
         this.userProvider = userProvider;
@@ -54,6 +63,11 @@ public class UserController {
         if (!isRegexEmail(postUserReq.getEmail())) {
             return new BaseResponse<>(INVALID_EMAIL);
         }
+        // 프로필 이미지 값 null 인 경우 default image url 로 set
+        if(postUserReq.getProfileImg() == null) {
+            postUserReq.setProfileImg(DEFAULT_PROFILE_IMG_URL);
+        }
+
         // 이메일 중복 확인은 [Service - Provider - Dao] 에서 합니다.
         try {
             PostUserRes postUserRes = userService.createUser(postUserReq);
@@ -288,5 +302,37 @@ public class UserController {
         }
     }
 
+    @ResponseBody
+    @PostMapping(value="/upload-image",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public BaseResponse<PostProfileImgRes> imageUploader(@RequestParam(value="image")MultipartFile image) {
+        try{
+            PostProfileImgRes postProfileImgRes = new PostProfileImgRes();
+
+            // 이미지 s3 업로드
+            String url = imageUploadService.upload(image);
+
+            // url 반환
+            postProfileImgRes.setUrl(url);
+            return new BaseResponse<>(postProfileImgRes);
+        }
+        catch (BaseException exception){
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+
+    @ResponseBody
+    @GetMapping("/proImg")
+    public BaseResponse<GetProfileImgRes> getUserImageUrl(){
+        try{
+            int userIdx = jwtService.getUserIdx();
+            System.out.println(userIdx);
+            GetProfileImgRes getProfileImgRes = userProvider.getUserImageUrl(userIdx);
+            return new BaseResponse<>(getProfileImgRes);
+        }
+        catch(BaseException exception){
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
 }
 

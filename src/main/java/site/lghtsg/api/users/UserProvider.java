@@ -1,5 +1,6 @@
 package site.lghtsg.api.users;
 
+import org.apache.commons.collections4.Get;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,6 +88,18 @@ public class UserProvider {
         } else { // 비밀번호가 다르다면 에러메세지를 출력한다.
             throw new BaseException(FAILED_TO_LOGIN);
         }
+    }
+
+    // 사용자 profile 이미지 url 전송
+    public GetProfileImgRes getUserImageUrl(int userIdx) throws BaseException{
+        GetProfileImgRes getProfileImgRes;
+        try{
+            getProfileImgRes = userDao.getUserProfileImgUrl(userIdx);
+        }catch(Exception e){
+            throw new BaseException(DATABASE_ERROR);
+        }
+        if(getProfileImgRes == null) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+        return getProfileImgRes;
     }
 
     // 주식 자산 조회
