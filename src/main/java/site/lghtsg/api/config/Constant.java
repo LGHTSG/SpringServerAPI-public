@@ -29,5 +29,6 @@ public class Constant {
     public static String MORE_THAN_1_YEAR= "1년 이상";
 
     public static String SINGLE_TRANSACTION_HISTORY = "변동 정보 없음";
+    public static String DEFAULT_PROFILE_IMG_URL= "https://lghtsgs3imageuploader.s3.ap-northeast-2.amazonaws.com/%EA%B8%B0%EB%B3%B8%EC%9D%B4%EB%AF%B8%EC%A7%80/default-proImg.jpg";
 
 }
