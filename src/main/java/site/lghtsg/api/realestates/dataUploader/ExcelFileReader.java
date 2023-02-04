@@ -15,7 +15,7 @@ import site.lghtsg.api.realestates.dataUploader.model.RegionName;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RequiredArgsConstructor
@@ -34,6 +34,8 @@ public class ExcelFileReader {
             File[] files = folder.listFiles();
 
             List<RegionName> regionNames = realEstateUploadDao.getRegionsForExcel();
+
+            int fileCnt = 0;
 
             for (File file : files) {
                 if (!(file.isFile() && file.canRead())) {
@@ -74,11 +76,11 @@ public class ExcelFileReader {
                     }
                     rowDatas.add(rowData);
                 }
-
                 createObject(rowDatas, regionNames); // 파일 단위로 업로드
+                System.out.println(fileCnt++ + "번째 파일 완료, " + LocalDateTime.now());
+
                 workbook.close();
             }
-            updateLastTransactions();
 
             return new BaseResponse<>("부동산 데이터 업로드 완료");
         } catch (IOException e) {
@@ -88,10 +90,11 @@ public class ExcelFileReader {
     }
 
     public void createObject(List<String[]> rowDatas, List<RegionName> regionNames) { // {지역명, 건물명, 면적, 년월, 일, 거래금액(만 원)}
-
+        // 업로드할 부동산
         Set<RealEstate> realEstates = new HashSet<>();
 
-        Set<RealEstateTransaction> transactions = new HashSet<>();
+        // 같은 부동산, 일 데이터가 있을 때 하나로 합치기 위한 저장공간(key : realEstateIdx + " " + transactionTime, value : transaction)
+        Map<String, List<RealEstateTransaction>> transactions = new HashMap<>();
 
 
         // realEstate 먼저 업로드
@@ -112,10 +115,6 @@ public class ExcelFileReader {
                     rowDatas.get(i)[0] = String.valueOf(regionId); // transaction 객체 생성에 재활용
                 }
             }
-
-
-
-
 
             if (regionId == -1) System.out.println(rowDatas.get(i)[0]);
             else {
@@ -141,11 +140,11 @@ public class ExcelFileReader {
             int avgPrice = Math.round(price/size);
 
             // 거래일
-            int year = Integer.parseInt(rowData[3].substring(0,4));
-            int month = Integer.parseInt(rowData[3].substring(4));
-            int day = Integer.parseInt(rowData[4]);
+            String year = rowData[3].substring(0,4);
+            String month = rowData[3].substring(4);
+            String day = rowData[4];
 
-            LocalDate transactionDate = LocalDate.of(year, month, day);
+            String transactionDate = year + "-" + month + "-" + day;
 
             // 건물 ID
             int realEstateId = -1;
@@ -160,23 +159,55 @@ public class ExcelFileReader {
 
             }
 
-            transactions.add(RealEstateTransaction.builder()
+            String key = realEstateId + " " + transactionDate;
+
+            transactions.putIfAbsent(key, new ArrayList<>());
+
+            transactions.get(key).add(RealEstateTransaction.builder()
                     .price(avgPrice)
                     .date(transactionDate)
                     .realEstateId(realEstateId)
                     .build());
-
-
         }
 
-        realEstateUploadDao.uploadTransactions(transactions);
-    }
+        // 중복 제거된 리스트(부동산마다, 일 최대 1개씩만)
+        List<RealEstateTransaction> transactionList = new ArrayList<>();
 
-    public void updateLastTransactions() {
-        Set<Integer> realEstateIdxs = realEstateUploadDao.getUpdatedRealEstateIdxs();
+        // 중복 데이터 합치기
+        for (List<RealEstateTransaction> trList : transactions.values()) {
+            if (trList.size() == 1) {
+                transactionList.add(trList.get(0));
+                continue;
+            }
 
-        for (Integer realEstateIdx : realEstateIdxs) {
-            realEstateUploadDao.updateLastTransactions(realEstateIdx);
+            long sumOfPrice = 0;
+
+            for (RealEstateTransaction tr : trList) {
+                sumOfPrice += tr.getPrice();
+            }
+            int price = (int) (sumOfPrice/trList.size());
+            trList.get(0).setPrice(price);
+
+            transactionList.add(trList.get(0));
         }
+
+        // transactions 업로드
+        Set<Integer> updatedRealEstateIdxs = realEstateUploadDao.uploadTransactions(transactionList);
+        // lastTrs & Transaction 테이블들 업데이트
+        realEstateUploadDao.updateTrs(updatedRealEstateIdxs);
     }
+
+//    /**
+//     * 최조 업데이트(기존 구조 -> TodayTrans 추가된 구조) 시 사용한 메소드
+//     * @return
+//     */
+//    public String updateLastTrs_NEW() {
+//        try {
+//            realEstateUploadDao.updateLastTrs_NEW();
+//            return "success";
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            return "failed";
+//        }
+//    }
 }

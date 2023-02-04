@@ -2,7 +2,7 @@ package site.lghtsg.api.realestates.dataUploader;
 
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -13,19 +13,19 @@ import site.lghtsg.api.realestates.dataUploader.model.RealEstateTransaction;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.ByteArrayInputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
-@Component
+@Service
 public class ApiConnector {
 
     private final RealEstateUploadDao realEstateUploadDao;
@@ -68,10 +68,10 @@ public class ApiConnector {
 
     /**
      * api 호출, 데이터 line단위로 받아서 readData에 전달 <br>
-     * 매일 오전 3시에 실행
+     * 매일 오전 10시 실행
      */
     @Async
-    @Scheduled(cron = "0 0 3 * * ?")
+    @Scheduled(cron = "0 0 10 * * ?")
     public void getData() {
         try {
             // 실행 시간 출력
@@ -115,10 +115,11 @@ public class ApiConnector {
                 responses.add(sb.toString());
             }
 
-            updateLastTransactions();
+            // 업로드 및 lastTrs 업데이트 실행
+            String result = readData(responses);
 
-            String result = readData(responses) + " / 보낸 요청 수 : " + requestCnt + "회";
-            System.out.println("[" + Thread.currentThread().getName() + "] : " + result);
+            String printMsg = result + " / 보낸 요청 수 : " + requestCnt + "회";
+            System.out.println("[" + Thread.currentThread().getName() + "] : " + printMsg);
 
         } catch (UnsupportedEncodingException encodingException) {
             encodingException.printStackTrace();
@@ -191,9 +192,11 @@ public class ApiConnector {
     }
 
     private String createObject(List<String[]> rowDatas) {
-        // 저장할 값 list
+        // 저장할 부동산
         Set<RealEstate> realEstates = new HashSet<>();
-        Set<RealEstateTransaction> transactions = new HashSet<>();
+
+        // 중복 제거에 사용됨. (부동산, 거래일) 별로 1개의 데이터만 남김.(key : realEstateIdx + " " + transactionTime, value : transaction)
+        Map<String, List<RealEstateTransaction>> transactions = new HashMap<>();
 
         // realEstates 먼저 업로드 - realEstateId가 없으므로
 
@@ -218,11 +221,12 @@ public class ApiConnector {
 
             int avgPrice = Math.round(price/size);
 
-            int year = Integer.parseInt(rowData[1]);
-            int month = Integer.parseInt(rowData[5]);
-            int day = Integer.parseInt(rowData[6]);
+            // 거래일
+            String year = rowData[3].substring(0,4);
+            String month = rowData[3].substring(4);
+            String day = rowData[4];
 
-            LocalDate transactionDate = LocalDate.of(year, month, day);
+            String transactionDate = year + "-" + month + "-" + day;
 
             // realEstateIdx 찾기
             int realEstateId = -1;
@@ -236,22 +240,43 @@ public class ApiConnector {
                 }
             }
 
-            transactions.add(RealEstateTransaction.builder()
+            String key = realEstateId + " " + transactionDate;
+
+            transactions.putIfAbsent(key, new ArrayList<>());
+
+            transactions.get(key).add(RealEstateTransaction.builder()
                     .price(avgPrice)
                     .date(transactionDate)
                     .realEstateId(realEstateId)
                     .build());
         }
-        realEstateUploadDao.uploadTransactions(transactions);
 
-        return String.valueOf(rowDatas.size());
-    }
+        // 중복 제거된 데이터를 담을 리스트
+        List<RealEstateTransaction> transactionList = new ArrayList<>();
 
-    public void updateLastTransactions() {
-        Set<Integer> realEstateIdxs = realEstateUploadDao.getUpdatedRealEstateIdxs();
+        // 중복 데이터 합치기
+        for (List<RealEstateTransaction> trList : transactions.values()) {
+            if (trList.size() == 1) {
+                transactionList.add(trList.get(0));
+                continue;
+            }
 
-        for (Integer realEstateIdx : realEstateIdxs) {
-            realEstateUploadDao.updateLastTransactions(realEstateIdx);
+            long sumOfPrice = 0;
+
+            for (RealEstateTransaction tr : trList) {
+                sumOfPrice += tr.getPrice();
+            }
+            int price = (int) (sumOfPrice/trList.size());
+            trList.get(0).setPrice(price);
+
+            transactionList.add(trList.get(0));
         }
+
+        // 데이터 업로드
+        Set<Integer> updatedRealEstateIdx = realEstateUploadDao.uploadTransactions(transactionList);
+        // lastTrs 및 거래 테이블들 업데이트
+        realEstateUploadDao.updateTrs(updatedRealEstateIdx);
+
+        return String.valueOf(transactionList.size());
     }
 }
