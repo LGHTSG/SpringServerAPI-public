@@ -227,6 +227,17 @@ public class UserDao {
         return this.jdbcTemplate.update(sellMyAssetQuery, sellMyAssetParams);
     }
 
+    public GetUserROERes getUserROERes(int userIdx){
+        String getUserROEQuery = "select totalSale, numOfTransaction from Sales where userIdx = ?;";
+        try{
+            return this.jdbcTemplate.queryForObject(getUserROEQuery,
+                    (rs, rowNum) -> new GetUserROERes(rs.getDouble("totalSale") / rs.getInt("numOfTransaction")), userIdx);
+        }
+        catch(EmptyResultDataAccessException e){
+            return null;
+        }
+    }
+
     public List<Asset> getPreviousTransaction(int userIdx, PostMyAssetReq postMyAssetReq){
         String getPreviousTransactionQuery = "";
 

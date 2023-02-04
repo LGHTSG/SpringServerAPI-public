@@ -102,6 +102,20 @@ public class UserProvider {
         return getProfileImgRes;
     }
 
+    // 사용자 수익율 조회
+    public GetUserROERes getUserROERes(int userIdx) throws BaseException{
+        GetUserROERes getUserROERes;
+        try{
+            getUserROERes = userDao.getUserROERes(userIdx);
+        }catch(Exception e){
+            throw new BaseException(DATABASE_ERROR);
+        }
+        if(getUserROERes == null){
+            throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+        }
+        return getUserROERes;
+    }
+
     // 주식 자산 조회
     public List<GetMyAssetRes> myAsset(int userIdx) throws BaseException {
         try {

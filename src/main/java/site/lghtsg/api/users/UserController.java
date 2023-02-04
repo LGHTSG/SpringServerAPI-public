@@ -185,6 +185,23 @@ public class UserController {
     }
 
     /**
+     * 특정 사용자 수익율 조회 API
+     * [GET] /users/roe
+     */
+    @ResponseBody
+    @GetMapping("/roe")
+    public BaseResponse<GetUserROERes> getUserROE(){
+        try{
+            int userIdx = jwtService.getUserIdx();
+            GetUserROERes getUserROERes = userProvider.getUserROERes(userIdx);
+            return new BaseResponse<>(getUserROERes);
+        }
+        catch(BaseException exception){
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+    /**
      * 나의 자산 조회 API
      * [GET] /users/my-asset
      */
