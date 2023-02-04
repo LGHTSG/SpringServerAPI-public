@@ -20,7 +20,7 @@ public class ImageUploadService {
     public String upload(MultipartFile image) throws BaseException {
         if(image.isEmpty()) throw new BaseException(MISSING_REQUIRED_ARGUMENT);
         try{
-            return s3Uploader.upload(image, "/user/profileImg");
+            return s3Uploader.upload(image, "user/profileImg");
         }
         catch(IOException e){
             throw new BaseException(IMAGE_S3_UPLOAD_ERROR);
