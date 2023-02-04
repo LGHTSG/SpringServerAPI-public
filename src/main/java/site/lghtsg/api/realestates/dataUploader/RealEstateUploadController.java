@@ -11,9 +11,12 @@ public class RealEstateUploadController {
     private final ExcelFileReader excelFileReader;
     private final RegionUploader regionUploader;
 
-    public RealEstateUploadController(ExcelFileReader excelFileReader, RegionUploader regionUploader) {
+    private final ApiConnector apiConnector;
+
+    public RealEstateUploadController(ExcelFileReader excelFileReader, RegionUploader regionUploader, ApiConnector apiConnector) {
         this.excelFileReader = excelFileReader;
         this.regionUploader = regionUploader;
+        this.apiConnector = apiConnector;
     }
 
     /**
@@ -30,6 +33,13 @@ public class RealEstateUploadController {
     @GetMapping("/upload_region")
     public String uploadRegion() {
         return regionUploader.readData();
-
     }
+
+    // api 데이터 불러오기 - 테스트
+    @GetMapping("/connect_api")
+    public String connectApi() {
+        apiConnector.getData();
+        return "success";
+    }
+
 }
