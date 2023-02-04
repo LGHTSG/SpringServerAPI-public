@@ -72,9 +72,7 @@ public class UserProvider {
         if (postLoginReq.getPassword().equals(password)) {  // password가 일치하는 지 확인 (encryption된 password)
             int userIdx = userDao.getPassword(postLoginReq).getUserIdx();
             String accessToken = jwtService.createAccessToken(userIdx);     // userIdx를 accessToken 발급
-            System.out.println("access 성공");
             String refreshToken = jwtService.createRefreshToken(userIdx);   // userIdx로 refreshToken 발급
-            System.out.println("refresh 성공");
             return new PostLoginRes(userIdx, accessToken, refreshToken);
 
         } else { // 비밀번호가 다르다면 에러메세지를 출력한다.

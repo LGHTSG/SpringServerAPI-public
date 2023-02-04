@@ -34,7 +34,6 @@ public class JwtService {
         this.userDao = userDao;
     }
 
-
     /*
     JWT 생성
     @param userIdx
@@ -53,17 +52,16 @@ public class JwtService {
 
     // access token
     public String createAccessToken(int userIdx) {
-        long tokenInValidTime = 1*(1000*60*60*24*30);
+        long tokenInValidTime = 1*(1000*60*60*24*365);
         return this.createJwt(userIdx, tokenInValidTime);
     }
 
     // refresh token
     public String createRefreshToken(int userIdx) {
         long tokenInValidTime = 1*(1000*60*60*24*365);
-        Duration tokenTime = Duration.ofDays(365);
         String userIdxString = Integer.toString(userIdx);
         String refresh = this.createJwt(userIdx, tokenInValidTime);
-        redisService.setValues(userIdxString, refresh, tokenTime);
+        redisService.setValues(userIdxString, refresh, Duration.ofMillis(tokenInValidTime));
         return refresh;
     }
 
@@ -88,17 +86,15 @@ public class JwtService {
         if(accessToken == null || accessToken.length() == 0){
             throw new BaseException(EMPTY_JWT);
         }
-        System.out.println("여기까진 됩니다.");
         // 2. JWT parsing
         Jws<Claims> claims;
         try{
             claims = Jwts.parser()
-                    .setSigningKey(JWT_SECRET_KEY)
-                    .parseClaimsJws(accessToken);
+                    .setSigningKey(JWT_SECRET_KEY)  // key 입력
+                    .parseClaimsJws(accessToken);   // value 입력
         } catch (Exception ignored) {
             throw new BaseException(EMPTY_JWT);
         }
-        System.out.println("여기까지도 됩니다.");
         // 3. userIdx 추출
         return claims.getBody().get("userIdx",Integer.class);  // jwt 에서 userIdx를 추출합니다.
     }

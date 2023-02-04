@@ -37,30 +37,5 @@ public class RedisService {
     public void deleteValues(String key) {
         redisTemplate.delete(key);
     }
-/*
-    // token 유효성 검사
-    public boolean validateToken(String jwtToken) {
-        try {
-            Jws<Claims> claims = Jwts.parser().setSigningKey(JWT_SECRET_KEY).parseClaimsJws(jwtToken);
-            ValueOperations<String, String> logoutValueOperations = redisTemplate.opsForValue();
-            if (logoutValueOperations.get(jwtToken) != null) {
-                return false;
-            }
-            return !claims.getBody().getExpiration().before(new Date());
-        } catch (Exception e) {
-            return false;
-        }
-    }
 
-    // 로그아웃
-    public void logout(int userIdx, String accessToken) {
-        String userIdxString = Integer.toString(userIdx);
-        if(redisTemplate.opsForValue().get(userIdx) != null){
-            redisTemplate.delete(userIdxString);
-        }
-        long expiration = jwtService.getExpiration(accessToken);
-        redisTemplate.opsForValue().set(accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
-        setValues("blackList" + accessToken, userIdxString, Duration.ofMillis(expiration));
-        deleteValues(userIdxString); // Redis에서 유저 리프레시 토큰 삭제
-    }*/
 }
