@@ -244,21 +244,14 @@ public class UserService {
 
     // 로그아웃
     public void logout(int userIdx, String accessToken) {
-        System.out.println("testpoint1");
         String userIdxString = Integer.toString(userIdx);
         if(redisTemplate.opsForValue().get(userIdxString) != null){
             redisTemplate.delete(userIdxString);
         }
-        System.out.println("testpoint2");       // complete
-
         long expiration = jwtService.getExpiration(accessToken);
-        System.out.println("testpoint3");
         redisTemplate.opsForValue().set(accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
-        System.out.println("testpoint4");
-        redisService.setValues("blackList" + accessToken, userIdxString, Duration.ofMillis(expiration));
-        System.out.println("testpoint5");
+        redisService.setValues(userIdxString,"blackList" + accessToken, Duration.ofMillis(expiration));
         redisService.deleteValues(userIdxString); // Redis에서 유저 리프레시 토큰 삭제
-        System.out.println("testpoint6");
     }
 
 }

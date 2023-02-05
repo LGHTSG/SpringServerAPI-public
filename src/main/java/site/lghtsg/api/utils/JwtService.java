@@ -86,6 +86,16 @@ public class JwtService {
         if(accessToken == null || accessToken.length() == 0){
             throw new BaseException(EMPTY_JWT);
         }
+
+        try {
+            if(!validateToken(accessToken)) {
+                System.out.println("jwt validate error 1");
+                throw new BaseException(JWT_VALIDATE_ERROR);
+            }
+        } catch (Exception e) {
+            System.out.println("jwt validate error");
+            throw new BaseException(JWT_ERROR);
+        }
         // 2. JWT parsing
         Jws<Claims> claims;
         try{
@@ -93,7 +103,7 @@ public class JwtService {
                     .setSigningKey(JWT_SECRET_KEY)  // key 입력
                     .parseClaimsJws(accessToken);   // value 입력
         } catch (Exception ignored) {
-            throw new BaseException(EMPTY_JWT);
+            throw new BaseException(JWT_ERROR);
         }
         // 3. userIdx 추출
         return claims.getBody().get("userIdx",Integer.class);  // jwt 에서 userIdx를 추출합니다.
@@ -112,7 +122,7 @@ public class JwtService {
 
     // 토큰 재발급
     public Token reIssueAccessToken(int userIdx, String refreshToken) {
-        // String userIdxString = Integer.toString(userIdx);
+        String userIdxString = Integer.toString(userIdx);
         if(!validateToken(refreshToken)) {
             throw new IllegalStateException("존재하지 않는 유저입니다.");
         }
@@ -123,13 +133,21 @@ public class JwtService {
     // token 유효성 검사
     public boolean validateToken(String jwtToken) {
         try {
+            System.out.println("jwt : " +jwtToken);
             Jws<Claims> claims = Jwts.parser()
                     .setSigningKey(JWT_SECRET_KEY)
                     .parseClaimsJws(jwtToken);
+            System.out.println("testpoint of validate 1");
+
             ValueOperations<String, String> logoutValueOperations = redisTemplate.opsForValue();
+            System.out.println("testpoint of validate 2");  // clear
+
             if (logoutValueOperations.get(jwtToken) != null) {
+                System.out.println("이미 로그아웃 되었음");
                 return false;
             }
+            System.out.println("testpoint 3");
+            System.out.println(!claims.getBody().getExpiration().before(new Date()));
             return !claims.getBody().getExpiration().before(new Date());
         } catch (Exception e) {
             return false;
