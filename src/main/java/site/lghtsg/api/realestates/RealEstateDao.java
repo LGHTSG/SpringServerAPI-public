@@ -1,6 +1,7 @@
 package site.lghtsg.api.realestates;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -34,21 +35,17 @@ public class RealEstateDao {
 
         String getRealEstateBoxesQuery =
                 "select re.realEstateIdx,\n" +
-                        "       re.name,\n" +
-                        "       ret.price,\n" +
-                        "       ret2.price as s2LastPrice,\n" +
-                        "       ret.transactionTime,\n" +
-                        "       ret2.transactionTime as s2TransactionTime,\n" +
-                        "       ii.iconImage\n" +
-                        "from RealEstate as re,\n" +
-                        "     RealEstateTodayTrans as ret,\n" +
-                        "     RealEstateTransaction as ret2,\n" +
-                        "     IconImage as ii,\n" +
-                        "     RegionName as rn\n" +
-                        "where ret.realEstateTransactionIdx = re.lastTransactionIdx\n" +
-                        "  and ret2.realEstateTransactionIdx = re.s2LastTransactionIdx\n" +
-                        "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
-                        "  and re.iconImageIdx = ii.iconImageIdx";
+                        "                       re.name,\n" +
+                        "                       rett.price,\n" +
+                        "                       ret.price           as s2LastPrice,\n" +
+                        "                       rett.transactionTime,\n" +
+                        "                       ret.transactionTime as s2TransactionTime,\n" +
+                        "                       ii.iconImage\n" +
+                        "                from RealEstate as re\n" +
+                        "                         join RealEstateTransaction rett on re.lastTransactionIdx = rett.realEstateTransactionIdx\n" +
+                        "                         join RealEstateTransaction ret on re.s2LastTransactionIdx = ret.realEstateTransactionIdx\n" +
+                        "                         join RegionName rn on re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
+                        "                         join IconImage ii on re.iconImageIdx = ii.iconImageIdx;";
 
         return this.jdbcTemplate.query(getRealEstateBoxesQuery, realEstateBoxRowMapper());
     }
@@ -60,18 +57,19 @@ public class RealEstateDao {
     public List<RealEstateBox> getRealEstateBoxesInArea(String area) {
 
         String findAreaQuery = getFindAreaWithLIKEQuery(area);
-        String getRealEstateBoxesInAreaQuery = "select re.realEstateIdx,\n" +
-                "       re.name,\n" +
-                "       rett.price,\n" +
-                "       ret.price           as s2LastPrice,\n" +
-                "       rett.transactionTime,\n" +
-                "       ret.transactionTime as s2TransactionTime,\n" +
-                "       ii.iconImage\n" +
-                "from RealEstate as re\n" +
-                "         join RealEstateTodayTrans rett on re.lastTransactionIdx = rett.realEstateTransactionIdx\n" +
-                "         join RealEstateTransaction ret on re.s2LastTransactionIdx = ret.realEstateTransactionIdx\n" +
-                "         join RegionName rn on re.legalTownCodeIdx = rn.legalTownCodeIdx and rn.name like ?\n" +
-                "         join IconImage ii on re.iconImageIdx = ii.iconImageIdx;";
+        String getRealEstateBoxesInAreaQuery =
+                "select re.realEstateIdx,\n" +
+                "                       re.name,\n" +
+                "                       rett.price,\n" +
+                "                       ret.price           as s2LastPrice,\n" +
+                "                       rett.transactionTime,\n" +
+                "                       ret.transactionTime as s2TransactionTime,\n" +
+                "                       ii.iconImage\n" +
+                "                from RealEstate as re\n" +
+                "                         join RealEstateTransaction rett on re.lastTransactionIdx = rett.realEstateTransactionIdx\n" +
+                "                         join RealEstateTransaction ret on re.s2LastTransactionIdx = ret.realEstateTransactionIdx\n" +
+                "                         join RegionName rn on re.legalTownCodeIdx = rn.legalTownCodeIdx and rn.name like ?\n" +
+                "                         join IconImage ii on re.iconImageIdx = ii.iconImageIdx;";
 
         return this.jdbcTemplate.query(getRealEstateBoxesInAreaQuery, realEstateBoxRowMapper(), findAreaQuery);
     }
@@ -129,26 +127,22 @@ public class RealEstateDao {
     public RealEstateBox getRealEstateBox(long realEstateIdx)  {
         String getRealEstateBoxQuery =
                 "select re.realEstateIdx,\n" +
-                        "       re.name,\n" +
-                        "       ret.price,\n" +
-                        "       ret2.price           as s2LastPrice,\n" +
-                        "       ret.transactionTime,\n" +
-                        "       ret2.transactionTime as s2TransactionTime,\n" +
-                        "       ii.iconImage\n" +
-                        "from RealEstate as re,\n" +
-                        "     RealEstateTodayTrans as ret,\n" +
-                        "     RealEstateTransaction as ret2,\n" +
-                        "     IconImage as ii,\n" +
-                        "     RegionName as rn\n" +
-                        "where ret.realEstateTransactionIdx = re.lastTransactionIdx\n" +
-                        "  and ret2.realEstateTransactionIdx = re.s2LastTransactionIdx\n" +
-                        "  and re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
-                        "  and re.iconImageIdx = ii.iconImageIdx\n" +
-                        "  and re.realEstateIdx = ?";
+                        "                       re.name,\n" +
+                        "                       rett.price,\n" +
+                        "                       ret.price           as s2LastPrice,\n" +
+                        "                       rett.transactionTime,\n" +
+                        "                       ret.transactionTime as s2TransactionTime,\n" +
+                        "                       ii.iconImage\n" +
+                        "                from RealEstate as re\n" +
+                        "                         join RealEstateTransaction rett on re.lastTransactionIdx = rett.realEstateTransactionIdx\n" +
+                        "                         join RealEstateTransaction ret on re.s2LastTransactionIdx = ret.realEstateTransactionIdx\n" +
+                        "                         join RegionName rn on re.legalTownCodeIdx = rn.legalTownCodeIdx\n" +
+                        "                         join IconImage ii on re.iconImageIdx = ii.iconImageIdx\n" +
+                        "                where re.realEstateIdx = ?;";
         try {
             return this.jdbcTemplate.queryForObject(getRealEstateBoxQuery, realEstateBoxRowMapper(), realEstateIdx);
         }
-        catch (IncorrectResultSizeDataAccessException error) {
+        catch (EmptyResultDataAccessException error) {
             return null;
         }
     }
@@ -160,14 +154,9 @@ public class RealEstateDao {
      */
     public List<RealEstateTransactionData> getRealEstatePrices(long realEstateIdx) {
         String getRealEstatePricesQuery =
-                "select re.realEstateIdx, re.name, ret.price, ret.transactionTime\n" +
-                        "from RealEstate as re\n" +
-                        "         JOIN RealEstateTransaction ret ON re.realEstateIdx = ret.realEstateIdx and re.realEstateIdx = ?\n" +
-                        "union\n" +
-                        "select re.realEstateIdx, re.name, rett.price, rett.transactionTime\n" +
-                        "from RealEstate as re\n" +
-                        "         join RealEstateTodayTrans as rett on re.realEstateIdx = rett.realEstateIdx and re.realEstateIdx = ?\n" +
-                        "order by transactionTime;";
+                "select ret.price, ret.transactionTime\n" +
+                        "from RealEstateTransaction as ret\n" +
+                        "where ret.realEstateIdx = 1;";
 
         Object[] getRealEstatePricesParam = new Object[]{realEstateIdx, realEstateIdx};
         return this.jdbcTemplate.query(getRealEstatePricesQuery, transactionRowMapper(), getRealEstatePricesParam);

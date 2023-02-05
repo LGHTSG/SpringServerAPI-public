@@ -5,12 +5,13 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import site.lghtsg.api.common.model.TransactionData;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class StockTransactionData {
-    private long price;
-    private String transactionTime;
+public class StockTransactionData extends TransactionData {
+    public StockTransactionData(int price, String transactionTime) {
+    }
 }
