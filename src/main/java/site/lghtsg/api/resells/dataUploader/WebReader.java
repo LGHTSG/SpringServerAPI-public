@@ -290,8 +290,8 @@ public class WebReader {
         }
     }
 
-    @Async
-    @Scheduled(cron = "0 0 1-23 * * *")
+//    @Async
+//    @Scheduled(cron = "0 0 1-23 * * *")
     public BaseResponse<String> updateByHour() {
         ChromeOptions options = new ChromeOptions();
         WebDriver driver = new ChromeDriver(options);
@@ -395,8 +395,8 @@ public class WebReader {
         }
     }
 
-    @Async
-    @Scheduled(cron = "0 0 0 * * *")
+//    @Async
+//    @Scheduled(cron = "0 0 0 * * *")
     public BaseResponse<String> updateByDay() {
         ChromeOptions options = new ChromeOptions();
         WebDriver driver = new ChromeDriver(options);

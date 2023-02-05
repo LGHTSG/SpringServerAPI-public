@@ -11,10 +11,10 @@ import site.lghtsg.api.users.UserDao;
 
 @SpringBootTest
 public class DatabaseTest {
-
-    static {
-        System.setProperty("com.amazonaws.sdk.disableEc2Metadata", "true");
-    }
+//
+//    static {
+//        System.setProperty("com.amazonaws.sdk.disableEc2Metadata", "true");
+//    }
 
     @Autowired
     private UserDao userDao;
