@@ -17,9 +17,14 @@ public class ResellUploadController {
         this.webReader = webReader;
     }
 
-    @GetMapping("/new")
-    public BaseResponse<String> uploadResellDate() {
-        return webReader.scraping();
+    @GetMapping("/info")
+    public BaseResponse<String> uploadResellInfo() {
+        return webReader.uploadResellInfo();
+    }
+
+    @GetMapping("/trans")
+    public BaseResponse<String> uploadResellTrans() {
+        return webReader.uploadResellTrans();
     }
 
     @GetMapping("/updateByHour")
