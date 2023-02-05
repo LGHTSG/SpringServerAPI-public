@@ -29,13 +29,17 @@ public class WebReader {
 
     public BaseResponse<String> uploadResellInfo() {
         ChromeOptions options = new ChromeOptions();
-        WebDriver driver = new ChromeDriver(options);
+        String path = "/usr/lib/chromium-browser/chromedriver";
         options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
         options.addArguments("--disable-popup-blocking");       //팝업안띄움
-        //options.addArguments("headless");                       //브라우저 안띄움
+        options.addArguments("--headless");                       //브라우저 안띄움
         options.addArguments("--disable-gpu");            //gpu 비활성화
         options.addArguments("--blink-settings=imagesEnabled=false"); //이미지 다운 안받음
-        options.addArguments("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
+        options.addArguments("--single-process");
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--remote-debugging-port=9222");
+        WebDriver driver = new ChromeDriver(options);
 
         try {
             //login 페이지
@@ -154,13 +158,18 @@ public class WebReader {
     public BaseResponse<String> uploadResellTrans(int startResellIdx, int lastResellIdx) {
 
         ChromeOptions options = new ChromeOptions();
-        WebDriver driver = new ChromeDriver(options);
+
+        String path = "/usr/lib/chromium-browser/chromedriver";
         options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
         options.addArguments("--disable-popup-blocking");       //팝업안띄움
-        //options.addArguments("headless");                       //브라우저 안띄움
+        options.addArguments("--headless");                       //브라우저 안띄움
         options.addArguments("--disable-gpu");            //gpu 비활성화
         options.addArguments("--blink-settings=imagesEnabled=false"); //이미지 다운 안받음
-        options.addArguments("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
+        options.addArguments("--single-process");
+        options.addArguments("--no-sandbox");
+        options.addArguments("--disable-dev-shm-usage");
+        options.addArguments("--remote-debugging-port=9222");
+        WebDriver driver = new ChromeDriver(options);
 
         try {
             //login 페이지
