@@ -9,6 +9,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.resells.dataUploader.model.Resell;
+import site.lghtsg.api.resells.dataUploader.model.ResellTodayTrans;
 import site.lghtsg.api.resells.dataUploader.model.ResellTransaction;
 
 import java.text.SimpleDateFormat;
@@ -37,9 +38,6 @@ public class WebReader {
         options.addArguments("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
 
         try {
-            //WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
-
-
             //login 페이지
             driver.get("https://kream.co.kr/login");
 
@@ -153,7 +151,7 @@ public class WebReader {
         }
     }
 
-    public BaseResponse<String> uploadResellTrans() {
+    public BaseResponse<String> uploadResellTrans(int startResellIdx, int lastResellIdx) {
 
         ChromeOptions options = new ChromeOptions();
         WebDriver driver = new ChromeDriver(options);
@@ -177,10 +175,6 @@ public class WebReader {
             System.out.println("로그인 성공 = " + driver.getCurrentUrl());
             Thread.sleep(1000);
 
-
-            //이 둘을 변경해서 정해진 범위의 상품 거래 내역 스크래핑
-            int startResellIdx = 1;
-            int lastResellIdx = 500;
             for (; startResellIdx <= lastResellIdx; startResellIdx++) {
                 int productCode = resellUploadDao.getProductCode(startResellIdx);
 
@@ -302,6 +296,13 @@ public class WebReader {
         ChromeOptions options = new ChromeOptions();
         WebDriver driver = new ChromeDriver(options);
         List<Integer[]> resellIdxAndProductCodeList = resellUploadDao.getResellIdxAndProductCode();
+        List<ResellTodayTrans> resellTodayTransList = new ArrayList<>();
+
+        // 현재 날짜/시간
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd/HH");
+        String today = now.format(formatter);
+
 
         try {
             options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
@@ -312,8 +313,11 @@ public class WebReader {
             options.addArguments("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
             //WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
 
+            int limit = 0;
+
             while (!resellIdxAndProductCodeList.isEmpty()) {
-                int lastTransPrice = resellUploadDao.getLastTransactionPrice(resellIdxAndProductCodeList.get(0)[1]);
+
+                //int lastTransPrice = resellUploadDao.getLastTransactionPrice(resellIdxAndProductCodeList.get(0)[1]);
                 int price;
                 int resellIdx = resellIdxAndProductCodeList.get(0)[0];
                 Thread.sleep(1000);
@@ -322,34 +326,36 @@ public class WebReader {
                 try {
                     price = Integer.parseInt(driver.findElement(By.className("num")).getText().replaceAll("[^0-9]", ""));
                     Thread.sleep(1000);
-
-                    if(price == lastTransPrice){
-                        String compare =  driver.findElement(By.className("fluctuation")).findElement(By.tagName("p")).getText();
+/*
+                    if (price == lastTransPrice) {
+                        String compare = driver.findElement(By.className("fluctuation")).findElement(By.tagName("p")).getText();
                         int idx = compare.indexOf(" ");
                         compare = compare.substring(0, idx);
                         int comparePrice = Integer.parseInt(compare.replaceAll("[^0-9]", ""));
                         System.out.println(comparePrice);
                         //한 시간 전 가격 == 지금 가격 but 증감 가격 != 0 -> 거래 발생 x
-                        if(comparePrice != 0){
+                        if (comparePrice != 0) {
                             System.out.println("추가 안 한다~");
                             System.out.println("-------------");
                             resellIdxAndProductCodeList.remove(0);
                             continue;
                         }
-                    }
+                    }*/
+                    limit = 0;
                 } catch (Exception e) {
-                    resellIdxAndProductCodeList.add(resellIdxAndProductCodeList.get(0));
+                    limit++;
+
+                    if (limit > 3) {
+                        resellIdxAndProductCodeList.remove(0);
+                        System.out.println("3번 이상 접속 불가");
+                        limit = 0;
+                    }
+
                     continue;
                 }
 
-                // 현재 날짜/시간
-                LocalDateTime now = LocalDateTime.now();
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd/HH");
-                String today = now.format(formatter);
-
-                //ResellTodayTrans에 가격 추가
-                resellUploadDao.updateResellTodayTransByHour(resellIdx, price, today);
-
+                ResellTodayTrans resellTodayTrans = new ResellTodayTrans(resellIdx, price);
+                resellTodayTransList.add(resellTodayTrans);
 
                 formatter = DateTimeFormatter.ofPattern("yy/MM/dd");
                 today = now.format(formatter);
@@ -358,9 +364,9 @@ public class WebReader {
                 //오늘 거래된 가격들 가져오기
                 List<Integer> todayTransactionList = resellUploadDao.getTransactionToday(resellIdxAndProductCodeList.get(0)[0], today);
 
-                if(todayTransactionList.size()==0){
-                    resellUploadDao.updateResellTransactionByHour(resellIdx, price, today);
-                }else {
+                if (todayTransactionList.size() == 0) {
+                    //resellUploadDao.updateResellTransactionByHour(resellIdx, price, today);
+                } else {
                     int todayTotal = 0;
 
                     for (Integer i : todayTransactionList) {
@@ -374,7 +380,10 @@ public class WebReader {
 
                 resellIdxAndProductCodeList.remove(0);
             }
+            formatter = DateTimeFormatter.ofPattern("yy/MM/dd/HH");
+            today = now.format(formatter);
 
+            resellUploadDao.updateResellTodayTransByHour(resellTodayTransList, today);
             resellUploadDao.updateLastTransactionIdx();
             resellUploadDao.updateS2LastTransactionIdx();
             return new BaseResponse<>("한 시간 주기 업데이트 성공");
@@ -392,6 +401,12 @@ public class WebReader {
         ChromeOptions options = new ChromeOptions();
         WebDriver driver = new ChromeDriver(options);
         List<Integer[]> resellIdxAndProductCodeList = resellUploadDao.getResellIdxAndProductCode();
+        List<ResellTodayTrans> resellTodayTransList = new ArrayList<>();
+
+        // 현재 날짜/시간
+        LocalDateTime now = LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd");
+        String today = now.format(formatter);
 
         try {
             options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
@@ -419,18 +434,13 @@ public class WebReader {
                 SimpleDateFormat dSdf = new SimpleDateFormat("yy/MM/dd", Locale.KOREA);
                 String yesterday = dSdf.format(dDate);
 
-                // 현재 날짜/시간
-                LocalDateTime now = LocalDateTime.now();
-                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yy/MM/dd");
-                String today = now.format(formatter);
-
                 //어제 거래된 가격들 가져오기
                 List<Integer> yesterdayTransactionList = resellUploadDao.getTransactionToday(resellIdxAndProductCodeList.get(0)[0], yesterday);
 
                 //전날 거래 마무리
-                if(yesterdayTransactionList.size()==0){
+                if (yesterdayTransactionList.size() == 0) {
                     resellUploadDao.updateResellTransactionByHour(resellIdx, price, yesterday);
-                }else {
+                } else {
                     int yesterdayTotal = 0;
 
                     for (Integer i : yesterdayTransactionList) {
@@ -448,12 +458,15 @@ public class WebReader {
                 formatter = DateTimeFormatter.ofPattern("yy/MM/dd/HH");
                 today = now.format(formatter);
 
-                //ResellTodayTrans에 가격 추가
-                resellUploadDao.updateResellTodayTransByHour(resellIdx, price, today);
+                ResellTodayTrans resellTodayTrans = new ResellTodayTrans(resellIdx, price);
+                resellTodayTransList.add(resellTodayTrans);
 
                 resellIdxAndProductCodeList.remove(0);
             }
+            formatter = DateTimeFormatter.ofPattern("yy/MM/dd/HH");
+            today = now.format(formatter);
 
+            resellUploadDao.updateResellTodayTransByHour(resellTodayTransList, today);
             resellUploadDao.updateLastTransactionIdx();
             resellUploadDao.updateS2LastTransactionIdx();
             resellUploadDao.truncateResellYesterdayTrans();

@@ -3,6 +3,7 @@ package site.lghtsg.api.resells.dataUploader;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import site.lghtsg.api.config.BaseResponse;
 
@@ -23,8 +24,8 @@ public class ResellUploadController {
     }
 
     @GetMapping("/trans")
-    public BaseResponse<String> uploadResellTrans() {
-        return webReader.uploadResellTrans();
+    public BaseResponse<String> uploadResellTrans(@RequestParam int startResellIdx, @RequestParam int lastResellIdx) {
+        return webReader.uploadResellTrans(startResellIdx, lastResellIdx);
     }
 
     @GetMapping("/updateByHour")
