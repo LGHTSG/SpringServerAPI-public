@@ -116,6 +116,21 @@ public class UserProvider {
         return getUserROERes;
     }
 
+    // 사용자 개인정보 조회
+    public GetUserInfo getUserInfo(int userIdx) throws BaseException {
+        GetUserInfo getUserInfo;
+        try{
+            getUserInfo = userDao.getUserInfo(userIdx);
+        }
+        catch(Exception e){
+            throw new BaseException(DATABASE_ERROR);
+        }
+        if(getUserInfo == null) {
+            throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+        }
+        return getUserInfo;
+    }
+
     // 주식 자산 조회
     public List<GetMyAssetRes> myAsset(int userIdx) throws BaseException {
         try {

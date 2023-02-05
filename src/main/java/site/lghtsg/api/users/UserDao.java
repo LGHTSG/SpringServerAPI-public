@@ -187,6 +187,18 @@ public class UserDao {
         return this.jdbcTemplate.query(getRealEstateAssetQuery, getMyAssetRowMapper(), userIdx);
     }
 
+    public GetUserInfo getUserInfo(int userIdx) {
+        String getUserInfoQuery = "select userName, email, profileImg from User where userIdx = ?;";
+        try{
+            return this.jdbcTemplate.queryForObject(getUserInfoQuery,
+                    (rs, row) -> new GetUserInfo(rs.getString("userName"), rs.getString("email"), rs.getString("profileImg"))
+                    , userIdx);
+        }
+        catch(EmptyResultDataAccessException e){
+            return null;
+        }
+    }
+
     // 자산 구매
     public int buyMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
         String postMyAssetQuery = "";
@@ -376,5 +388,6 @@ public class UserDao {
             }
         };
     }
+
 
 }
