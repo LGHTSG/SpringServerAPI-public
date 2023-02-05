@@ -160,7 +160,8 @@ public class UserController {
     public BaseResponse<String> logOut(@RequestBody String accessToken) {
         try {
             int userIdx = jwtService.getUserIdx();
-            userService.logout(userIdx, accessToken);
+            String accessToken1 = jwtService.getJwt();
+            userService.logout(userIdx, accessToken1);
             String result = "로그아웃 완료";
             return new BaseResponse<>(result);
         } catch (BaseException exception){

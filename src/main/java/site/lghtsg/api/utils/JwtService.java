@@ -101,7 +101,11 @@ public class JwtService {
 
     // 토큰 만료
     public Long getExpiration(String accessToken) {
-        Date expiration = Jwts.parser().setSigningKey(JWT_SECRET_KEY).parseClaimsJws(accessToken).getBody().getExpiration();
+        Date expiration = Jwts.parser()
+                .setSigningKey(JWT_SECRET_KEY)
+                .parseClaimsJws(accessToken)
+                .getBody()
+                .getExpiration();
         Long now = new Date().getTime();
         return (expiration.getTime() - now);
     }
@@ -119,7 +123,9 @@ public class JwtService {
     // token 유효성 검사
     public boolean validateToken(String jwtToken) {
         try {
-            Jws<Claims> claims = Jwts.parser().setSigningKey(JWT_SECRET_KEY).parseClaimsJws(jwtToken);
+            Jws<Claims> claims = Jwts.parser()
+                    .setSigningKey(JWT_SECRET_KEY)
+                    .parseClaimsJws(jwtToken);
             ValueOperations<String, String> logoutValueOperations = redisTemplate.opsForValue();
             if (logoutValueOperations.get(jwtToken) != null) {
                 return false;
