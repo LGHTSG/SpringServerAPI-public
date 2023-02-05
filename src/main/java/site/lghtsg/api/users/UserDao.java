@@ -187,6 +187,18 @@ public class UserDao {
         return this.jdbcTemplate.query(getRealEstateAssetQuery, getMyAssetRowMapper(), userIdx);
     }
 
+    public GetUserInfo getUserInfo(int userIdx) {
+        String getUserInfoQuery = "select userName, email, profileImg from User where userIdx = ?;";
+        try{
+            return this.jdbcTemplate.queryForObject(getUserInfoQuery,
+                    (rs, row) -> new GetUserInfo(rs.getString("userName"), rs.getString("email"), rs.getString("profileImg"))
+                    , userIdx);
+        }
+        catch(EmptyResultDataAccessException e){
+            return null;
+        }
+    }
+
     // 자산 구매
     public int buyMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
         String postMyAssetQuery = "";
@@ -225,6 +237,17 @@ public class UserDao {
 
         Object[] sellMyAssetParams = new Object[]{userIdx, postMyAssetReq.getAssetIdx(), postMyAssetReq.getPrice(), postMyAssetReq.getTransactionTime()};
         return this.jdbcTemplate.update(sellMyAssetQuery, sellMyAssetParams);
+    }
+
+    public GetUserROERes getUserROERes(int userIdx){
+        String getUserROEQuery = "select totalSale, numOfTransaction from Sales where userIdx = ?;";
+        try{
+            return this.jdbcTemplate.queryForObject(getUserROEQuery,
+                    (rs, rowNum) -> new GetUserROERes(rs.getDouble("totalSale") / rs.getInt("numOfTransaction")), userIdx);
+        }
+        catch(EmptyResultDataAccessException e){
+            return null;
+        }
     }
 
     public List<Asset> getPreviousTransaction(int userIdx, PostMyAssetReq postMyAssetReq){
@@ -283,7 +306,7 @@ public class UserDao {
     // 단일 자산 화면 개인 거래 내역 조회
     public List<GetUserTransactionHistoryRes> getStockTransactionHistory(long stockIdx, int userIdx){
         String getTransactionHistoryQuery =
-                "select createdAt as transactionTime,\n" +
+                "select transactionTime,\n" +
                 "       price,\n" +
                 "       sellCheck\n" +
                 "from StockUserTransaction as SUT\n" +
@@ -295,7 +318,7 @@ public class UserDao {
 
     public List<GetUserTransactionHistoryRes> getRealEstateTransactionHistory(long realestateIdx, int userIdx){
         String getTransactionHistoryQuery =
-                "select createdAt as transactionTime,\n" +
+                "select transactionTime,\n" +
                 "       price,\n" +
                 "       sellCheck\n" +
                 "from RealEstateUserTransaction as REUT\n" +
@@ -307,7 +330,7 @@ public class UserDao {
 
     public List<GetUserTransactionHistoryRes> getResellTransactionHistory(long resellIdx, int userIdx){
         String getTransactionHistoryQuery =
-                "select createdAt as transactionTime,\n" +
+                "select transactionTime,\n" +
                 "       price,\n" +
                 "       sellCheck\n" +
                 "from ResellUserTransaction as RUT\n" +
@@ -365,5 +388,6 @@ public class UserDao {
             }
         };
     }
+
 
 }

@@ -185,6 +185,42 @@ public class UserController {
     }
 
     /**
+     * 특정 사용자 수익율 조회 API
+     * [GET] /users/roe
+     */
+    @ResponseBody
+    @GetMapping("/roe")
+    public BaseResponse<GetUserROERes> getUserROE(){
+        try{
+            int userIdx = jwtService.getUserIdx();
+            GetUserROERes getUserROERes = userProvider.getUserROERes(userIdx);
+            return new BaseResponse<>(getUserROERes);
+        }
+        catch(BaseException exception){
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+    /**
+     * [한] :
+     * 사용자 개인정보 반환 api
+     * 필요가 없을 것 같아 개인정보 확인 화면 페이지를 뺐었으나,
+     * 기능 추가를 위해 만들어두는 것이 맞아 api 추가하였음.
+     */
+    @ResponseBody
+    @GetMapping("/info")
+    public BaseResponse<GetUserInfo> getUserInfo(){
+        try{
+            int userIdx = jwtService.getUserIdx();
+            GetUserInfo getUserInfo = userProvider.getUserInfo(userIdx);
+            return new BaseResponse<>(getUserInfo);
+        }
+        catch(BaseException baseException){
+            return new BaseResponse<>(baseException.getStatus());
+        }
+    }
+
+    /**
      * 나의 자산 조회 API
      * [GET] /users/my-asset
      */

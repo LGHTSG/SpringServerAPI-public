@@ -57,10 +57,9 @@ public class ResellDao {
                 "  and rst2.resellTransactionIdx = rs.s2LastTransactionIdx\n" +
                 "  and rs.iconImageIdx = ii.iconImageIdx\n" +
                 "  and rs.resellIdx = ?";
-        long getResellParams = resellIdx;
 
         try {
-            return this.jdbcTemplate.queryForObject(getResellQuery, resellInfoResRowMapper(), getResellParams);
+            return this.jdbcTemplate.queryForObject(getResellQuery, resellInfoResRowMapper(), resellIdx);
         }
         catch (IncorrectResultSizeDataAccessException error) {
             return null;
@@ -69,10 +68,9 @@ public class ResellDao {
 
     public GetResellBoxRes getResellBox(long resellIdx) {
         String getResellQuery = "select * from Resell where resellIdx = ?";
-        long getResellParams = resellIdx;
 
         try {
-            return this.jdbcTemplate.queryForObject(getResellQuery, resellBoxResRowMapper(), getResellParams);
+            return this.jdbcTemplate.queryForObject(getResellQuery, resellBoxResRowMapper(), resellIdx);
         }
         catch (IncorrectResultSizeDataAccessException error) {
             return null;
@@ -81,14 +79,12 @@ public class ResellDao {
 
     public List<GetResellTransactionRes> getResellTransaction(long resellIdx) {
         String getResellTransactionQuery = "select * from ResellTransaction where resellIdx = ?";
-        long getResellTransactionParams = resellIdx;
-        return this.jdbcTemplate.query(getResellTransactionQuery, (rs, rowNum) -> new GetResellTransactionRes(rs.getInt("price"), rs.getString("transactionTime")), getResellTransactionParams);
+        return this.jdbcTemplate.query(getResellTransactionQuery, (rs, rowNum) -> new GetResellTransactionRes(rs.getInt("price"), rs.getString("transactionTime")), resellIdx);
     }
 
     public List<Integer> getResellTransactionForPriceAndRateOfChange(long resellIdx) {
         String getResellTransactionHistoryQuery = "select price from ResellTransaction where resellIdx = ?";
-        long getResellTransactionHistory = resellIdx;
-        return this.jdbcTemplate.query(getResellTransactionHistoryQuery, (rs, rowNum) -> rs.getInt("price"), getResellTransactionHistory);
+        return this.jdbcTemplate.query(getResellTransactionHistoryQuery, (rs, rowNum) -> rs.getInt("price"), resellIdx);
     }
 
     private RowMapper<GetResellBoxRes> resellBoxResRowMapper() {
