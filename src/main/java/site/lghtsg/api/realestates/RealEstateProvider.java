@@ -190,6 +190,7 @@ public class RealEstateProvider {
         List<RealEstateTransactionData> realEstateTransactionData;
         try {
             realEstateTransactionData = realEstateDao.getRealEstatePricesInArea(area);
+            Collections.sort(realEstateTransactionData);
         }
         catch(Exception e){
             throw new BaseException(DATABASE_ERROR);
@@ -209,6 +210,7 @@ public class RealEstateProvider {
         List<RealEstateTransactionData> realEstateTransactionData;
         try {
             realEstateTransactionData = realEstateDao.getRealEstatePrices(realEstateIdx);
+            Collections.sort(realEstateTransactionData);
         }
         catch(Exception e){
             throw new BaseException(DATABASE_ERROR);

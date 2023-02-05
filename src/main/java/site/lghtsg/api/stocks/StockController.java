@@ -21,8 +21,6 @@ public class StockController {
         this.stockProvider = stockProvider;
     }
 
-
-
     @ResponseBody
     @GetMapping("") //주식 리스트 조회 /stocks?sort=trading-volume&order=ascending or descending
     public BaseResponse<List<StockBox>> getStockBoxes(@RequestParam(required = false) String sort, @RequestParam(required = false) String order) {

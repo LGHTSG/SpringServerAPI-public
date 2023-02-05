@@ -28,9 +28,9 @@ public class ResellDao {
         String getResellBoxesQuery =  "select rs.resellIdx, rs.name, rst.price as price, rst2.price as s2Price, rs.image1,  rst2.transactionTime\n" +
                 "from Resell as rs,\n" +
                 "     ResellTodayTrans as rst,\n" +
-                "     ResellTransaction as rst2\n" +
-                "where rst.resellTransactionIdx = rs.lastTransactionIdx\n" + "  and rst2.resellTransactionIdx = rs.s2LastTransactionIdx";
-
+                "     ResellTodayTrans as rst2\n" +
+                "where rst.resellTransactionIdx = rs.lastTransactionIdx\n" +
+                "  and rst2.resellTransactionIdx = rs.s2LastTransactionIdx";
 
         return this.jdbcTemplate.query(getResellBoxesQuery,resellBoxResRowMapper());
     }
@@ -51,7 +51,7 @@ public class ResellDao {
                 "       rst2.price\n" +
                 "from Resell as rs,\n" +
                 "     ResellTodayTrans as rst,\n" +
-                "     ResellTransaction as rst2,\n" +
+                "     ResellTodayTrans as rst2,\n" +
                 "     IconImage as ii\n" +
                 "where rst.resellTransactionIdx = rs.lastTransactionIdx\n" +
                 "  and rst2.resellTransactionIdx = rs.s2LastTransactionIdx\n" +
@@ -78,7 +78,7 @@ public class ResellDao {
     }
 
     public List<GetResellTransactionRes> getResellTransaction(long resellIdx) {
-        String getResellTransactionQuery = "select * from ResellTransaction where resellIdx = ?";
+        String getResellTransactionQuery = "select price, transactionTime from ResellTransaction where resellIdx = ?";
         return this.jdbcTemplate.query(getResellTransactionQuery, (rs, rowNum) -> new GetResellTransactionRes(rs.getInt("price"), rs.getString("transactionTime")), resellIdx);
     }
 

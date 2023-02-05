@@ -7,14 +7,12 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
 public class TransactionData implements Comparable<TransactionData>{
 
     String datetime;
     long price;
-    long totalPrice;
-    long cnt;
 
     @Override
     public int compareTo(TransactionData o) {

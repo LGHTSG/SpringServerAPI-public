@@ -98,10 +98,9 @@ public class StockDao {
         return new RowMapper<StockTransactionData>() {
             @Override
             public StockTransactionData mapRow(ResultSet rs, int rowNum) throws SQLException {
-                StockTransactionData stockTransactionData = new StockTransactionData(
-                        rs.getInt("price"),
-                        rs.getString("transactionTime")
-                );
+                StockTransactionData stockTransactionData = new StockTransactionData();
+                stockTransactionData.setPrice(rs.getLong("price"));
+                stockTransactionData.setDatetime(rs.getString("transactionTime"));
                 return stockTransactionData;
             }
         };

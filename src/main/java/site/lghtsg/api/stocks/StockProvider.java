@@ -7,6 +7,7 @@ import site.lghtsg.api.common.model.*;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.stocks.model.*;
 
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
@@ -121,6 +122,7 @@ public class StockProvider {
         List<StockTransactionData> stockTransactionData;
         try {
             stockTransactionData = stockDao.getStockPrices(stockIdx);
+            Collections.sort(stockTransactionData);
         }
         catch(Exception e){
             throw new BaseException(DATABASE_ERROR);
