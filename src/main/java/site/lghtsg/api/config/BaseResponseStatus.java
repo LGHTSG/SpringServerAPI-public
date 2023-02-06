@@ -100,6 +100,7 @@ public enum BaseResponseStatus {
 
     REQUESTED_DATA_FAIL_TO_EXIST(4205, "요청한 데이터가 존재하지 않습니다."),
     RETURN_EXCEEDING_REQUESTED(4206, "반환하는 데이터가 요청값을 초과합니다.(1개 자산 요청 -> 2개 이상 반환)"),
+    FILE_SAVE_ERROR(4207, "저장할 파일을 생성하다 에러가 발생했습니다."),
     FILE_READ_ERROR(4207, "파일을 읽어오는 과정에서 에러가 발생했습니다.");
     // 5000 : 필요시 만들어서 쓰세요
     // 6000 : 필요시 만들어서 쓰세요

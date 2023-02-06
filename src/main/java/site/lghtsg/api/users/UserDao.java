@@ -159,7 +159,7 @@ public class UserDao {
                         "         join ResellUserTransaction RUT\n" +
                         "              on R.resellIdx = RUT.resellIdx and RUT.userIdx = ? and RUT.transactionStatus = 1\n" +
                         "         join ResellTodayTrans RTT on R.lastTransactionIdx = RTT.resellTransactionIdx\n" +
-                        "         join ResellTransaction RT on R.s2LastTransactionIdx = RT.resellTransactionIdx\n" +
+                        "         join ResellTodayTrans RT on R.s2LastTransactionIdx = RT.resellTransactionIdx\n" +
                         "         join IconImage II on R.iconImageIdx = II.iconImageIdx;";
 
         return this.jdbcTemplate.query(getResellAssetQuery, getMyAssetRowMapper(), userIdx);
@@ -180,7 +180,7 @@ public class UserDao {
                         "from RealEstate as RE\n" +
                         "         join RealEstateUserTransaction REUT\n" +
                         "              on RE.realEstateIdx = REUT.realEstateIdx and REUT.userIdx = ? and REUT.transactionStatus = 1\n" +
-                        "         join RealEstateTodayTrans RETT on RE.lastTransactionIdx = RETT.realEstateTransactionIdx\n" +
+                        "         join RealEstateTransaction RETT on RE.lastTransactionIdx = RETT.realEstateTransactionIdx\n" +
                         "         join RealEstateTransaction RET on RE.s2LastTransactionIdx = RET.realEstateTransactionIdx\n" +
                         "         join IconImage II on RE.iconImageIdx = II.iconImageIdx;\n";
 

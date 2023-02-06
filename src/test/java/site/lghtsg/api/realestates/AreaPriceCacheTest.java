@@ -4,7 +4,8 @@
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
 //import site.lghtsg.api.config.BaseException;
-//import site.lghtsg.api.realestates.dataUploader.AreaPriceCacheUplaoder;
+//import site.lghtsg.api.realestates.dataUploader.AreaPriceCacheUploadDao;
+//import site.lghtsg.api.realestates.dataUploader.AreaPriceCacheUploader;
 //import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 //
 //import java.util.*;
@@ -18,7 +19,10 @@
 //    @Autowired
 //    private RealEstateDao realEstateDao;
 //    @Autowired
-//    private AreaPriceCacheUplaoder areaPriceCacheUplaoder;
+//    private AreaPriceCacheUploader areaPriceCacheUploader;
+//
+//    @Autowired
+//    private AreaPriceCacheUploadDao areaPriceCacheDao;
 //    @Test
 //    void 부동산_구_리스트(){
 //        String keyword = PARAM_DEFAULT;
@@ -56,9 +60,9 @@
 //    @Test
 //    void 파일에서_리스트_읽어오기(){
 //        try {
-//            areaPriceCacheUplaoder.upload();
+//            areaPriceCacheUploader.cachePastPrice();
 //        }catch(BaseException e){
-//            System.out.println(e.getMessage());
+//            e.printStackTrace();
 //        }
 //    }
 //    @Test
@@ -67,5 +71,14 @@
 //        r.setPrice(20000);
 //        r.setDatetime("2016-03-40");
 //        realEstateDao.checkDateExists(r);
+//    }
+//
+//    @Test
+//    void 테이블초기화(){
+//        try {
+//            areaPriceCacheUploader.initTableRow();
+//        }catch(Exception e){
+//            e.printStackTrace();
+//        }
 //    }
 //}

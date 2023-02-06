@@ -136,17 +136,21 @@ public class UserProvider {
         try {
             List<GetMyAssetRes> realEstateAsset = userDao.getRealEstateAsset(userIdx);
             realEstateAsset.forEach(GetMyAssetRes -> GetMyAssetRes.setCategory(ASSET_CATEGORY_REALESTATE));
+            System.out.println("realEstate");
 
             List<GetMyAssetRes> resellAsset = userDao.getResellAsset(userIdx);
             resellAsset.forEach(GetMyAssetRes -> GetMyAssetRes.setCategory(ASSET_CATEGORY_RESELL));
+            System.out.println("resell");
 
             List<GetMyAssetRes> stockAsset = userDao.getStockAsset(userIdx);
             stockAsset.forEach(GetMyAssetRes -> GetMyAssetRes.setCategory(ASSET_CATEGORY_STOCK));
+            System.out.println("stock");
 
             stockAsset.addAll(resellAsset);
             stockAsset.addAll(realEstateAsset);
             calculateRateOfChange(stockAsset);
 
+            System.out.println("check");
             // updatedAt 기준으로 정렬
             // 다른 Provider 에서는 sort 메서드를 따로 만들어서 자체적으로 BaseException 을 던졌다.
             // 얘는 굳이 메서드를 둘 필요가 없어 직접 BaseException 을 던지도록 했다.
