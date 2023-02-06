@@ -153,7 +153,6 @@ public class UserService {
         int result;
         // 구매 가능한 자산인지 validation
         buyValidation(userIdx, postMyAssetReq);
-
         try {
             // transactionStatus 수정
             userDao.changeMyAssetList(userIdx, postMyAssetReq);
@@ -175,7 +174,6 @@ public class UserService {
         sellValidation(userIdx, postMyAssetReq);
         // 과거 거래 기록 가지고오기
         Asset previousTransaction = userProvider.getPreviousTransaction(userIdx, postMyAssetReq);
-
 
         try {
             // 리스트 상태 변경 Dao

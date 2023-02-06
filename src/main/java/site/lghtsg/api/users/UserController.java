@@ -198,9 +198,7 @@ public class UserController {
     public BaseResponse<List<GetMyAssetRes>> getMyAsset(@RequestParam(required = false) String sort) {
         try {
             int userIdx = jwtService.getUserIdx();
-
             List<GetMyAssetRes> resultOfAsset = userProvider.myAsset(userIdx);
-
             return new BaseResponse<>(resultOfAsset);
         } catch (BaseException exception) {
             return new BaseResponse<>(exception.getStatus());
