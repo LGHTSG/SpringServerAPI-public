@@ -158,16 +158,16 @@ public class RealEstateDao {
                         "from RealEstateTransaction as ret\n" +
                         "where ret.realEstateIdx = ?;";
 
-        Object[] getRealEstatePricesParam = new Object[]{realEstateIdx, realEstateIdx};
-        return this.jdbcTemplate.query(getRealEstatePricesQuery, transactionRowMapper(), getRealEstatePricesParam);
+        return this.jdbcTemplate.query(getRealEstatePricesQuery, transactionRowMapper(), realEstateIdx);
     }
-//
-//    public List<RealEstateTransactionData> getCachedRealEstatePricesInArea(String area){
-//        // RealEstateAreaPriceCache 테이블에서 컬럼 이름
-//        String findAreaCachedQuery = getFindAreaColumnFromCacheTable(area);
-//
-//
-//    }
+
+    public List<RealEstateTransactionData> getCachedRealEstatePricesInArea(String area){
+        // RealEstateAreaPriceCache 테이블에서 컬럼 이름
+        String findAreaCachedQuery = getFindAreaColumnFromCacheTable(area);
+        String getPricesInAreaQuery = "select transactionDate as transactionTime, " + findAreaCachedQuery + " as price from RealEstateAreaPriceCache;";
+
+        return this.jdbcTemplate.query(getPricesInAreaQuery, transactionRowMapper());
+    }
 
     /**
      * TODO : 캐싱된 테이블에서 가져오는 방식으로 변경 예정

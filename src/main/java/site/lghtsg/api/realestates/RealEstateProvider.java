@@ -188,8 +188,14 @@ public class RealEstateProvider {
         validateAreaInput(area);
 
         List<RealEstateTransactionData> realEstateTransactionData;
+        long area_limit = area.chars().filter(c -> c == ' ').count();
+
         try {
-            realEstateTransactionData = realEstateDao.getRealEstatePricesInArea(area);
+            // 범위가 넓다면 (구 까지라만이면) 캐시 데이터
+            if(area_limit < 2) realEstateTransactionData = realEstateDao.getCachedRealEstatePricesInArea(area);
+            // 법위가 좁다면 (구보다 구체적이라면) 직접 가져오기
+            // TODO: 같은 날 겹치는 가격에 대해서 처리를 하고 반환을 해야함.
+            else realEstateTransactionData = realEstateDao.getRealEstatePricesInArea(area);
             Collections.sort(realEstateTransactionData);
         }
         catch(Exception e){
