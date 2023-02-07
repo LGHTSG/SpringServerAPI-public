@@ -281,15 +281,16 @@ public class StockUploadDao {
     }
 
     public void uploadSNP500Details(StockInfo detail) {
-//        String query = "update Stock set stockCode = ? , issuedShares = ? where url = ?";
-        String query = "update Stock set stockCode = ? where url = ?";
+        String query = "update Stock set stockCode = ? , issuedShares = ? where url = ?";
+//        String query = "update Stock set stockCode = ? where url = ?";
 
-        this.jdbcTemplate.update(query, detail.getStockCode(), detail.getUrl());
+        this.jdbcTemplate.update(query, detail.getStockCode(), detail.getIssuedShares(), detail.getUrl());
     }
 
 
     public List<String> getAmericanStockUrls() {
-        String query = "select url from Stock where LENGTH(stockCode) <= 5";
+//        String query = "select url from Stock where LENGTH(stockCode) <= 5";
+        String query = "select url from Stock where issuedShares is null";
 
         return this.jdbcTemplate.query(query, (rs, rowNum) -> rs.getString("url"));
     }
@@ -336,6 +337,15 @@ public class StockUploadDao {
 
         return new ArrayList<>(this.jdbcTemplate.query(query, (rs, rowNum) -> rs.getInt("stockIdx")));
     }
+
+    /**
+     * issuedShares 업로드에 사용
+     */
+//    public void setIssuedShares(StockInfo issuedShares) {
+//        String query = "update Stock set issuedShares = ? where url = ?";
+//
+//        this.jdbcTemplate.update(query, issuedShares.getIssuedShares(), issuedShares.getUrl());
+//    }
 
 //    public void updateLastTrs_NEW() {
 //        // idxs 가져오기

@@ -418,23 +418,33 @@ public class StockScraper {
                 WebElement nameElement = element.findElement(xpath("..")).findElement(xpath(".."))
                         .findElement(tagName("h1"));
 
-//                // issuedShares 스크래핑
-//                List<WebElement> grid = driver.findElements(className("key-info_dd-numeric__5IsvY"));
-//                WebElement issuedSharesElement = grid.get(grid.size()-1);
-//                String issuedSharesSrc = issuedSharesElement.findElement(tagName("span")).getText().replaceAll(",", ""); // 반올림하기 전 값
+                // issuedShares 스크래핑
+                List<WebElement> grid = wait.until(ExpectedConditions.visibilityOfAllElementsLocatedBy(
+                        className("key-info_dd-numeric__5IsvY")));
 
+                WebElement issuedSharesElement = grid.get(grid.size()-1);
+                long issuedSharesSrc = Long.parseLong(
+                        issuedSharesElement.findElement(tagName("span")).getText().replaceAll(",", "")
+                ); // 반올림하기 전 값
+
+                long issuedShares = Math.round(issuedSharesSrc / 1000.0) * 1000;
+                System.out.println(issuedShares);
 
                 String[] nameAndCode = nameElement.getText().split(" ");
                 String codeSrc = nameAndCode[nameAndCode.length-1];
                 String code = codeSrc.substring(1, codeSrc.length()-1);
 
-
-
                 stockUploadDao.uploadSNP500Details(StockInfo.builder()
                         .url(url)
                         .stockCode(code)
-//                        .issuedShares(issuedShares)
+                        .issuedShares(issuedShares)
                         .build());
+
+                // issuedShares 업로드에 사용
+//                stockUploadDao.setIssuedShares(StockInfo.builder()
+//                        .issuedShares(issuedShares)
+//                        .url(url)
+//                        .build());
             }
         } catch (Exception e) {
             e.printStackTrace();
