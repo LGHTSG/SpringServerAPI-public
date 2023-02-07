@@ -1,9 +1,6 @@
 package site.lghtsg.api.utils;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
+import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
@@ -39,7 +36,7 @@ public class JwtService {
     @param userIdx
     @return String
      */
-    public String createJwt(int userIdx, long option){
+    public String createJwt(int userIdx, long option) {
         Date now = new Date();
         return Jwts.builder()
                 .setHeaderParam("type","jwt")
@@ -52,7 +49,7 @@ public class JwtService {
 
     // access token
     public String createAccessToken(int userIdx) {
-        long tokenInValidTime = 1*(1000*60*60*24*365);
+        long tokenInValidTime = 1*(1000*60*30);
         return this.createJwt(userIdx, tokenInValidTime);
     }
 
@@ -137,7 +134,7 @@ public class JwtService {
                     .setSigningKey(JWT_SECRET_KEY)
                     .parseClaimsJws(token.getAccessToken());
             return !claims.getBody().getExpiration().before(new Date());
-        } catch (Exception e) {
+        } catch (ExpiredJwtException e) {
             return false;
         }
     }
