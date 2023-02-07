@@ -3,12 +3,17 @@ package site.lghtsg.api.users;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.Secret.Secret;
 import site.lghtsg.api.users.model.*;
 import site.lghtsg.api.utils.AES128;
 import site.lghtsg.api.utils.JwtService;
+import site.lghtsg.api.utils.RedisService;
+
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 
 import static site.lghtsg.api.config.BaseResponseStatus.*;
 
@@ -19,12 +24,16 @@ public class UserService {
     private final UserDao userDao;
     private final UserProvider userProvider;
     private final JwtService jwtService;
+    private final RedisService redisService;
+    private final RedisTemplate<String, String> redisTemplate;
 
     @Autowired
-    public UserService(UserDao userDao, UserProvider userProvider, JwtService jwtService) {
+    public UserService(UserDao userDao, UserProvider userProvider, JwtService jwtService, RedisTemplate redisTemplate, RedisService redisService) {
         this.userDao = userDao;
         this.userProvider = userProvider;
         this.jwtService = jwtService;
+        this.redisTemplate = redisTemplate;
+        this.redisService = redisService;
     }
 
     /**
@@ -158,7 +167,6 @@ public class UserService {
         int result;
         // 구매 가능한 자산인지 validation
         buyValidation(userIdx, postMyAssetReq);
-
         try {
             // transactionStatus 수정
             userDao.changeMyAssetList(userIdx, postMyAssetReq);
@@ -242,6 +250,24 @@ public class UserService {
             userDao.changeMyAssetList(userIdx, postMyAssetReq);
         }catch (Exception exception) {
             throw new BaseException(DELETE_FAIL_ASSET_LIST);
+        }
+    }
+
+    // 로그아웃
+    // 블랙리스트 올리는 작업 (테스트)
+    // AccessToken 전달 시 현재 blacklist 에 있는지 validation
+    public void logout(int userIdx, String accessToken) throws BaseException {
+        try {
+            String userIdxString = Integer.toString(userIdx);
+            if (redisTemplate.opsForValue().get(userIdxString) != null) {
+                redisTemplate.delete(userIdxString);
+            }
+            long expiration = jwtService.getExpiration(accessToken);
+            redisTemplate.opsForValue().set(accessToken, "logout", expiration, TimeUnit.MILLISECONDS);
+            redisService.setValues(userIdxString, "blackList" + accessToken, Duration.ofMillis(expiration));
+            redisService.deleteValues(userIdxString); // Redis에서 유저 리프레시 토큰 삭제
+        }catch(Exception e){
+            throw new BaseException(LOGOUT_REDIS_SERVICE_ERROR);
         }
     }
 

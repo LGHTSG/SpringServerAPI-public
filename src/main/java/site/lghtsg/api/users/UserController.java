@@ -3,6 +3,7 @@ package site.lghtsg.api.users;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.cache.CacheProperties;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,6 +11,8 @@ import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.users.model.*;
 import site.lghtsg.api.utils.JwtService;
+import site.lghtsg.api.utils.RedisService;
+import site.lghtsg.api.utils.S3Uploader;
 
 import javax.mail.MessagingException;
 
@@ -35,13 +38,16 @@ public class UserController {
     @Autowired
     private final EmailService emailService;
     @Autowired
+    private final RedisService redisService;
     private ImageUploadService imageUploadService;
 
-    public UserController(UserProvider userProvider, UserService userService, JwtService jwtService, EmailService emailService) {
+    public UserController(UserProvider userProvider, UserService userService, JwtService jwtService,
+                          EmailService emailService, RedisService redisService) {
         this.userProvider = userProvider;
         this.userService = userService;
         this.jwtService = jwtService;
         this.emailService = emailService;
+        this.redisService = redisService;
     }
 
     /**
@@ -159,6 +165,19 @@ public class UserController {
      * 로그아웃 API
      * [POST] /users/log-out
      */
+    @ResponseBody
+    @PostMapping("/log-out")
+    public BaseResponse<String> logOut(@RequestBody String accessToken) {
+        try {
+            int userIdx = jwtService.getUserIdx();
+            String accessToken1 = jwtService.getJwt();
+            userService.logout(userIdx, accessToken1);
+            String result = "로그아웃 완료";
+            return new BaseResponse<>(result);
+        } catch (BaseException exception){
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
 
     /**
      * 회원탈퇴 API
@@ -225,9 +244,7 @@ public class UserController {
     public BaseResponse<List<GetMyAssetRes>> getMyAsset(@RequestParam(required = false) String sort) {
         try {
             int userIdx = jwtService.getUserIdx();
-
             List<GetMyAssetRes> resultOfAsset = userProvider.myAsset(userIdx);
-
             return new BaseResponse<>(resultOfAsset);
         } catch (BaseException exception) {
             return new BaseResponse<>(exception.getStatus());
@@ -331,6 +348,24 @@ public class UserController {
         }
         catch(BaseException exception){
             return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+    /**
+     * access token 재발급 API
+     * [POST] /users/token/re-issue
+     */
+    @ResponseBody
+    @PostMapping("/token/re-issue")
+    public BaseResponse<Token> accessTokenReIssue(@RequestParam(required = false) String userIdx) {
+        try {
+            Token token = new Token();
+            token.setAccessToken(jwtService.getJwt());
+            jwtService.validateRefreshToken(token);
+            token.setAccessToken(jwtService.reIssueAccessToken(token));
+            return new BaseResponse<>(token);
+        } catch (BaseException exception) {
+                    return new BaseResponse<>(exception.getStatus());
         }
     }
 

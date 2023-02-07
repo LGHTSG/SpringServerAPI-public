@@ -9,7 +9,7 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class PostLoginRes {
+public class Token {
     private int userIdx;
     private String accessToken;
     private String refreshToken;

@@ -1,5 +1,5 @@
 package site.lghtsg.api.config;
-/*
+
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -14,11 +14,9 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
 @Configuration
 @EnableRedisRepositories
 public class RedisRepositoryConfig {
-    @Value("${spring.redis.host}")
-    private String host;
+    @Value("${spring.redis.host}") private String host;
 
-    @Value("${spring.redis.port}")
-    private int port;
+    @Value("${spring.redis.port}") private int port;
 
     // Lettuce
     // Using RedisConnectionFactory interface, create LettuceConnectionFactory
@@ -39,4 +37,3 @@ public class RedisRepositoryConfig {
     }
 
 }
-*/

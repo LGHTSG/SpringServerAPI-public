@@ -28,6 +28,7 @@ public class WebReader {
     }
 
     public BaseResponse<String> uploadResellInfo() {
+
         ChromeOptions options = new ChromeOptions();
         String path = "/usr/lib/chromium-browser/chromedriver";
         options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
@@ -40,8 +41,10 @@ public class WebReader {
         options.addArguments("--disable-dev-shm-usage");
         options.addArguments("--remote-debugging-port=9222");
         WebDriver driver = new ChromeDriver(options);
-
         try {
+            //WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+
+            Thread.sleep(4000);
             //login 페이지
             driver.get("https://kream.co.kr/login");
 

@@ -43,6 +43,14 @@ public class UserDao {
                 checkEmailParams);
     }
 
+    // userIdx로 회원이 존재하는지 확인
+    public int checkUserExist(int userIdx) {
+        String checkUserExistQuery = "select exists(select userIdx from User where userIdx = ?)";
+        int checkUserExistParams = userIdx;
+        return this.jdbcTemplate.queryForObject(checkUserExistQuery,
+                int.class,
+                checkUserExistParams);
+    }
 
     // 로그인 : email에 해당되는 user의 암호와 탈퇴 여부 체크
     public User getPassword(PostLoginReq postLoginReq) {
@@ -280,6 +288,7 @@ public class UserDao {
     }
 
     // 리스트 노출 상태 변경
+    // switch -> if 한 이유는 상수와의 비교를 위해서. 상수를 쓰는 이유는 같은 내용을 중복해서 사용하게 되었을 때 변경할 코드를 줄이기 위함
     public int changeMyAssetList(int userIdx, PostMyAssetReq postMyAssetReq) {
 
         String changeMyAssetListQuery = "", category = postMyAssetReq.getCategory();
