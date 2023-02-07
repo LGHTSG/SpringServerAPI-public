@@ -93,9 +93,8 @@ public enum BaseResponseStatus {
     JWT_VALIDATE_ERROR(4015,"JWT validation 에러"),
     JWT_ERROR(4016,"JWT 에러"),
 
-    PASSWORD_ENCRYPTION_ERROR( 4011, "비밀번호 암호화에 실패하였습니다."),
-    PASSWORD_DECRYPTION_ERROR( 4012, "비밀번호 복호화에 실패하였습니다."),
     IMAGE_S3_UPLOAD_ERROR( 4020, "이미지를 S3 버킷 업로드에 실패하였습니다."),
+    LOGOUT_REDIS_SERVICE_ERROR( 4021, "로그아웃에서 에러가 발생했습니다."),
 
     // 42XX
     DATALIST_SORTING_ERROR(4201, "데이터 정렬 과정에서 오류가 발생했습니다."),

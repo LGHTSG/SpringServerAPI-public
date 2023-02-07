@@ -29,9 +29,10 @@ public class WebReader {
 
     public BaseResponse<String> uploadResellInfo() {
 
+        WebDriver driver = null;
         try {
             ChromeOptions options = new ChromeOptions();
-            WebDriver driver = new ChromeDriver(options);
+            driver = new ChromeDriver(options);
             options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
             options.addArguments("--disable-popup-blocking");       //팝업안띄움
             //options.addArguments("headless");                       //브라우저 안띄움
