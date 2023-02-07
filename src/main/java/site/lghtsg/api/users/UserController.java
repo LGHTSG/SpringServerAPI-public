@@ -1,6 +1,5 @@
 package site.lghtsg.api.users;
 
-import org.apache.commons.collections4.Get;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,12 +10,9 @@ import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.users.model.*;
 import site.lghtsg.api.utils.JwtService;
-import site.lghtsg.api.utils.S3Uploader;
 
 import javax.mail.MessagingException;
-import javax.servlet.http.HttpServletRequest;
 
-import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.List;
 
@@ -365,6 +361,21 @@ public class UserController {
             System.out.println(userIdx);
             GetProfileImgRes getProfileImgRes = userProvider.getUserImageUrl(userIdx);
             return new BaseResponse<>(getProfileImgRes);
+        }
+        catch(BaseException exception){
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+    /**
+     * 개발 시 현재 사용자가 제대로 등록되었는지 리스트를 확인하기 위한 용도
+     */
+    @ResponseBody
+    @GetMapping("")
+    public BaseResponse<List<GetUserInfoRes>> getUserList(){
+        try{
+            List<GetUserInfoRes> getUserInfoList = userProvider.getUserList();
+            return new BaseResponse<>(getUserInfoList);
         }
         catch(BaseException exception){
             return new BaseResponse<>(exception.getStatus());
