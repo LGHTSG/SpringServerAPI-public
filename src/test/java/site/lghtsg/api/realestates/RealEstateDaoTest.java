@@ -1,5 +1,6 @@
 //package site.lghtsg.api.realestates;
 //
+//import org.checkerframework.common.value.qual.StaticallyExecutable;
 //import org.junit.jupiter.api.Test;
 //import org.springframework.beans.factory.annotation.Autowired;
 //import org.springframework.boot.test.context.SpringBootTest;
@@ -152,5 +153,20 @@
 ////
 ////        realEstateDao.uploadRealEstates(realEstates);
 ////    }
-//}
+//
+////    @Test
+////    void 부동산_지역내_모든가격_리스트(){
+////        String area = "서울특별시+강남구";
+////        final int test_len = 1;
+////        for(int i = 0; i < test_len; i++){
 ////
+////            long start = System.currentTimeMillis();
+////            List<RealEstateTransactionData> realEstateTransactionData = realEstateDao.getRealEstatePricesInArea(area);
+////            long end = System.currentTimeMillis();
+////            System.out.println("Duration : " + (double)(end - start) / 1000 + "s");
+////            System.out.println(realEstateTransactionData.size());
+////        }
+////
+////    }
+//
+//}

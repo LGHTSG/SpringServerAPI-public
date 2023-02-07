@@ -4,11 +4,19 @@ import site.lghtsg.api.stocks.model.StockBox;
 
 import java.util.Comparator;
 
+import static site.lghtsg.api.config.Constant.ASCENDING_PARAM;
+
 public class CompareByTradingVolume implements Comparator<StockBox> {
+    private String order;
+
+    public CompareByTradingVolume(String order) {
+        this.order = order;
+    }
     public int compare(StockBox o1, StockBox o2) {
         double o1MarketCap = o1.getTradingVolume(), o2MarketCap = o2.getTradingVolume();
-        if (o1MarketCap < o2MarketCap) return 1;
-        else if (o1MarketCap > o2MarketCap) return -1;
-        return 0;
+        int ret = Double.compare(o2MarketCap, o1MarketCap);
+
+        if(order.equals(ASCENDING_PARAM)) ret *= -1;
+        return ret;
     }
 }

@@ -62,9 +62,8 @@ public class StockDao {
                 "         join IconImage as II on S.iconImageIdx = II.iconImageIdx\n" +
                 "where S.stockIdx = ?;";
 
-        long getStockInfoParams = stockIdx;
         try {
-            return this.jdbcTemplate.queryForObject(getStockInfoQuery, stockBoxRowMapper(), getStockInfoParams);
+            return this.jdbcTemplate.queryForObject(getStockInfoQuery, stockBoxRowMapper(), stockIdx);
         } catch (EmptyResultDataAccessException e) { // 쿼리문에 해당하는 결과가 없을 때
             return null;
         }
@@ -73,8 +72,7 @@ public class StockDao {
     //특정 주식 누적 가격 조회 (그래프용)
     public List<StockTransactionData> getStockPrices(long stockIdx) {
         String getStockPricesQuery = "select price, transactionTime from StockTransaction where stockIdx = ?";
-        long getStockPricesParam = stockIdx;
-        return this.jdbcTemplate.query(getStockPricesQuery, transactionRowMapper(), getStockPricesParam);
+        return this.jdbcTemplate.query(getStockPricesQuery, transactionRowMapper(), stockIdx);
     }
 
     private RowMapper<StockBox> stockBoxRowMapper(){
@@ -100,10 +98,9 @@ public class StockDao {
         return new RowMapper<StockTransactionData>() {
             @Override
             public StockTransactionData mapRow(ResultSet rs, int rowNum) throws SQLException {
-                StockTransactionData stockTransactionData = new StockTransactionData(
-                        rs.getInt("price"),
-                        rs.getString("transactionTime")
-                );
+                StockTransactionData stockTransactionData = new StockTransactionData();
+                stockTransactionData.setPrice(rs.getLong("price"));
+                stockTransactionData.setDatetime(rs.getString("transactionTime"));
                 return stockTransactionData;
             }
         };

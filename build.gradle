@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.lghtsg'
-version = '0.0.1-SNAPSHOT'
+version = '0.2.6-SNAPSHOT'
 sourceCompatibility = '11'
 
 configurations {
@@ -30,6 +30,9 @@ dependencies {
 	implementation(group: 'io.jsonwebtoken', name: 'jjwt', version: '0.7.0')
 	implementation('io.jsonwebtoken:jjwt:0.9.0')
 
+	// [한] : 프로필 이미지 s3 서버 올리기 위한 spring cloud
+	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+
 	// [데옹] : 로그인 서비스 구현 중 jwt에 대한 오류가 발생 -> 구글링 후 임시 추가
 	implementation group: 'org.glassfish.jaxb', name: 'jaxb-runtime', version: '2.3.2'
   
@@ -46,6 +49,8 @@ dependencies {
 	// [라이언] : 파일 데이터 업로드 관련
 	implementation group: 'org.apache.poi', name: 'poi', version: '4.1.2'
 	implementation group: 'org.apache.poi', name: 'poi-ooxml', version: '4.1.2'
+	// [라이언] : 주식 openApi 관련 (json 데이터 받아오기)
+	implementation group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
 
 	implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '4.7.2'
 

@@ -1,16 +1,12 @@
 package site.lghtsg.api.realestates;
 
 import org.springframework.web.bind.annotation.*;
-import site.lghtsg.api.common.model.Box;
 import site.lghtsg.api.config.BaseException;
 import site.lghtsg.api.config.BaseResponse;
-import site.lghtsg.api.realestates.dataUploader.ApiConnector;
-import site.lghtsg.api.realestates.dataUploader.ExcelFileReader;
 import site.lghtsg.api.realestates.model.RealEstateBox;
 import site.lghtsg.api.realestates.model.RealEstateInfo;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -65,11 +61,11 @@ public class RealEstateController {
     public BaseResponse<List<RealEstateTransactionData>> realEstateAreaPrices(@RequestParam String area){
         try{
             List<RealEstateTransactionData> realEstateTransactionData = realEstateProvider.getAreaRealEstatePrices(area);
-            List<RealEstateTransactionData> subList = new ArrayList<>();
-            for(int i = 0; i < LIST_LIMIT; i++){
-                subList.add(realEstateTransactionData.get(i));
-            }
-            return new BaseResponse<>(subList);
+//            List<RealEstateTransactionData> subList = new ArrayList<>();
+//            for(int i = 0; i < LIST_LIMIT; i++){
+//                subList.add(realEstateTransactionData.get(i));
+//            }
+            return new BaseResponse<>(realEstateTransactionData);
         }
         catch(BaseException e){
              return new BaseResponse<>((e.getStatus()));
