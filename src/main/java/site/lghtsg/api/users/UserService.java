@@ -254,6 +254,8 @@ public class UserService {
     }
 
     // 로그아웃
+    // 블랙리스트 올리는 작업 (테스트)
+    // AccessToken 전달 시 현재 blacklist 에 있는지 validation
     public void logout(int userIdx, String accessToken) {
         String userIdxString = Integer.toString(userIdx);
         if(redisTemplate.opsForValue().get(userIdxString) != null){
