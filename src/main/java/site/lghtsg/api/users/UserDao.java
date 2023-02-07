@@ -281,6 +281,7 @@ public class UserDao {
 
     // 리스트 노출 상태 변경
     public int changeMyAssetList(int userIdx, PostMyAssetReq postMyAssetReq) {
+
         String changeMyAssetListQuery = "", category = postMyAssetReq.getCategory();
 
         if(category.equals(ASSET_CATEGORY_STOCK)) {
