@@ -102,16 +102,20 @@ public class RealEstateUploadDao {
                 "select RET.realEstateTransactionIdx " +
                 "from RealEstateTransaction RET " +
                 "where RE.realEstateIdx = RET.realEstateIdx " +
-                "order by RET.transactionTime desc ";
+                "order by RET.transactionTime desc limit 1)";
 
-        String lastTr = "limit 0,1)";
-        String s2LastTr = "limit 1,1)";
+        String setS2LastTrs = "update RealEstate RE " +
+                "set RE.s2LastTransactionIdx = ( " +
+                "select RET.realEstateTransactionIdx " +
+                "from RealEstateTransaction RET " +
+                "where RE.realEstateIdx = RET.realEstateIdx " +
+                "order by RET.transactionTime desc limit 1, 1)";
 
 //        String updates2Last = "update RealEstate " +
 //                "set s2LastTransactionIdx = lastTransactionIdx";
 
-        this.jdbcTemplate.update(setLastTrs + s2LastTr);
-        this.jdbcTemplate.update(setLastTrs + lastTr);
+        this.jdbcTemplate.update(setLastTrs);
+        this.jdbcTemplate.update(setS2LastTrs);
     }
 
 
