@@ -73,7 +73,7 @@ public class AreaPriceCacheUploader {
         // 인천광역시_옹진군부터
         for(String area : areaList){
             System.out.println(area);
-            if(!area.equals("경상북도_울릉군")) start++;
+            if(!area.equals("제주특별자치도_제주시")) start++;
             else break;
         }
         System.out.println(start);
