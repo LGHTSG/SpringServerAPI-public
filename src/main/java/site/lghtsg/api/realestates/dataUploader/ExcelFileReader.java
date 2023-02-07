@@ -53,7 +53,7 @@ public class ExcelFileReader {
 
                 int[] targetCellIdxs = {0, 4, 5, 6, 7, 8}; // 지역명(리 포함됨), 건물명, 면적, 년월, 일, 거래금액(만 원)
 
-                for (int rowIdx = firstRowNum; rowIdx < lastRowNum; rowIdx++) {
+                for (int rowIdx = firstRowNum; rowIdx <= lastRowNum; rowIdx++) {
                     XSSFRow row = sheet.getRow(rowIdx);
 
                     String[] rowData = new String[6];
@@ -194,20 +194,6 @@ public class ExcelFileReader {
         // transactions 업로드
         Set<Integer> updatedRealEstateIdxs = realEstateUploadDao.uploadTransactions(transactionList);
         // lastTrs & Transaction 테이블들 업데이트
-        realEstateUploadDao.updateTrs(updatedRealEstateIdxs);
+        realEstateUploadDao.updateTrs();
     }
-
-//    /**
-//     * 최조 업데이트(기존 구조 -> TodayTrans 추가된 구조) 시 사용한 메소드
-//     * @return
-//     */
-//    public String updateLastTrs_NEW() {
-//        try {
-//            realEstateUploadDao.updateLastTrs_NEW();
-//            return "success";
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            return "failed";
-//        }
-//    }
 }

@@ -9,7 +9,6 @@ import site.lghtsg.api.realestates.dataUploader.model.RealEstateTransaction;
 import site.lghtsg.api.realestates.dataUploader.model.RegionName;
 
 import javax.sql.DataSource;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -70,7 +69,7 @@ public class RealEstateUploadDao {
      */
     public Set<Integer> uploadTransactions(List<RealEstateTransaction> transactionSet) {
         // insert
-        StringBuilder queryBuilder = new StringBuilder("insert into RealEstateTodayTrans (price, transactionTime, realEstateIdx) values");
+        StringBuilder queryBuilder = new StringBuilder("insert into RealEstateTransaction (price, transactionTime, realEstateIdx) values");
         Object[] params = new Object[transactionSet.size() * 3];
 
         Set<Integer> updatedREIdx = new HashSet<>(transactionSet.size());
@@ -97,60 +96,24 @@ public class RealEstateUploadDao {
         return updatedREIdx;
     }
 
-    public void updateTrs(Set<Integer> realEstateIdxs) {
-        // 옮길 데이터의 Idx 리스트
-        List<Integer> targetTrIdxs = new ArrayList<>();
+    public void updateTrs() {
+        String setLastTrs = "update RealEstate RE " +
+                "set RE.lastTransactionIdx = ( " +
+                "select RET.realEstateTransactionIdx " +
+                "from RealEstateTransaction RET " +
+                "where RE.realEstateIdx = RET.realEstateIdx " +
+                "order by RET.transactionTime desc ";
 
-        // RealEstate.lastTransactionIdx 업데이트
-        String update =
-                "update RealEstate set lastTransactionIdx = \n" +
-                        "(select realEstateTransactionIdx from RealEstateTodayTrans\n" +
-                        "where realEstateIdx = ? order by transactionTime desc limit 1)\n" +
-                        "where realEstateIdx = ?";
-        // 옮길 Trs의 Idx 가져오기 (lastTr이 아닌 것들)
-        String getTargetTrIdxs =
-                "select realEstateTransactionIdx from RealEstateTodayTrans\n" +
-                        "where realEstateIdx = ? and realEstateTransactionIdx != (\n" +
-                        "select lastTransactionIdx from RealEstate where realEstateIdx = ?\n" +
-                        ")";
+        String lastTr = "limit 0,1)";
+        String s2LastTr = "limit 1,1)";
 
-        for (Integer reIdx : realEstateIdxs) {
-            this.jdbcTemplate.update(update, reIdx, reIdx);
+//        String updates2Last = "update RealEstate " +
+//                "set s2LastTransactionIdx = lastTransactionIdx";
 
-            targetTrIdxs.addAll(
-                    this.jdbcTemplate.query(getTargetTrIdxs, (rs, rowNum) -> rs.getInt("realEstateTransactionIdx"), reIdx, reIdx)
-            );
-        }
-
-        System.out.println("targetTrIdxs.size() = " + targetTrIdxs.size());
-
-        // 데이터 옮기기(TodayTrans -> Transaction)
-        String insert =
-                "insert into RealEstateTransaction (realEstateIdx, price, transactionTime, createdAt, updatedAt) " +
-                "select realEstateIdx, price, transactionTime, createdAt, updatedAt " +
-                "from RealEstateTodayTrans " +
-                "where realEstateTransactionIdx = ?";
-
-        String delete = "delete from RealEstateTodayTrans where realEstateTransactionIdx = ?";
-
-        for (Integer idx : targetTrIdxs) {
-
-            this.jdbcTemplate.update(insert, idx);
-            this.jdbcTemplate.update(delete, idx);
-        }
-
-        // s2Last 변경
-        String s2Lastupdate =
-                "update RealEstate set s2LastTransactionIdx = ( \n" +
-                "select realEstateTransactionIdx from RealEstateTransaction \n" +
-                "where realEstateIdx = ? order by transactionTime desc limit 1 \n" +
-                ") where realEstateIdx = ?";
-
-        for (Integer realEstateIdx : realEstateIdxs) {
-            this.jdbcTemplate.update(s2Lastupdate, realEstateIdx, realEstateIdx);
-        }
-        System.out.println("업데이트 완료");
+        this.jdbcTemplate.update(setLastTrs + s2LastTr);
+        this.jdbcTemplate.update(setLastTrs + lastTr);
     }
+
 
     /**
      * 지역정보 업로드
@@ -242,64 +205,61 @@ public class RealEstateUploadDao {
         });
     }
 
-//    /**
-//     * 최초 업데이트(구조 변경(TodayTrans 추가)) 시 사용한 메소드
-//     */
-//    public void updateLastTrs_NEW() {
-//        // idxs 가져오기
-//        String getIdxs = "select realEstateIdx from RealEstate where lastTransactionIdx is null limit 60000";
-//        List<Integer> realEstateIdxs = this.jdbcTemplate.query(getIdxs, (rs, rowNum) -> rs.getInt("realEstateIdx"));
+    // 삭제 예정
+
+//    public void updateTrs(Set<Integer> realEstateIdxs) {
+//        // 옮길 데이터의 Idx 리스트
+//        List<Integer> targetTrIdxs = new ArrayList<>();
 //
-//        System.out.println("건물 ID 가져오기 완료, " + LocalDateTime.now());
+//        // RealEstate.lastTransactionIdx 업데이트
+//        String update =
+//                "update RealEstate set lastTransactionIdx = \n" +
+//                        "(select realEstateTransactionIdx from RealEstateTodayTrans\n" +
+//                        "where realEstateIdx = ? order by transactionTime desc limit 1)\n" +
+//                        "where realEstateIdx = ?";
+//        // 옮길 Trs의 Idx 가져오기 (lastTr이 아닌 것들)
+//        String getTargetTrIdxs =
+//                "select realEstateTransactionIdx from RealEstateTodayTrans\n" +
+//                        "where realEstateIdx = ? and realEstateTransactionIdx != (\n" +
+//                        "select lastTransactionIdx from RealEstate where realEstateIdx = ?\n" +
+//                        ")";
 //
-//        List<Integer> lastTrIdxs = new ArrayList<>(realEstateIdxs.size());
-//        String getlastTrIdx = "";
+//        for (Integer reIdx : realEstateIdxs) {
+//            this.jdbcTemplate.update(update, reIdx, reIdx);
 //
-//        // lastTr Idx 얻기
-//        for (Integer idx : realEstateIdxs) {
-//            getlastTrIdx =
-//                    "select realEstateTransactionIdx from RealEstateTransaction where realEstateIdx = " + idx + "\n" +
-//                    "order by transactionTime desc limit 2";
-////            lastTrIdxs.add(this.jdbcTemplate.queryForObject(getlastTrIdx, int.class));
-//            List<Integer> lastTrs = this.jdbcTemplate.query(getlastTrIdx, (rs,rowNum) -> rs.getInt("realEstateTransactionIdx"));
-//
-//            if (lastTrs.size() == 0) { // 오류 있는 데이터
-//                System.out.println(idx);
-//                continue;
-//            }
-//
-//            int lastTrIdx = lastTrs.get(0);
-//            // move lastTr
-//            String insert =
-//                    "insert into RealEstateTodayTrans(realEstateIdx, price, transactionTime, createdAt, updatedAt) " +
-//                    "select realEstateIdx, price, transactionTime, createdAt, updatedAt from RealEstateTransaction " +
-//                    "where realEstateTransactionIdx = " + lastTrIdx;
-//
-//            String delete = "delete from RealEstateTransaction where realEstateTransactionIdx = " + lastTrIdx;
-//
-//            // update RealEstate
-//            String setLastTr =
-//                    "update RealEstate set lastTransactionIdx = " +
-//                    "(select realEstateTransactionIdx from RealEstateTodayTrans order by realEstateTransactionIdx desc limit 1) " +
-//                    "where realEstateIdx = " + idx;
-//
-//            // 실행
-//            this.jdbcTemplate.update(insert);
-//            this.jdbcTemplate.update(delete);
-//            this.jdbcTemplate.update(setLastTr);
-//
-//            if (lastTrs.size() == 2) {
-//                // set S2LastTrIdx
-//                int s2Last = lastTrs.get(1);
-//                String setS2Last =
-//                        "update RealEstate set s2LastTransactionIdx = " + s2Last + " " +
-//                        "where realEstateIdx = " + idx;
-//
-//                this.jdbcTemplate.update(setS2Last);
-//            }
-////            System.out.println(idx);
+//            targetTrIdxs.addAll(
+//                    this.jdbcTemplate.query(getTargetTrIdxs, (rs, rowNum) -> rs.getInt("realEstateTransactionIdx"), reIdx, reIdx)
+//            );
 //        }
-//        System.out.println("LastTrIdx 세팅 완료, " + LocalDateTime.now());
+//
+//        System.out.println("targetTrIdxs.size() = " + targetTrIdxs.size());
+//
+//        // 데이터 옮기기(TodayTrans -> Transaction)
+//        String insert =
+//                "insert into RealEstateTransaction (realEstateIdx, price, transactionTime, createdAt, updatedAt) " +
+//                "select realEstateIdx, price, transactionTime, createdAt, updatedAt " +
+//                "from RealEstateTodayTrans " +
+//                "where realEstateTransactionIdx = ?";
+//
+//        String delete = "delete from RealEstateTodayTrans where realEstateTransactionIdx = ?";
+//
+//        for (Integer idx : targetTrIdxs) {
+//
+//            this.jdbcTemplate.update(insert, idx);
+//            this.jdbcTemplate.update(delete, idx);
+//        }
+//
+//        // s2Last 변경
+//        String s2Lastupdate =
+//                "update RealEstate set s2LastTransactionIdx = ( \n" +
+//                "select realEstateTransactionIdx from RealEstateTransaction \n" +
+//                "where realEstateIdx = ? order by transactionTime desc limit 1 \n" +
+//                ") where realEstateIdx = ?";
+//
+//        for (Integer realEstateIdx : realEstateIdxs) {
+//            this.jdbcTemplate.update(s2Lastupdate, realEstateIdx, realEstateIdx);
+//        }
+//        System.out.println("업데이트 완료");
 //    }
 
 }

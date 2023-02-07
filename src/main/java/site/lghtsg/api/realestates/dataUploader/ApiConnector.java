@@ -70,7 +70,7 @@ public class ApiConnector {
      * api 호출, 데이터 line단위로 받아서 readData에 전달 <br>
      * 매일 오전 10시 실행
      */
-    @Async
+    @Async // 비동기로 돌아감. 직접 실행할 때 주의!
     @Scheduled(cron = "0 0 10 * * ?")
     public void getData() {
         try {
@@ -275,7 +275,8 @@ public class ApiConnector {
         // 데이터 업로드
         Set<Integer> updatedRealEstateIdx = realEstateUploadDao.uploadTransactions(transactionList);
         // lastTrs 및 거래 테이블들 업데이트
-        realEstateUploadDao.updateTrs(updatedRealEstateIdx);
+
+        realEstateUploadDao.updateTrs();
 
         return String.valueOf(transactionList.size());
     }
