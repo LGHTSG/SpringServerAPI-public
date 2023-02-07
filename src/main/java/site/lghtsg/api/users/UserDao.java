@@ -341,6 +341,12 @@ public class UserDao {
         return this.jdbcTemplate.query(getTransactionHistoryQuery, transactionHistoryRowMapper(), getTransactionHistoryParams);
     }
 
+    public List<GetUserInfoRes> getUserInfoList(){
+        String getUserInfoQuery = "select U.userName, email from User as U;";
+        return this.jdbcTemplate.query(getUserInfoQuery,
+                (rs, row) -> new GetUserInfoRes(rs.getString("userName"), rs.getString("email")));
+    }
+
     private RowMapper<Asset> assetRowMapper(){
         return new RowMapper<Asset>() {
             @Override

@@ -12,7 +12,6 @@ import static site.lghtsg.api.config.Constant.SINGLE_TRANSACTION_HISTORY;
 import static site.lghtsg.api.realestates.RealEstateProvider.processDateDiffOutput;
 
 import site.lghtsg.api.config.Secret.Secret;
-import site.lghtsg.api.realestates.RealEstateProvider;
 import site.lghtsg.api.utils.AES128;
 import site.lghtsg.api.utils.JwtService;
 import site.lghtsg.api.users.model.*;
@@ -280,4 +279,17 @@ public class UserProvider {
         if(getUserTransactionHistoryRes.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
         return getUserTransactionHistoryRes;
     }
+
+    /**
+     * 현재 등록되어 있는 사용자 리스트 반환
+     */
+    public List<GetUserInfoRes> getUserList() throws BaseException {
+        try{
+            return userDao.getUserInfoList();
+        }
+        catch(Exception e){
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
 }
