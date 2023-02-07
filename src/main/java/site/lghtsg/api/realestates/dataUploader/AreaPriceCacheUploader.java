@@ -1,5 +1,7 @@
 package site.lghtsg.api.realestates.dataUploader;
 
+import com.amazonaws.util.StringUtils;
+import org.apache.poi.util.StringUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import site.lghtsg.api.common.model.TransactionData;
@@ -9,16 +11,22 @@ import site.lghtsg.api.realestates.model.RealEstateRemains;
 import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.FileReader;
+import java.io.OutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Comparator;
 import java.util.List;
 
-import static site.lghtsg.api.config.BaseResponseStatus.FILE_READ_ERROR;
-import static site.lghtsg.api.config.BaseResponseStatus.REQUESTED_DATA_FAIL_TO_EXIST;
+import static site.lghtsg.api.config.BaseResponseStatus.*;
 
 @Service
 public class AreaPriceCacheUploader {
+
+    @Autowired
+    private AreaPriceCacheUploadDao areaPriceCacheUploadDao;
 
     @Autowired
     private RealEstateDao realEstateDao;
@@ -26,13 +34,23 @@ public class AreaPriceCacheUploader {
     // 매일 업데이트 되는 부동산의 거래 기록을 가져와 각 지역별 같은 날 1개의 가격만 존재할 수 있도록 처리한다.
     // 동 단위는 불러와서 처리하고, 구, 시 단위는 해당 테이블에 미리 계산 처리해둔다.
     // 데이터 초기화 용
-    public void upload() throws BaseException {
-        // 1. 가격 데이터를 불러온다
+    public void initTableRow() throws BaseException {
+        // 날짜 리스트를 가져온다.
+        List<String> days = setDateList("2006-01-01", "2023-02-05", "yyyy-MM-dd");
+        try{
+            areaPriceCacheUploadDao.initAreaPriceCacheRow(days);
+        }catch(Exception e){
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    public void cachePastPrice() throws BaseException {
+
+        // =================== 데이터 리스트 파일 읽어오기 ====================
         List<String> areaList = new ArrayList<>();
         try {
             String path = "src/main/java/site/lghtsg/api/common/AreaPriceCacheList.txt";
             String line = "";
-            System.out.println("check");
             BufferedReader bufferedReader = new BufferedReader(new FileReader(path));
 
             while( (line = bufferedReader.readLine()) != null ){
@@ -43,43 +61,59 @@ public class AreaPriceCacheUploader {
             throw new BaseException(FILE_READ_ERROR);
         }
 
-        // 쿼리문을 어떻게 날릴지...
-        // 일단 과거 데이터만 올리고 자동업로드는 추가로 하자
-        // 1. 각 지역별로 데이터 가지고 오기 / 가지고 온 데이터로 값 초기화
+        // =================== 에러 리스트 파일 열기 ====================
+        OutputStream output;
+        try {
+            output = new FileOutputStream("src/main/java/site/lghtsg/api/common/FailedToCachePastAvg.txt");
+        } catch (Exception e) {
+            throw new BaseException(FILE_SAVE_ERROR);
+        }
 
-        int test_lim = 10; // 테스트 용 지역 길이 제한 - 서울시 다음부터 시작
-        // 테이블 값 업데이트만 남았음
-        for (int i = 10, ilim = areaList.size(); i < ilim; i++) {
+        int start = 0;
+        // 인천광역시_옹진군부터
+        for(String area : areaList){
+            System.out.println(area);
+            if(!area.equals("제주특별자치도_제주시")) start++;
+            else break;
+        }
+        System.out.println(start);
+
+        // =================== 각 지역마다 가격 처리 ====================
+        for (int i = start, lim = areaList.size(); i < lim; i++) {
             String area = areaList.get(i);
+            String[] area_div = area.split("_");
+            int cnt_minimum = getCountMinimum(area_div.length);
+
+            // =================== 데이터 가져오기 및 정렬 ====================
             List<RealEstateTransactionData> prices = realEstateDao.getRealEstatePricesInArea(area);
-            if(prices.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+            if (prices.size() == 0) {
+                System.out.println(area + "가격없음");
+                continue;
+            }
 
             // 시간 순 정렬
             prices.sort(Comparator.comparing(TransactionData::getDatetime));
-            // 시간 순 중복 제거 (평균) - 가격 평균을...
-            // 날짜가 바뀌는 시점 누적한 평균값을 리스트에 추가한다.
-            // 비교용 마지막 더미 데이터
+
             RealEstateTransactionData lastData = new RealEstateTransactionData();
             lastData.setDatetime("THIS-IS-NOT");
             prices.add(lastData);
-            String[] area_div = area.split("_");
-            System.out.println(area_div.length);
-            int cnt_minimum = getCountMinimum(area_div.length);
 
+
+            // ===================== 데이터 평균 처리 =======================
             List<RealEstateTransactionData> result = new ArrayList<>();
             long cnt = 0, priceSum = 0;
             String now = "", next = "";
-            for(int j = 0, jlim = prices.size(); j < jlim - 1; j++){
+            for (int j = 0, jlim = prices.size(); j < jlim - 1; j++) {
                 now = prices.get(j).getDatetime();
                 next = prices.get(j + 1).getDatetime();
 
                 priceSum += prices.get(j).getPrice();
                 cnt += 1;
 
-                if(now.compareTo(next) != 0) {
+                if (now.compareTo(next) != 0) {
                     RealEstateTransactionData data = new RealEstateTransactionData();
                     data.setDatetime(now);
-                    if(cnt <= cnt_minimum) priceSum = 0; // 거래 기록이 너무 적을 경우 평균값과 멀어지므로 0으로 가격을 무효시킨다
+                    if (cnt <= cnt_minimum) priceSum = 0; // 거래 기록이 너무 적을 경우 평균값과 멀어지므로 0으로 가격을 무효시킨다
                     data.setPrice(priceSum / cnt);
                     result.add(data);
                     cnt = 0;
@@ -87,50 +121,53 @@ public class AreaPriceCacheUploader {
                 }
             }
 
-            // 서울시에 대해서는 계산 끝. 테이블 초기화도 완료
-//            if(i == 0) {
-//                realEstateDao.initAreaPriceCacheRow(result, area);
-//                continue;
-//            }
 
-            // 서울 지역 row 초기화
-//            try {
-//                realEstateDao.initAreaPriceCacheRow(result, area);
-//            }catch(Exception e ){
-//                throw new BaseException(DATABASE_ERROR);
-//            }
-
-            // 데이터 업데이트 파트 - 각 일자의 가격마다 업데이트 쿼리를 짜서 날려야한다.
-
+            // ===================== 데이터 업데이트 =======================
             List<RealEstateRemains> remains = new ArrayList<>();
-            for(RealEstateTransactionData r : result) {
+            for (RealEstateTransactionData r : result) {
                 try {
-                    if(realEstateDao.checkDateExists(r) == 1){
-                        realEstateDao.updateAreaCacheTable(r, area);
+                    areaPriceCacheUploadDao.updateAreaCacheTable(r, area);
+                } catch (Exception e) {
+                    // 에러가 나는 데이터들에 한해서는 파일에 넣어준다.
+                    String date = r.getDatetime() + " : " + r.getPrice();
+                    byte[] by = date.getBytes();
+                    try {
+                        output.write(by);
+                    } catch (Exception ee) {
+                        throw new BaseException(FILE_SAVE_ERROR);
                     }
-                    else realEstateDao.insertAreaCacheTable(r, area);
-                }
-                    catch(Exception e2){
-                        RealEstateRemains rm = new RealEstateRemains();
-                        rm.setArea(area);
-                        rm.setDatetime(r.getDatetime());
-                        rm.setPrice(r.getPrice());
-                        remains.add(rm);
                 }
             }
-
-            for(RealEstateRemains rm : remains){
-                System.out.println(rm.getArea() + " / " + rm.getDatetime() + " : " + rm.getPrice());
-            }
-
-
-            // 아직 null 과 0이 왜 동시에 존재히는지 파악하지 못했다.
-
         }
     }
 
     static int getCountMinimum(int area_level){
         if(area_level >= 2) return 0;
         return 4;
+    }
+
+    private List<String> setDateList(String startDate, String endDate, String format) throws BaseException {
+
+        List<String> dateList = new ArrayList<String>();
+        SimpleDateFormat formatter = new SimpleDateFormat(format);
+
+        try {
+            Calendar beginDate = Calendar.getInstance();
+            Calendar stopDate = Calendar.getInstance();
+
+            beginDate.setTime(formatter.parse(startDate));
+            stopDate.setTime(formatter.parse(endDate));
+
+
+            while (beginDate.compareTo(stopDate) != 1) {
+                dateList.add(formatter.format(beginDate.getTime()));
+
+                beginDate.add(Calendar.DATE, 1);
+            }
+
+        } catch (Exception e) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+        return dateList;
     }
 }

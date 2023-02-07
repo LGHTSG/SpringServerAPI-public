@@ -6,6 +6,7 @@
 //import site.lghtsg.api.common.model.Box;
 //import site.lghtsg.api.config.BaseException;
 //import site.lghtsg.api.realestates.model.RealEstateBox;
+//import site.lghtsg.api.realestates.model.RealEstateTransactionData;
 //
 //import java.util.List;
 //
@@ -59,6 +60,35 @@
 //            }
 //        }catch(BaseException e){
 //            System.out.println(e.getStatus());
+//        }
+//    }
+//
+//    @Test
+//    void 부동산_캐시_리스트_테스트(){
+//        String area = "대전광역시+유성구";
+//        try {
+//            List<RealEstateTransactionData> data = realEstateProvider.getAreaRealEstatePrices(area);
+//            System.out.println(area);
+//            System.out.println(data.size());
+//            for(RealEstateTransactionData r : data) {
+//                System.out.println(r.getDatetime() + " : " + r.getPrice());
+//            }
+//        }catch(Exception e){
+//            e.getStackTrace();
+//        }
+//    }
+//
+//    @Test
+//    void 특정_부동산_가격조회(){
+//        long idx = 1;
+//        try{
+//            List<RealEstateTransactionData> realEstateTransactionData = realEstateProvider.getRealEstatePrices(idx);
+//            for(RealEstateTransactionData r : realEstateTransactionData){
+//                System.out.println(r.getDatetime() + " " + r.getPrice());
+//            }
+//        }
+//        catch(Exception e){
+//            e.printStackTrace();
 //        }
 //    }
 //}

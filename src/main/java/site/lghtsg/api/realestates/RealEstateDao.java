@@ -156,18 +156,18 @@ public class RealEstateDao {
         String getRealEstatePricesQuery =
                 "select ret.price, ret.transactionTime\n" +
                         "from RealEstateTransaction as ret\n" +
-                        "where ret.realEstateIdx = 1;";
+                        "where ret.realEstateIdx = ?;";
 
-        Object[] getRealEstatePricesParam = new Object[]{realEstateIdx, realEstateIdx};
-        return this.jdbcTemplate.query(getRealEstatePricesQuery, transactionRowMapper(), getRealEstatePricesParam);
+        return this.jdbcTemplate.query(getRealEstatePricesQuery, transactionRowMapper(), realEstateIdx);
     }
-//
-//    public List<RealEstateTransactionData> getCachedRealEstatePricesInArea(String area){
-//        // RealEstateAreaPriceCache 테이블에서 컬럼 이름
-//        String findAreaCachedQuery = getFindAreaColumnFromCacheTable(area);
-//
-//
-//    }
+
+    public List<RealEstateTransactionData> getCachedRealEstatePricesInArea(String area){
+        // RealEstateAreaPriceCache 테이블에서 컬럼 이름
+        String findAreaCachedQuery = getFindAreaColumnFromCacheTable(area);
+        String getPricesInAreaQuery = "select transactionDate as transactionTime, " + findAreaCachedQuery + " as price from RealEstateAreaPriceCache;";
+
+        return this.jdbcTemplate.query(getPricesInAreaQuery, transactionRowMapper());
+    }
 
     /**
      * TODO : 캐싱된 테이블에서 가져오는 방식으로 변경 예정
@@ -199,27 +199,6 @@ public class RealEstateDao {
         return 1;
     }
 
-    public void insertAreaCacheTable(RealEstateTransactionData now, String area) {
-        String insertAreaCacheTableQuery =
-                "insert into RealEstateAreaPriceCache\n" +
-                        "(transactionDate, " + area + ") values (?, ?);";
-        Object[] insertAreaCacheTableParam = new Object[]{now.getDatetime(), now.getPrice()};
-        this.jdbcTemplate.update(insertAreaCacheTableQuery, insertAreaCacheTableParam);
-    }
-
-    /**
-     * 특정 위치 특정 가격 값을 update한다.
-     *
-     * @param now
-     */
-    public void updateAreaCacheTable(RealEstateTransactionData now, String area) {
-        String updateAreaCacheTableQuery =
-                "update RealEstateAreaPriceCache\n" +
-                        "set " + area + " = ?\n" +
-                        "where transactionDate = ?;";
-        Object[] updateAreaCacheTableParam = new Object[]{now.getPrice(), now.getDatetime()};
-        this.jdbcTemplate.update(updateAreaCacheTableQuery, updateAreaCacheTableParam);
-    }
 
     /**
      * area 제대로 입력했는지 validation
