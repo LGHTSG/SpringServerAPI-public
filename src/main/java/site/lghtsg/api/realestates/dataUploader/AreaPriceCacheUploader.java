@@ -69,16 +69,27 @@ public class AreaPriceCacheUploader {
             throw new BaseException(FILE_SAVE_ERROR);
         }
 
-//        int test_lim = 1; // 테스트 용 지역 길이 제한 - 서울시 다음부터 시작
+        int start = 0;
+        // 인천광역시_옹진군부터
+        for(String area : areaList){
+            System.out.println(area);
+            if(!area.equals("경상북도_경주시")) start++;
+            else break;
+        }
+        System.out.println(start);
 
         // =================== 각 지역마다 가격 처리 ====================
-        for (String area : areaList) {
+        for (int i = start, lim = areaList.size(); i < lim; i++) {
+            String area = areaList.get(i);
             String[] area_div = area.split("_");
             int cnt_minimum = getCountMinimum(area_div.length);
 
             // =================== 데이터 가져오기 및 정렬 ====================
             List<RealEstateTransactionData> prices = realEstateDao.getRealEstatePricesInArea(area);
-            if (prices.size() == 0) throw new BaseException(REQUESTED_DATA_FAIL_TO_EXIST);
+            if (prices.size() == 0) {
+                System.out.println(area + "가격없음");
+                continue;
+            }
 
             // 시간 순 정렬
             prices.sort(Comparator.comparing(TransactionData::getDatetime));
