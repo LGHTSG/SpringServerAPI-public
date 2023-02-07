@@ -173,6 +173,7 @@ public class WebReader {
 
         try {
             //login 페이지
+            Thread.sleep(4000);
             driver.get("https://kream.co.kr/login");
 
             //id, pw 입력
