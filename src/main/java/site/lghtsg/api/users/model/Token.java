@@ -10,6 +10,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Token {
+    private int userIdx;
     private String accessToken;
     private String refreshToken;
 }

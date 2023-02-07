@@ -305,5 +305,23 @@ public class UserController {
         }
     }
 
+    /**
+     * access token 재발급 API
+     * [POST] /users/token/re-issue
+     */
+    @ResponseBody
+    @PostMapping("/token/re-issue")
+    public BaseResponse<Token> accessTokenReIssue(@RequestParam(required = false) String userIdx) {
+        try {
+            Token token = new Token();
+            token.setAccessToken(jwtService.getJwt());
+            jwtService.validateRefreshToken(token);
+            token.setAccessToken(jwtService.reIssueAccessToken(token));
+            return new BaseResponse<>(token);
+        } catch (BaseException exception) {
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
 }
 

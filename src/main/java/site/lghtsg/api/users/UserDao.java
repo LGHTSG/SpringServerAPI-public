@@ -269,7 +269,7 @@ public class UserDao {
         String changeMyAssetListQuery = "";
         switch (postMyAssetReq.getCategory()) {
             case "stock":
-                changeMyAssetListQuery = "UPDATE StockUserTransaction SET transactionStatus=0 where useridx=? and stockidx = ? and transactionstatus=1";
+                changeMyAssetListQuery = "UPDATE StockUserTransaction SET transactionStatus=0 where userIdx=? and stockIdx = ? and transactionstatus=1";
                 break;
             case "resell":
                 changeMyAssetListQuery = "UPDATE ResellUserTransaction SET transactionStatus=0 WHERE userIdx=? AND resellIdx = ? AND transactionStatus=1";

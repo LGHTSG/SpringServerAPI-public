@@ -82,31 +82,34 @@ public class JwtService {
     public int getUserIdx() throws BaseException{
         //1. JWT 추출
         String accessToken = getJwt();
+
         // jwt 오류 처리 부분
         if(accessToken == null || accessToken.length() == 0){
             throw new BaseException(EMPTY_JWT);
         }
 
-        try {
-            if(!validateToken(accessToken)) {
-                System.out.println("jwt validate error 1");
-                throw new BaseException(JWT_VALIDATE_ERROR);
+        Token token = new Token();
+        token.setAccessToken(accessToken);
+
+        // access token의 유효성을 확인한다. 만료가 안되면 정상 진행,
+        // 만료가 되었으면 refresh token의 유효성을 확인하고 유효하면 access token을 재발급
+        // 혹은 로그아웃 및 만료로 다시 로그인을 한다.
+        if(validateAccessToken(token)) {
+            // JWT parsing
+            Jws<Claims> claims;
+            try{
+                claims = Jwts.parser()
+                        .setSigningKey(JWT_SECRET_KEY)  // key 입력
+                        .parseClaimsJws(accessToken);   // value 입력
+            } catch (Exception ignored) {
+                throw new BaseException(JWT_ERROR);
             }
-        } catch (Exception e) {
-            System.out.println("jwt validate error");
-            throw new BaseException(JWT_ERROR);
+            // userIdx 추출
+            token.setUserIdx(claims.getBody().get("userIdx",Integer.class)); // jwt 에서 userIdx를 추출합니다.
+        } else if(!validateAccessToken(token)) {
+            throw new BaseException(JWT_VALIDATE_ERROR);
         }
-        // 2. JWT parsing
-        Jws<Claims> claims;
-        try{
-            claims = Jwts.parser()
-                    .setSigningKey(JWT_SECRET_KEY)  // key 입력
-                    .parseClaimsJws(accessToken);   // value 입력
-        } catch (Exception ignored) {
-            throw new BaseException(JWT_ERROR);
-        }
-        // 3. userIdx 추출
-        return claims.getBody().get("userIdx",Integer.class);  // jwt 에서 userIdx를 추출합니다.
+        return token.getUserIdx();
     }
 
     // 토큰 만료
@@ -121,36 +124,46 @@ public class JwtService {
     }
 
     // 토큰 재발급
-    public Token reIssueAccessToken(int userIdx, String refreshToken) {
-        String userIdxString = Integer.toString(userIdx);
-        if(!validateToken(refreshToken)) {
-            throw new IllegalStateException("존재하지 않는 유저입니다.");
-        }
-        String accessToken = createAccessToken(userIdx);
-        return new Token(accessToken, refreshToken);
+    public String reIssueAccessToken(Token token) {
+        String accessToken = createAccessToken(token.getUserIdx());
+        return accessToken;
     }
 
-    // token 유효성 검사
-    public boolean validateToken(String jwtToken) {
+    // access token 유효성 검사
+    public boolean validateAccessToken(Token token) {
         try {
-            System.out.println("jwt : " +jwtToken);
+            // jwt parsing (access token)
             Jws<Claims> claims = Jwts.parser()
                     .setSigningKey(JWT_SECRET_KEY)
-                    .parseClaimsJws(jwtToken);
-            System.out.println("testpoint of validate 1");
-
-            ValueOperations<String, String> logoutValueOperations = redisTemplate.opsForValue();
-            System.out.println("testpoint of validate 2");  // clear
-
-            if (logoutValueOperations.get(jwtToken) != null) {
-                System.out.println("이미 로그아웃 되었음");
-                return false;
-            }
-            System.out.println("testpoint 3");
-            System.out.println(!claims.getBody().getExpiration().before(new Date()));
+                    .parseClaimsJws(token.getAccessToken());
             return !claims.getBody().getExpiration().before(new Date());
         } catch (Exception e) {
             return false;
+        }
+    }
+
+    // refresh token 받아오기 및 유효성 검사
+    public Token validateRefreshToken(Token token) throws BaseException {
+        try {
+            // jwt parsing (access token)
+            Jws<Claims> claims = Jwts.parser()
+                    .setSigningKey(JWT_SECRET_KEY)
+                    .parseClaimsJws(token.getAccessToken());
+
+            // userIdx 추출
+            int userIdx = claims.getBody().get("userIdx",Integer.class); // jwt 에서 userIdx를 추출합니다.
+            token.setUserIdx(userIdx);
+            String userIdxString = Integer.toString(userIdx);
+
+            // refresh token : redis에 존재하는지 확인 (로그아웃이나 만료되면 존재 X)
+            token.setRefreshToken(redisService.getValues(userIdxString));
+            if(token.getRefreshToken() == null) {
+                System.out.println("만료 혹은 로그아웃 된 token");
+                throw new BaseException(JWT_VALIDATE_ERROR);
+            }
+            return token;
+        } catch (Exception exception) {
+            throw new BaseException(DATABASE_ERROR);
         }
     }
 

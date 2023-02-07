@@ -87,7 +87,7 @@ public enum BaseResponseStatus {
 
     PASSWORD_ENCRYPTION_ERROR( 4013, "비밀번호 암호화에 실패하였습니다."),
     PASSWORD_DECRYPTION_ERROR( 4014, "비밀번호 복호화에 실패하였습니다."),
-    JWT_VALIDATE_ERROR(4015,"JWT 에러"),
+    JWT_VALIDATE_ERROR(4015,"JWT validation 에러"),
     JWT_ERROR(4016,"JWT 에러"),
 
     // 42XX
