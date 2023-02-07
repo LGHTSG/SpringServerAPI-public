@@ -11,7 +11,7 @@ import lombok.Setter;
 @NoArgsConstructor
 @AllArgsConstructor
 public class GetMyAssetRes {
-    private int transactionIdx;
+    private int assetIdx;
     private String assetName;
     private long price;
     private long s2Price; // 증감율 계산 위함

@@ -48,7 +48,6 @@ public class ResellController {
             GetResellInfoRes getResellInfoRes = resellProvider.getResellInfo(resellIdx);
             return new BaseResponse<>(getResellInfoRes);
         } catch (BaseException e) {
-            e.printStackTrace();
             return new BaseResponse<>((e.getStatus()));
         }
     }

@@ -1,6 +1,5 @@
 package site.lghtsg.api.users;
 
-import org.apache.commons.codec.binary.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +26,15 @@ public class UserService {
         this.userProvider = userProvider;
         this.jwtService = jwtService;
     }
+
+    /**
+     * @문제점 :
+     *  category 구분을 나의 자산 리스트를 읽어올때는 provider 에서, 나의 자산 리스트에 저장할때는 dao 에서 한다.
+     *  때문에 category 입력이 제대로 이루어졌는지 validation 이 골치아파졌다.
+     *  타 파트에서도 변수 입력 validation 은 provider / service 에서 진행했기에,
+     *  우선은 데이터 나의 자산 조회만 validation 진행하고, 자산 구매 / 판매 시 오는 카테고리 validation 은 프론트를 믿는다.
+     * TODO : 시간 남을 때 리팩토링 작업 필요 (아무래도 changeMyAsset 등의 dao 메서드를 각 카테고리마다 구분해야 할 듯 싶다)
+     */
 
     // 회원가입 [POST]
     public PostUserRes createUser(PostUserReq postUserReq) throws BaseException {
@@ -78,6 +86,8 @@ public class UserService {
             if (result == 0) {
                 throw new BaseException(MODIFY_FAIL_PASSWORD);
             }
+        } catch(BaseException be) {
+            throw be;
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
@@ -100,6 +110,8 @@ public class UserService {
             if (result == 0) {
                 throw new BaseException(MODIFY_FAIL_PASSWORD);
             }
+        } catch (BaseException be){
+            throw be;
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
@@ -109,9 +121,10 @@ public class UserService {
     public void modifyUserProfileImg(PatchUserProfileImgReq patchUserProfileImgReq) throws BaseException {
         try {
             int result = userDao.modifyUserProfileImg(patchUserProfileImgReq);
-            if(result == 0) {
-                throw new BaseException(MODIFY_FAIL_PROFILEIMAGE);
-            }
+            if(result == 0) throw new BaseException(MODIFY_FAIL_PROFILEIMAGE);
+
+        } catch (BaseException be){
+            throw be;
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
@@ -132,9 +145,9 @@ public class UserService {
         }
         try {
             int result = userDao.withdrawUser(patchUserDeleteReq);
-            if(result == 0) {
-                throw new BaseException(DELETE_FAIL_USER);
-            }
+            if(result == 0) throw new BaseException(DELETE_FAIL_USER);
+        } catch (BaseException be){
+            throw be;
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
@@ -152,11 +165,12 @@ public class UserService {
 
             // 자산 구매 Dao
             result = userDao.buyMyAsset(userIdx, postMyAssetReq);
+            // 구매 실패
+            if (result == 0) throw new BaseException(PURCHASE_FAIL_ASSET);
+        } catch (BaseException be){
+            throw be;
         } catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
-        }
-        if(result == 0) { // 자산 구매에서 실패했다면
-            throw new BaseException(PURCHASE_FAIL_ASSET);
         }
     }
 
@@ -167,7 +181,6 @@ public class UserService {
         sellValidation(userIdx, postMyAssetReq);
         // 과거 거래 기록 가지고오기
         Asset previousTransaction = userProvider.getPreviousTransaction(userIdx, postMyAssetReq);
-
 
         try {
             // 리스트 상태 변경 Dao
@@ -181,23 +194,22 @@ public class UserService {
         updateTableSales(userIdx, postMyAssetReq, previousTransaction);
     }
 
-    public int buyValidation(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException{
+    public void buyValidation(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException{
         Asset previousTransaction;
         // 구매는 이전 거래가 없는 경우 허용
         try {
             previousTransaction = userProvider.getPreviousTransaction(userIdx, postMyAssetReq);
         } catch(BaseException e){
-            if(e.getStatus().equals(NO_PREVIOUS_USER_TRANSACTION)) return 1;
+            if(e.getStatus().equals(NO_PREVIOUS_USER_TRANSACTION)) return; // 과거 거래 기록이 없는 경우도 구매는 허용
             else throw e;
         }
         // 이전 거래가 구매라면 구매 불가
         if(previousTransaction.getSellCheck() == 0) {
             throw new BaseException(PURCHASE_FAIL_ASSET);
         }
-        return 1;
     }
 
-    public int sellValidation(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
+    public void sellValidation(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
         // 이전 거래가 없다면 판매 불가 (getPreviousTransaction에서 오류 반환)
         Asset previousTransaction = userProvider.getPreviousTransaction(userIdx, postMyAssetReq);
         // 이전 거래가 판매라면 판매 불가
@@ -209,7 +221,6 @@ public class UserService {
         if(previousTransactionTime.compareTo(postMyAssetReq.getTransactionTime()) > 0){
             throw new BaseException(SELL_AHEAD_OF_PREVIOUS_PURCHACE);
         }
-        return 1;
     }
 
     // Sales 갱신
