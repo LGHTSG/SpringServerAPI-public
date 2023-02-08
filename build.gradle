@@ -5,7 +5,7 @@ plugins {
 }
 
 group = 'com.lghtsg'
-version = '0.2.7-SNAPSHOT'
+version = '0.2.8-SNAPSHOT'
 sourceCompatibility = '11'
 
 configurations {

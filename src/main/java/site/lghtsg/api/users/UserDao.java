@@ -24,14 +24,15 @@ public class UserDao {
 
     // 회원가입
     public int createUser(PostUserReq postUserReq) {
-        String createUserQuery = "insert into User" +
+        String createUserQuery = "insert into User " +
                 "(userName, email, emailCheck, password, profileImg) " +
                 "values (?,?,?,?,?); ";
-        String createSales = "INSERT INTO Sales VALUES ()";
+        String createSales = "INSERT INTO Sales (userIdx) (select last_insert_id() as userIdx from User limit 1);";
         Object[] createUserParams = new Object[]{postUserReq.getUserName(), postUserReq.getEmail(),
                 postUserReq.getEmailCheck(), postUserReq.getPassword(), postUserReq.getProfileImg()};
+        int userIdx = this.jdbcTemplate.update(createUserQuery, createUserParams);
         this.jdbcTemplate.update(createSales);
-        return this.jdbcTemplate.update(createUserQuery, createUserParams);
+        return userIdx;
     }
 
     // 이메일 확인
