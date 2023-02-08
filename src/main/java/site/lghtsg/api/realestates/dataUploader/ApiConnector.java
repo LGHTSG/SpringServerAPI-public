@@ -214,6 +214,7 @@ public class ApiConnector {
 
         // id 생성된 부동산 리스트 가져오기
         List<RealEstate> realEstatesInDB = realEstateUploadDao.getRealEstates();
+        // rowData 형태  : {"거래금액", "년", "법정동시군구코드", "법정동읍면동코드", "아파트", "월", "일", "전용면적"};
 
         for (String[] rowData : rowDatas) {
             Long price = Long.parseLong(rowData[0].replaceAll(",", "")) * 10000;
@@ -222,9 +223,9 @@ public class ApiConnector {
             int avgPrice = Math.round(price/size);
 
             // 거래일
-            String year = rowData[3].substring(0,4);
-            String month = rowData[3].substring(4);
-            String day = rowData[4];
+            String year = rowData[1];
+            String month = rowData[5];
+            String day = rowData[6];
 
             String transactionDate = year + "-" + month + "-" + day;
 
