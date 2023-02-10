@@ -28,23 +28,16 @@ public class WebReader {
     }
 
     public BaseResponse<String> uploadResellInfo() {
-
         ChromeOptions options = new ChromeOptions();
-        String path = "/usr/lib/chromium-browser/chromedriver";
+        WebDriver driver = new ChromeDriver(options);
         options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
         options.addArguments("--disable-popup-blocking");       //팝업안띄움
-        options.addArguments("--headless");                       //브라우저 안띄움
+        //options.addArguments("headless");                       //브라우저 안띄움
         options.addArguments("--disable-gpu");            //gpu 비활성화
         options.addArguments("--blink-settings=imagesEnabled=false"); //이미지 다운 안받음
-        options.addArguments("--single-process");
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--remote-debugging-port=9222");
-        WebDriver driver = new ChromeDriver(options);
-        try {
-            //WebDriverWait wait = new WebDriverWait(driver, Duration.ofSeconds(20));
+        options.addArguments("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
 
-            Thread.sleep(4000);
+        try {
             //login 페이지
             driver.get("https://kream.co.kr/login");
 
@@ -58,7 +51,7 @@ public class WebReader {
             Thread.sleep(1000);
 
             //스크래핑할 브랜드 url로 이동
-            String url = "https://kream.co.kr/search?category_id=2";
+            String url = "https://kream.co.kr/search?category_id=7";
             driver.navigate().to(url);
             Thread.sleep(1000);
 
@@ -67,7 +60,7 @@ public class WebReader {
             int lastHeight = 0;
             WebElement element = driver.findElement(By.className("product_card"));
             var stTime = new Date().getTime();
-            while (new Date().getTime() < stTime + 900000) {
+            while (new Date().getTime() < stTime + 1800000) {
                 Thread.sleep(2000);
                 ((JavascriptExecutor) driver).executeScript("window.scrollTo(0, document.body.scrollHeight)", element);
 
@@ -97,6 +90,17 @@ public class WebReader {
             //스크래핑 시작
             while (!urlList.isEmpty()) {
                 driver.get(urlList.get(0));
+
+                int productCode = Integer.parseInt(driver.getCurrentUrl().replaceAll("[^0-9]", ""));
+                int checkDuplicated = resellUploadDao.checkDuplicated(productCode);
+
+                if (checkDuplicated == 1) {
+                    urlList.remove(0);
+                    System.out.println(productCode);
+                    System.out.println("중복ㅋㅋ");
+                    System.out.println("------");
+                    continue;
+                }
                 //상품명, 브랜드, 이미지 url, 모델번호, 발매일자, 발매가, 색상 스크래핑
                 WebElement name = driver.findElement(By.className("sub_title"));
                 WebElement brand = driver.findElement(By.className("brand"));
@@ -114,19 +118,7 @@ public class WebReader {
                     resell.setBrand(brand.getText());
                     resell.setProductNum(productInfo.get(0).getText());
                     resell.setImage1(imageUrlList.get(0).findElement(By.tagName("img")).getAttribute("src"));
-                    int productCode = Integer.parseInt(driver.getCurrentUrl().replaceAll("[^0-9]", ""));
                     resell.setProductCode(productCode);
-
-                    System.out.println(productCode);
-
-                    int checkDuplicated = resellUploadDao.checkDuplicated(productCode);
-
-                    if (checkDuplicated == 1) {
-                        urlList.remove(0);
-                        System.out.println("중복ㅋㅋ");
-                        System.out.println("------");
-                        continue;
-                    }
 
                     if (imageUrlList.size() >= 2) {
                         resell.setImage2(imageUrlList.get(1).findElement(By.tagName("img")).getAttribute("src"));
@@ -141,10 +133,28 @@ public class WebReader {
                     try {
                         driver.findElement(By.xpath("//*[@id=\"panel1\"]/a")).click();
                     } catch (Exception e) {
-                        urlList.remove(0);
-                        continue;
+
+                        try {
+                            Thread.sleep(1000);
+                            driver.findElement(By.xpath("//*[@id=\"wrap\"]/div[2]/div[1]/div/div[2]/div/div[5]/div/div[4]/div/a")).click();
+
+                            driver.get("https://kream.co.kr/login");
+                            driver.findElement(By.xpath("//*[@id=\"__layout\"]/div/div[2]/div[1]/div/div[1]/div/input")).sendKeys("wnsdud6969@naver.com");
+                            driver.findElement(By.xpath("//*[@id=\"__layout\"]/div/div[2]/div[1]/div/div[2]/div/input")).sendKeys("qkrwnsdud123!");
+
+                            //버튼 클릭
+                            driver.findElement(By.xpath("//*[@id=\"__layout\"]/div/div[2]/div[1]/div/div[3]/a")).click();
+                            System.out.println("로그인 성공 = " + driver.getCurrentUrl());
+                            Thread.sleep(1000);
+                        } catch (Exception ea) {
+                            urlList.remove(0);
+                            continue;
+                        }
                     }
+
                     resellUploadDao.uploadResell(resell);
+                    System.out.println(productCode);
+                    System.out.println("------");
                     Thread.sleep(1000);
                 }
                 urlList.remove(0);
@@ -161,22 +171,16 @@ public class WebReader {
     public BaseResponse<String> uploadResellTrans(int startResellIdx, int lastResellIdx) {
 
         ChromeOptions options = new ChromeOptions();
-
-        String path = "/usr/lib/chromium-browser/chromedriver";
+        WebDriver driver = new ChromeDriver(options);
         options.setPageLoadStrategy(PageLoadStrategy.NORMAL);
         options.addArguments("--disable-popup-blocking");       //팝업안띄움
-        options.addArguments("--headless");                       //브라우저 안띄움
+        //options.addArguments("headless");                       //브라우저 안띄움
         options.addArguments("--disable-gpu");            //gpu 비활성화
         options.addArguments("--blink-settings=imagesEnabled=false"); //이미지 다운 안받음
-        options.addArguments("--single-process");
-        options.addArguments("--no-sandbox");
-        options.addArguments("--disable-dev-shm-usage");
-        options.addArguments("--remote-debugging-port=9222");
-        WebDriver driver = new ChromeDriver(options);
+        options.addArguments("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36");
 
         try {
             //login 페이지
-            Thread.sleep(4000);
             driver.get("https://kream.co.kr/login");
 
             //id, pw 입력
@@ -208,6 +212,8 @@ public class WebReader {
                         driver.findElement(By.xpath("//*[@id=\"__layout\"]/div/div[2]/div[1]/div/div[3]/a")).click();
                         System.out.println("로그인 성공 = " + driver.getCurrentUrl());
                         Thread.sleep(1000);
+                        driver.get(productUrl);
+                        driver.findElement(By.xpath("//*[@id=\"panel1\"]/a")).click();
                     } catch (Exception ea) {
                         startResellIdx--;
                         continue;
@@ -225,6 +231,7 @@ public class WebReader {
                 int lastHeight = 0;
                 int newHeight = 0;
 
+                boolean keep = true;
                 while (true) {
                     Thread.sleep(5000);
 
@@ -241,8 +248,13 @@ public class WebReader {
                             driver.findElement(By.xpath("//*[@id=\"__layout\"]/div/div[2]/div[1]/div/div[3]/a")).click();
                             System.out.println("로그인 성공 = " + driver.getCurrentUrl());
                             Thread.sleep(1000);
+                            keep = false;
+                            startResellIdx--;
+                            break;
                         } catch (Exception ea) {
-                            continue;
+                            startResellIdx--;
+                            keep = false;
+                            break;
                         }
                     }
 
@@ -253,6 +265,10 @@ public class WebReader {
 
                     lastHeight = newHeight;
                     System.out.println(lastHeight);
+                }
+
+                if(!keep){
+                    continue;
                 }
 
                 transaction1 = driver.findElements(By.className("list_txt"));
@@ -303,8 +319,8 @@ public class WebReader {
         }
     }
 
-//    @Async
-//    @Scheduled(cron = "0 0 1-23 * * *")
+    /*@Async
+    @Scheduled(cron = "0 0 1-23 * * *")*/
     public BaseResponse<String> updateByHour() {
         ChromeOptions options = new ChromeOptions();
         WebDriver driver = new ChromeDriver(options);
@@ -377,8 +393,9 @@ public class WebReader {
                 //오늘 거래된 가격들 가져오기
                 List<Integer> todayTransactionList = resellUploadDao.getTransactionToday(resellIdxAndProductCodeList.get(0)[0], today);
 
+
                 if (todayTransactionList.size() == 0) {
-                    //resellUploadDao.updateResellTransactionByHour(resellIdx, price, today);
+                    resellUploadDao.updateResellTransactionByHour(resellIdx, price, today);
                 } else {
                     int todayTotal = 0;
 
@@ -396,6 +413,7 @@ public class WebReader {
             formatter = DateTimeFormatter.ofPattern("yy/MM/dd/HH");
             today = now.format(formatter);
 
+
             resellUploadDao.updateResellTodayTransByHour(resellTodayTransList, today);
             resellUploadDao.updateLastTransactionIdx();
             resellUploadDao.updateS2LastTransactionIdx();
@@ -408,8 +426,8 @@ public class WebReader {
         }
     }
 
-//    @Async
-//    @Scheduled(cron = "0 0 0 * * *")
+    /*@Async
+    @Scheduled(cron = "0 0 0 * * *")*/
     public BaseResponse<String> updateByDay() {
         ChromeOptions options = new ChromeOptions();
         WebDriver driver = new ChromeDriver(options);
@@ -468,14 +486,12 @@ public class WebReader {
                 //오늘 거래 시작
                 resellUploadDao.startTodayTransaction(resellIdx, price, today);
 
-                formatter = DateTimeFormatter.ofPattern("yy/MM/dd/HH");
-                today = now.format(formatter);
-
                 ResellTodayTrans resellTodayTrans = new ResellTodayTrans(resellIdx, price);
                 resellTodayTransList.add(resellTodayTrans);
 
                 resellIdxAndProductCodeList.remove(0);
             }
+
             formatter = DateTimeFormatter.ofPattern("yy/MM/dd/HH");
             today = now.format(formatter);
 
