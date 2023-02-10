@@ -1,17 +1,13 @@
 package site.lghtsg.api.users.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class PostMyAssetReq {
     private int assetIdx; // 구매한 자산 idx
     private String category;
-    private long price; // 구매 가격
-    private String transactionTime; // 구매 시간
+    private final long price; // 구매 가격
+    private final String transactionTime; // 구매 시간
 }
