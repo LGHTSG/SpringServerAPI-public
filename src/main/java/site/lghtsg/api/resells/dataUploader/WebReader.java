@@ -213,6 +213,7 @@ public class WebReader {
                         System.out.println("로그인 성공 = " + driver.getCurrentUrl());
                         Thread.sleep(1000);
                         driver.get(productUrl);
+                        driver.findElement(By.xpath("//*[@id=\"panel1\"]/a")).click();
                     } catch (Exception ea) {
                         startResellIdx--;
                         continue;
