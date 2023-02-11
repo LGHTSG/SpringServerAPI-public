@@ -282,7 +282,7 @@ public class UserDao {
                 getPreviousTransactionQuery =
                         "select REUT.realEstateIdx as idx, REUT.sellCheck, REUT.transactionTime, REUT.price\n" +
                                 "                        from RealEstateUserTransaction as REUT\n" +
-                                "                        where REUT.userIdx = ? and REUT.realestateIdx = 1\n" +
+                                "                        where REUT.userIdx = ? and REUT.realestateIdx = ?\n" +
                                 "order by REUT.updatedAt desc\n" +
                                 "limit 1;";
                 break;
