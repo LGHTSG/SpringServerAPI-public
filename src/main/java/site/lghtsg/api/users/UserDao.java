@@ -265,20 +265,26 @@ public class UserDao {
         switch (postMyAssetReq.getCategory()) {
             case "stock":
                 getPreviousTransactionQuery = "select SUT.stockIdx as idx, SUT.sellCheck, SUT.transactionTime, SUT.price\n" +
-                        "from StockUserTransaction as SUT\n" +
-                        "where SUT.userIdx = ? and SUT.transactionStatus = 1 and SUT.stockIdx = ?;";
+                        "                        from StockUserTransaction as SUT\n" +
+                        "                        where SUT.userIdx = ? and SUT.stockIdx = ?\n" +
+                        "order by SUT.updatedAt desc\n" +
+                        "limit 1;";
                 break;
             case "resell":
                 getPreviousTransactionQuery =
                         "select RUT.resellIdx as idx, RUT.sellCheck, RUT.transactionTime, RUT.price\n" +
-                        "from ResellUserTransaction as RUT\n" +
-                        "where RUT.userIdx = ? and RUT.transactionStatus = 1 and RUT.resellIdx = ?;";
+                                "                        from ResellUserTransaction as RUT\n" +
+                                "                        where RUT.userIdx = ? and RUT.resellIdx = ?\n" +
+                                "order by RUT.updatedAt desc\n" +
+                                "limit 1;";
                 break;
             case "realestate":
                 getPreviousTransactionQuery =
                         "select REUT.realEstateIdx as idx, REUT.sellCheck, REUT.transactionTime, REUT.price\n" +
-                        "from RealEstateUserTransaction as REUT\n" +
-                        "where REUT.userIdx = ? and REUT.transactionStatus = 1 and REUT.realestateIdx = ?;";
+                                "                        from RealEstateUserTransaction as REUT\n" +
+                                "                        where REUT.userIdx = ? and REUT.realestateIdx = ?\n" +
+                                "order by REUT.updatedAt desc\n" +
+                                "limit 1;";
                 break;
             default:
                 break;
@@ -302,8 +308,8 @@ public class UserDao {
             changeMyAssetListQuery = "UPDATE RealEstateUserTransaction SET transactionStatus=0 WHERE userIdx=? AND realEstateIdx = ? AND transactionStatus=1";
         }
 
-        Object[] sellMyAssetParams = new Object[]{userIdx, postMyAssetReq.getAssetIdx()};
-        return this.jdbcTemplate.update(changeMyAssetListQuery, sellMyAssetParams);
+        Object[] changeMyAssetListParams = new Object[]{userIdx, postMyAssetReq.getAssetIdx()};
+        return this.jdbcTemplate.update(changeMyAssetListQuery, changeMyAssetListParams);
     }
 
     public int updateTableSales(int userIdx, double sales) {
