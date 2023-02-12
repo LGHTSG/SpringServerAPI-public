@@ -39,7 +39,7 @@ public class UserDao {
                 "select RTT.price\n" +
                         "from ResellUserTransaction RUT\n" +
                         "   join Resell R on RUT.resellIdx = R.resellIdx and userIdx = ? and transactionStatus = 1\n" + ////// 수정
-                        "   join ResellTodayTrans RTT on R.lastTransactionIdx = RTT.resellTransactionId";
+                        "   join ResellTodayTrans RTT on R.lastTransactionIdx = RTT.resellTransactionIdx";
 
         return this.jdbcTemplate.query(getPricesQuery, (rs, rowNum) -> rs.getInt("price"), userIdx);
     }
