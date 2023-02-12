@@ -68,7 +68,7 @@ public class UserDao {
     public int updateBuyMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
         String updateMyAssetQuery = "update Sales set currentCash = currentCash - ? where userIdx = ?";
 
-        Object[] updateMyAssetParams = new Object[]{userIdx, postMyAssetReq.getPrice(), postMyAssetReq.getAssetIdx()};
+        Object[] updateMyAssetParams = new Object[]{postMyAssetReq.getPrice(), userIdx};
         return this.jdbcTemplate.update(updateMyAssetQuery, updateMyAssetParams);
     }
 
@@ -76,7 +76,7 @@ public class UserDao {
     public int updateSellMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
         String updateMyAssetQuery = "update Sales set currentCash = currentCash + ? where userIdx = ?";
 
-        Object[] updateMyAssetParams = new Object[]{userIdx, postMyAssetReq.getPrice(), postMyAssetReq.getAssetIdx()};
+        Object[] updateMyAssetParams = new Object[]{postMyAssetReq.getPrice(), userIdx};
         return this.jdbcTemplate.update(updateMyAssetQuery, updateMyAssetParams);
     }
 
