@@ -22,6 +22,48 @@ public class UserDao {
     @Autowired
     public void setDataSource(DataSource dataSource) {this.jdbcTemplate = new JdbcTemplate(dataSource);}
 
+    // 보유주식 현재가 조회
+    public List<Integer> getStockAssetPrices(int userIdx) {
+        String getPricesQuery =
+                "select STTT.price\n" +
+                        "from StockUserTransaction SUT\n" +
+                        "   join Stock ST on SUT.stockIdx = ST.stockIdx and SUT.userIdx = ? and SUT.transactionStatus = 1\n" + /////// 수정!
+                        "   join StockTodayTrans STTT on ST.lastTransactionIdx = STTT.stockTransactionIdx";
+
+        return this.jdbcTemplate.query(getPricesQuery, (rs, rowNum) -> rs.getInt("price"), userIdx);
+    }
+
+    // 보유 리셀 현재가 조회
+    public List<Integer> getResellAssetPrices(int userIdx) {
+        String getPricesQuery =
+                "select RTT.price\n" +
+                        "from ResellUserTransaction RUT\n" +
+                        "   join Resell R on RUT.resellIdx = R.resellIdx and userIdx = ? and transactionStatus = 1\n" + ////// 수정
+                        "   join ResellTodayTrans RTT on R.lastTransactionIdx = RTT.resellTransactionId";
+
+        return this.jdbcTemplate.query(getPricesQuery, (rs, rowNum) -> rs.getInt("price"), userIdx);
+    }
+
+    // 보유 부동산 현재가 조회
+    public List<Integer> getRealEstateAssetPrices(int userIdx) {
+        String getPricesQuery =
+                "select RETT.price\n" +
+                        "from RealEstateUserTransaction REUT\n" +
+                        "   join RealEstate RE on REUT.realEstateIdx = RE.realEstateIdx and userIdx = ? and transactionStatus = 1\n" + //// 수정
+                        "   join RealEstateTransaction RETT on RE.lastTransactionIdx = RETT.realEstateTransactionIdx";
+
+        return this.jdbcTemplate.query(getPricesQuery, (rs, rowNum) -> rs.getInt("price"), userIdx);
+    }
+
+    public Long getCurrentCash(int userIdx) {
+        String getTotalCashQuery = "select currentCash from Sales where userIdx = ?";
+        try {
+            return this.jdbcTemplate.queryForObject(getTotalCashQuery, (rs, rowNum) -> rs.getLong("currentCash"), userIdx);
+        } catch (EmptyResultDataAccessException e) {
+            return null;
+        }
+    }
+
     // 회원가입
     public int createUser(PostUserReq postUserReq) {
         String createUserQuery = "insert into User " +

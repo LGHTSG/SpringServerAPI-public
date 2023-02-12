@@ -11,6 +11,7 @@ import static site.lghtsg.api.config.Constant.*;
 import static site.lghtsg.api.config.Constant.SINGLE_TRANSACTION_HISTORY;
 import static site.lghtsg.api.realestates.RealEstateProvider.processDateDiffOutput;
 
+import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.config.Secret.Secret;
 import site.lghtsg.api.utils.AES128;
 import site.lghtsg.api.utils.JwtService;
@@ -39,6 +40,40 @@ public class UserProvider {
     public UserProvider(UserDao userDao, JwtService jwtService) {
         this.userDao = userDao;
         this.jwtService = jwtService;
+    }
+
+    // 보유 현금 조회
+    public Long myCash(int userIdx) throws BaseException {
+        Long totalCash;
+        try {
+            totalCash = userDao.getCurrentCash(userIdx);
+        } catch (Exception e) {
+            throw new BaseException(DATABASE_ERROR);
+        }
+        return totalCash;
+    }
+
+    // 자산의 총 현재가치 조회(현금 포함)
+    public Long getMyValueOfAssets(int userIdx) throws BaseException {
+        try {
+            long totalValue = 0;
+
+            // 현금
+            totalValue += userDao.getCurrentCash(userIdx);
+            // 부동산, 주식, 리셀 (현재가)
+            List<Integer> assetPrices = new ArrayList<>();
+
+            assetPrices.addAll(userDao.getRealEstateAssetPrices(userIdx));
+            assetPrices.addAll(userDao.getStockAssetPrices(userIdx));
+            assetPrices.addAll(userDao.getResellAssetPrices(userIdx));
+
+            for (Integer price : assetPrices) {
+                totalValue += price;
+            }
+            return totalValue;
+        } catch (Exception e) {
+            throw new BaseException(DATABASE_ERROR);
+        }
     }
 
     // 이메일 체크 (회원가입 +a 사용)

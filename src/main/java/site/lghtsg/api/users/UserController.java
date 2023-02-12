@@ -49,6 +49,36 @@ public class UserController {
     }
 
     /**
+     * 보유 현금 조회 API
+     * @return
+     */
+    @ResponseBody
+    @GetMapping("/my-cash")
+    public BaseResponse<Long> getMyCash() {
+        try {
+            int userIdx = jwtService.getUserIdx();
+            return new BaseResponse<>(userProvider.myCash(userIdx));
+        } catch (BaseException exception) {
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+    /**
+     * 보유자산의 총 현재가치 조회 API
+     * @return
+     */
+    @ResponseBody
+    @GetMapping("/my-asset/price")
+    public BaseResponse<Long> getMyValueOfAssets() {
+        try {
+            int userIdx = jwtService.getUserIdx();
+            return new BaseResponse<>(userProvider.getMyValueOfAssets(userIdx));
+        } catch (BaseException exception) {
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
+
+    /**
      * 회원가입 API
      * [POST] /users/sign-up
      */
@@ -78,7 +108,7 @@ public class UserController {
     }
 
     /**
-     * Email 인증 APㅌI
+     * Email 인증 API
      * [Post] /users/sign-up/email-check
      */
     @ResponseBody
