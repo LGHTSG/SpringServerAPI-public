@@ -64,6 +64,22 @@ public class UserDao {
         }
     }
 
+    //자산 구매 시 자산 감소
+    public int updateBuyMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
+        String updateMyAssetQuery = "update Sales set currentCash = currentCash - ? where userIdx = ?";
+
+        Object[] updateMyAssetParams = new Object[]{userIdx, postMyAssetReq.getPrice(), postMyAssetReq.getAssetIdx()};
+        return this.jdbcTemplate.update(updateMyAssetQuery, updateMyAssetParams);
+    }
+
+    //자산 판매 시 자산 증가
+    public int updateSellMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
+        String updateMyAssetQuery = "update Sales set currentCash = currentCash + ? where userIdx = ?";
+
+        Object[] updateMyAssetParams = new Object[]{userIdx, postMyAssetReq.getPrice(), postMyAssetReq.getAssetIdx()};
+        return this.jdbcTemplate.update(updateMyAssetQuery, updateMyAssetParams);
+    }
+
     // 회원가입
     public int createUser(PostUserReq postUserReq) {
         String createUserQuery = "insert into User " +

@@ -173,6 +173,8 @@ public class UserService {
 
             // 자산 구매 Dao
             result = userDao.buyMyAsset(userIdx, postMyAssetReq);
+            // 자산 구매 시 자산 감소
+            userDao.updateBuyMyAsset(userIdx, postMyAssetReq);
             // 구매 실패
             if (result == 0) throw new BaseException(PURCHASE_FAIL_ASSET);
         } catch (BaseException be){
@@ -193,6 +195,8 @@ public class UserService {
         try {
             // 리스트 상태 변경 Dao
             userDao.changeMyAssetList(userIdx, postMyAssetReq);
+            // 자산 구매 시 자산 감소
+            userDao.updateSellMyAsset(userIdx, postMyAssetReq);
             // 자산 판매 Dao
             userDao.sellMyAsset(userIdx, postMyAssetReq);
         } catch (Exception exception) {
