@@ -47,10 +47,10 @@ public class UserProvider {
         Long totalCash;
         try {
             totalCash = userDao.getCurrentCash(userIdx);
+            return totalCash;
         } catch (Exception e) {
             throw new BaseException(DATABASE_ERROR);
         }
-        return totalCash;
     }
 
     // 자산의 총 현재가치 조회(현금 포함)
