@@ -38,16 +38,14 @@ public class UserController {
     @Autowired
     private final EmailService emailService;
     @Autowired
-    private final RedisService redisService;
     private ImageUploadService imageUploadService;
 
     public UserController(UserProvider userProvider, UserService userService, JwtService jwtService,
-                          EmailService emailService, RedisService redisService) {
+                          EmailService emailService) {
         this.userProvider = userProvider;
         this.userService = userService;
         this.jwtService = jwtService;
         this.emailService = emailService;
-        this.redisService = redisService;
     }
 
     /**
