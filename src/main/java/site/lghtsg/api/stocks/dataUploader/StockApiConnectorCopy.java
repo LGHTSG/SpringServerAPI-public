@@ -27,6 +27,9 @@ import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
+/**
+ * 자동 업로드 테스트를 위한 클래스
+ */
 @Service
 public class StockApiConnectorCopy {
 
@@ -40,10 +43,12 @@ public class StockApiConnectorCopy {
         this.stockUploadDao = stockUploadDao;
     }
 
-    // 자동 실행
 
+    /**
+     * 테스트 Table에 업로드
+     */
     @Async
-    @Scheduled(cron = "0 0 2 ? * TUE-SAT") // 수정될 시간대
+    @Scheduled(cron = "0 0 17 ? * MON-FRI") // UTC 기준. 한국시간 기준 TUE-SAT 2AM
     public void getClosePricesOfDomestic() {
         try {
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -90,6 +95,7 @@ public class StockApiConnectorCopy {
 
         // 조회기간
 //        List<List<String>> periods = getPeriods(yesterday, LocalDate.of(2018, 1, 1));
+
         LocalDate tempDate = LocalDate.of(2023, 2, 11);
         List<List<String>> periods = getPeriods(tempDate, tempDate);
 
@@ -199,7 +205,7 @@ public class StockApiConnectorCopy {
 
         String baseUrl = "https://openapi.koreainvestment.com:9443/uapi/overseas-price/v1/quotations/inquire-daily-chartprice";
 
-//        // 조회기간
+//        // 기간 단위 조회
 //        List<List<String>> periods = getPeriods(LocalDate.now(), LocalDate.of(2018, 1, 1));
 
         // 일 단위 조회

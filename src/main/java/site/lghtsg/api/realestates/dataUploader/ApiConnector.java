@@ -67,11 +67,10 @@ public class ApiConnector {
     }
 
     /**
-     * api 호출, 데이터 line단위로 받아서 readData에 전달 <br>
-     * 매일 오전 10시 실행
+     * api 호출, 데이터 line단위로 받아서 readData에 전달
      */
-    @Async // 비동기로 돌아감. 직접 실행할 때 주의!
-    @Scheduled(cron = "0 0 10 * * ?")
+//    @Async
+//    @Scheduled(cron = "0 0 1 * * ?") // UTC 기준. 한국 기준 매일 10AM
     public void getData() {
         try {
             // 실행 시간 출력
