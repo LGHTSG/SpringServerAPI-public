@@ -40,7 +40,7 @@ public class StockApiConnector {
     // 자동 실행
 
 //    @Async
-//    @Scheduled(cron = "0 0 2 ? * TUE-SAT") // 익일(화-토) 새벽 2시 실행
+//    @Scheduled(cron = "0 0 17 ? * MON-FRI") // 한국시간 기준 TUE-SAT 2AM
     public void getClosePricesOfDomestic() {
         try {
             getDataOfDomestic();

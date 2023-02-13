@@ -20,7 +20,7 @@ public class TestController {
         this.stockScraper = stockScraper;
     }
 
-    // Test
+    // 자동 업로드 테스트
     @GetMapping("/test")
     public void uploadDomesticTest() {
         apiConnectorCopy.getClosePricesOfDomestic();
@@ -74,11 +74,7 @@ public class TestController {
         try {
             apiConnector.getClosePricesOfDomestic();
         } catch (Exception e) {
-            try {
-                apiConnector.getClosePricesOfDomestic();
-            } catch (Exception e2) { // 여러번 실패하면 (일시적인 게 아니면) 중지
-                e.printStackTrace();
-            }
+            e.printStackTrace();
         }
     }
 //
@@ -89,11 +85,6 @@ public class TestController {
             apiConnector.getClosePricesOfAmerican();
         } catch (Exception e) {
             e.printStackTrace();
-            try {
-                apiConnector.getClosePricesOfAmerican();
-            } catch (Exception e2) { // 여러번 실패하면 중지
-                e.printStackTrace();
-            }
         }
     }
 
