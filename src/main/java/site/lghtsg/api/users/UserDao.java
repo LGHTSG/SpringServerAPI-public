@@ -23,44 +23,50 @@ public class UserDao {
     public void setDataSource(DataSource dataSource) {this.jdbcTemplate = new JdbcTemplate(dataSource);}
 
     // 보유주식 현재가 조회
-    public List<Integer> getStockAssetPrices(int userIdx) {
+    public long getStockAssetPrices(int userIdx) {
         String getPricesQuery =
-                "select STTT.price\n" +
+                "select sum(STTT.price)\n" +
                         "from StockUserTransaction SUT\n" +
-                        "   join Stock ST on SUT.stockIdx = ST.stockIdx and SUT.userIdx = ? and SUT.transactionStatus = 1\n" + /////// 수정!
+                        "   join Stock ST on SUT.stockIdx = ST.stockIdx and SUT.userIdx = ? and SUT.transactionStatus = 1 and SUT.sellCheck = 0\n" +
                         "   join StockTodayTrans STTT on ST.lastTransactionIdx = STTT.stockTransactionIdx";
 
-        return this.jdbcTemplate.query(getPricesQuery, (rs, rowNum) -> rs.getInt("price"), userIdx);
+        Long totalPrice = this.jdbcTemplate.queryForObject(getPricesQuery, long.class, userIdx);
+        return (totalPrice == null) ? 0L : totalPrice;
     }
 
     // 보유 리셀 현재가 조회
-    public List<Integer> getResellAssetPrices(int userIdx) {
+    public long getResellAssetPrices(int userIdx) {
         String getPricesQuery =
-                "select RTT.price\n" +
+                "select sum(RTT.price)\n" +
                         "from ResellUserTransaction RUT\n" +
-                        "   join Resell R on RUT.resellIdx = R.resellIdx and userIdx = ? and transactionStatus = 1\n" + ////// 수정
+                        "   join Resell R on RUT.resellIdx = R.resellIdx and RUT.userIdx = ? and RUT.transactionStatus = 1 and RUT.sellCheck = 0\n" +
                         "   join ResellTodayTrans RTT on R.lastTransactionIdx = RTT.resellTransactionIdx";
 
-        return this.jdbcTemplate.query(getPricesQuery, (rs, rowNum) -> rs.getInt("price"), userIdx);
+        Long totalPrice = this.jdbcTemplate.queryForObject(getPricesQuery, long.class, userIdx);
+        return (totalPrice == null) ? 0L : totalPrice;
     }
 
     // 보유 부동산 현재가 조회
-    public List<Integer> getRealEstateAssetPrices(int userIdx) {
+    public long getRealEstateAssetPrices(int userIdx) {
         String getPricesQuery =
-                "select RETT.price\n" +
+                "select sum(RETT.price)\n" +
                         "from RealEstateUserTransaction REUT\n" +
-                        "   join RealEstate RE on REUT.realEstateIdx = RE.realEstateIdx and userIdx = ? and transactionStatus = 1\n" + //// 수정
+                        "   join RealEstate RE on REUT.realEstateIdx = RE.realEstateIdx and REUT.userIdx = ? and REUT.transactionStatus = 1 and REUT.sellCheck = 0\n" +
                         "   join RealEstateTransaction RETT on RE.lastTransactionIdx = RETT.realEstateTransactionIdx";
 
-        return this.jdbcTemplate.query(getPricesQuery, (rs, rowNum) -> rs.getInt("price"), userIdx);
+        Long totalPrice = this.jdbcTemplate.queryForObject(getPricesQuery, long.class, userIdx);
+        return (totalPrice == null) ? 0L : totalPrice;
     }
 
-    public Long getCurrentCash(int userIdx) {
+    // 보유 현금 조회
+    public long getCurrentCash(int userIdx) {
         String getTotalCashQuery = "select currentCash from Sales where userIdx = ?";
+
         try {
-            return this.jdbcTemplate.queryForObject(getTotalCashQuery, (rs, rowNum) -> rs.getLong("currentCash"), userIdx);
+            Long cash =  this.jdbcTemplate.queryForObject(getTotalCashQuery, long.class, userIdx);
+            return (cash == null) ? 0L : cash;
         } catch (EmptyResultDataAccessException e) {
-            return null;
+            return 0L;
         }
     }
 

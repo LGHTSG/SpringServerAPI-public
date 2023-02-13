@@ -44,7 +44,7 @@ public class UserProvider {
 
     // 보유 현금 조회
     public Long myCash(int userIdx) throws BaseException {
-        Long totalCash;
+        long totalCash;
         try {
             totalCash = userDao.getCurrentCash(userIdx);
             return totalCash;
@@ -60,16 +60,12 @@ public class UserProvider {
 
             // 현금
             totalValue += userDao.getCurrentCash(userIdx);
+
             // 부동산, 주식, 리셀 (현재가)
-            List<Integer> assetPrices = new ArrayList<>();
+            totalValue += userDao.getRealEstateAssetPrices(userIdx);
+            totalValue += userDao.getStockAssetPrices(userIdx);
+            totalValue += userDao.getResellAssetPrices(userIdx);
 
-            assetPrices.addAll(userDao.getRealEstateAssetPrices(userIdx));
-            assetPrices.addAll(userDao.getStockAssetPrices(userIdx));
-            assetPrices.addAll(userDao.getResellAssetPrices(userIdx));
-
-            for (Integer price : assetPrices) {
-                totalValue += price;
-            }
             return totalValue;
         } catch (Exception e) {
             throw new BaseException(DATABASE_ERROR);
