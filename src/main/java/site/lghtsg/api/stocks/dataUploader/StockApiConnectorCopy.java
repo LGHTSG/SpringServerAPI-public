@@ -18,32 +18,49 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Set;
 
 @Service
-public class StockApiConnector {
+public class StockApiConnectorCopy {
 
-    private final StockUploadDao stockUploadDao;
+    private final StockUploadDaoCopy stockUploadDao;
     private final String appKey = Secret.STOCK_KIS_API_APPKEY;
     private final String appSecret = Secret.STOCK_KIS_API_APPSECRET;
     private String accessToken;
 
 
-    public StockApiConnector(StockUploadDao stockUploadDao) {
+    public StockApiConnectorCopy(StockUploadDaoCopy stockUploadDao) {
         this.stockUploadDao = stockUploadDao;
     }
 
     // 자동 실행
 
-//    @Async
-//    @Scheduled(cron = "0 0 2 ? * TUE-SAT") // 익일(화-토) 새벽 2시 실행
+    @Async
+    @Scheduled(cron = "0 0 2 ? * TUE-SAT") // 수정될 시간대
     public void getClosePricesOfDomestic() {
         try {
+            SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+            String sTime = format.format(new Date());
+
+            // 시작 시간 표기
+            stockUploadDao.insertTimeFlag(sTime);
+
+            // 실행
             getDataOfDomestic();
+
+            // 종료 시간 표기
+            String eTime = format.format(new Date());
+            stockUploadDao.insertTimeFlag(eTime);
+
+            System.out.println("sTime = " + sTime);
+            System.out.println("eTime = " + eTime);
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("국내 일간종목 종가 가져오기 실패");
@@ -73,7 +90,8 @@ public class StockApiConnector {
 
         // 조회기간
 //        List<List<String>> periods = getPeriods(yesterday, LocalDate.of(2018, 1, 1));
-        List<List<String>> periods = getPeriods(LocalDate.now(), LocalDate.now());
+        LocalDate tempDate = LocalDate.of(2023, 2, 11);
+        List<List<String>> periods = getPeriods(tempDate, tempDate);
 
         List<String> startDates = periods.get(0);
         List<String> endDates = periods.get(1);

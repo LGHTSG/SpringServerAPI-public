@@ -9,13 +9,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
 
     private final StockApiConnector apiConnector;
+    private final StockApiConnectorCopy apiConnectorCopy;
     private final StockInfoUploader stockInfoUploader;
     private final StockScraper stockScraper;
 
-    public TestController(StockApiConnector apiConnector, StockInfoUploader stockInfoUploader, StockScraper stockScraper) {
+    public TestController(StockApiConnector apiConnector, StockApiConnectorCopy apiConnectorCopy, StockInfoUploader stockInfoUploader, StockScraper stockScraper) {
         this.apiConnector = apiConnector;
+        this.apiConnectorCopy = apiConnectorCopy;
         this.stockInfoUploader = stockInfoUploader;
         this.stockScraper = stockScraper;
+    }
+
+    // Test
+    @GetMapping("/test")
+    public void uploadDomesticTest() {
+        apiConnectorCopy.getClosePricesOfDomestic();
     }
 
     // Stock 테이블 정보수집 관련
