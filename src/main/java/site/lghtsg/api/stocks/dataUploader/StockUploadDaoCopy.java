@@ -10,12 +10,19 @@ import javax.sql.DataSource;
 import java.util.*;
 
 @Repository
-public class StockUploadDao {
+public class StockUploadDaoCopy {
 
     private JdbcTemplate jdbcTemplate;
 
     @Autowired
     public void setDataSource(DataSource dataSource) {this.jdbcTemplate = new JdbcTemplate(dataSource);}
+
+    public void insertTimeFlag(String time) {
+        String insertQuery = "insert into StockTransactionEmpty(stockIdx, price, transactionTime, tradingVolume)\n" +
+                "values (999, 99999, '" + time + "', 999999)";
+
+        this.jdbcTemplate.update(insertQuery);
+    }
 
     /**
      * 실시간 스크래핑 데이터 업로드
@@ -23,7 +30,7 @@ public class StockUploadDao {
      */
     public void uploadPrices(Map<Integer, StockTransaction> transactions) {
         // insert
-        StringBuilder insert = new StringBuilder("insert into StockTodayTrans(stockIdx, price, transactionTime, tradingVolume) values");
+        StringBuilder insert = new StringBuilder("insert into StockTodayTransTest(stockIdx, price, transactionTime, tradingVolume) values");
         Object[] params = new Object[transactions.size()*4];
         int paramIdx = 0;
         int idx = 0;
@@ -47,13 +54,13 @@ public class StockUploadDao {
 
         // update lastTrs
         // 쿼리
-        String createTempTb = "create temporary table lastTrs select stockTransactionIdx, stockIdx from StockTodayTrans limit 0";
+        String createTempTb = "create temporary table lastTrs select stockTransactionIdx, stockIdx from StockTodayTransTest limit 0";
         String collectLastTrs =
                 "insert into lastTrs(stockTransactionIdx, stockIdx)\n" +
-                "(select StockTransactionIdx, stockIdx from StockTodayTrans where transactionTime = ?)";
+                        "(select StockTransactionIdx, stockIdx from StockTodayTransTest where transactionTime = ?)";
         String updateTrs =
-                "update Stock set lastTransactionIdx = \n" +
-                "(select stockTransactionIdx from lastTrs where stockIdx = ?) where stockIdx = ?";
+                "update StockTest set lastTransactionIdx = \n" +
+                        "(select stockTransactionIdx from lastTrs where stockIdx = ?) where stockIdx = ?";
         String dropTempTb = "drop table lastTrs";
 
         // 실행
@@ -73,7 +80,7 @@ public class StockUploadDao {
      * @return
      */
     public Set<Integer> uploadPrices(List<StockTransaction> transactions) {
-        StringBuilder sb = new StringBuilder("insert into StockTodayTrans (stockIdx, price, transactionTime, tradingVolume) values");
+        StringBuilder sb = new StringBuilder("insert into StockTodayTransTest (stockIdx, price, transactionTime, tradingVolume) values");
 
         Object[] params = new Object[transactions.size()*4];
         int paramIdx = 0;
@@ -104,8 +111,8 @@ public class StockUploadDao {
      * @param stockIdxs 국내 실시간 종목 리스트 or 해외 종목 리스트
      */
     public void clearTodayTrans(List<Integer> stockIdxs) {
-        String delete = "delete from StockTodayTrans where stockIdx = ? and stockTransactionIdx != (\n" +
-                "select lastTransactionIdx from Stock where stockIdx = ?)";
+        String delete = "delete from StockTodayTransTest where stockIdx = ? and stockTransactionIdx != (\n" +
+                "select lastTransactionIdx from StockTest where stockIdx = ?)";
 
         for (Integer stockIdx : stockIdxs) {
             this.jdbcTemplate.update(delete, stockIdx, stockIdx);
@@ -118,17 +125,17 @@ public class StockUploadDao {
 
         String condition = (isDomestic) ? "stockIdx not between 3685 and 4178" : "stockIdx between 3685 and 4178";
         String insert =
-                "insert into StockTransaction (stockIdx, price, transactionTime, tradingVolume, createdAt, updatedAt) ( \n" +
+                "insert into StockTransactionEmpty (stockIdx, price, transactionTime, tradingVolume, createdAt, updatedAt) ( \n" +
                         "select stockIdx, price, transactionTime, tradingVolume, createdAt, updatedAt \n" +
-                        "from StockTodayTrans \n" +
+                        "from StockTodayTransTest \n" +
                         "where stockIdx = ? and datediff((" +
-                        "select max(transactionTime) from StockTodayTrans where " + condition + " \n" +
+                        "select max(transactionTime) from StockTodayTransTest where " + condition + " \n" +
                         "), transactionTime) = 0 " +    // 다른 종목들 copy될 때 한 번 같이 copy되고, 그 이후로는 되지 않음.
                         "order by transactionTime limit 1 \n" +
                         ")";
 
         String updateS2LastTr =
-                "update Stock set s2LastTransactionIdx = ( \n" +
+                "update StockTest set s2LastTransactionIdx = ( \n" +
                         "select stockTransactionIdx from StockTransaction \n" +
                         "where stockIdx = ? order by transactionTime desc limit 1 \n" +
                         ") where stockIdx = ?";
@@ -145,16 +152,16 @@ public class StockUploadDao {
 
         // lastTr 업데이트
         String updateLastTr =
-                "update Stock set lastTransactionIdx = \n" +
-                        "(select stockTransactionIdx from StockTodayTrans \n" +
+                "update StockTest set lastTransactionIdx = \n" +
+                        "(select stockTransactionIdx from StockTodayTransTest \n" +
                         "where stockIdx = ? order by transactionTime desc limit 1) \n" +
                         "where stockIdx = ?";
 
         // 옮길 Tr Idx 가져오기(lastTr이 아닌 것들)
         String getTargetTrIdx =
-                "select stockTransactionIdx from StockTodayTrans \n" +
+                "select stockTransactionIdx from StockTodayTransTest \n" +
                         "where stockIdx = ? and stockTransactionIdx != (\n" +
-                        "select lastTransactionIdx from Stock \n" +
+                        "select lastTransactionIdx from StockTest \n" +
                         "where stockIdx = ?)";
 
         for (Integer stockIdx : updatedStockIdxs) {
@@ -169,12 +176,12 @@ public class StockUploadDao {
 
         // 옮기기
         String insert =
-                "insert into StockTransaction(stockIdx, price, transactionTime, tradingVolume, createdAt, updatedAt) " +
+                "insert into StockTransactionEmpty(stockIdx, price, transactionTime, tradingVolume, createdAt, updatedAt) " +
                         "select stockIdx, price, transactionTime, tradingVolume, createdAt, updatedAt " +
-                        "from StockTodayTrans " +
+                        "from StockTodayTransTest " +
                         "where stockTransactionIdx = ?";
 
-        String delete = "delete from StockTodayTrans where stockTransactionIdx = ?";
+        String delete = "delete from StockTodayTransTest where stockTransactionIdx = ?";
 
         for (Integer trIdx : targetTrIdxs) {
             this.jdbcTemplate.update(insert, trIdx);
@@ -183,7 +190,7 @@ public class StockUploadDao {
 
         // s2LastTr 변경
         String updateS2LastTr =
-                "update Stock set s2LastTransactionIdx = ( \n" +
+                "update StockTest set s2LastTransactionIdx = ( \n" +
                         "select stockTransactionIdx from StockTransaction \n" +
                         "where stockIdx = ? order by transactionTime desc limit 1 \n" +
                         ") where stockIdx = ?";
@@ -196,11 +203,11 @@ public class StockUploadDao {
 
         // 실시간 x 국내주식이면서, 다른 것들과 거래일이 차이나고, 아직 처리 안 된 종목 찾기
         String findDelistedStock =
-                "select sttt.stockTransactionIdx from StockTodayTrans sttt \n" +
-                        "inner join Stock st on sttt.stockIdx = st.stockIdx \n" +
-                        "inner join StockTransaction stt on st.s2LastTransactionIdx = stt.stockTransactionIdx\n" +
+                "select sttt.stockTransactionIdx from StockTodayTransTest sttt \n" +
+                        "inner join StockTest st on sttt.stockIdx = st.stockIdx \n" +
+                        "inner join StockTransactionEmpty stt on st.s2LastTransactionIdx = stt.stockTransactionIdx\n" +
                         "where length(st.stockCode) >= 6 and st.url is null \n" +
-                        "and datediff((select max(transactionTime) as transactionTime from StockTodayTrans where stockIdx <= 3684), sttt.transactionTime) >= 1 \n" +
+                        "and datediff((select max(transactionTime) as transactionTime from StockTodayTransTest where stockIdx <= 3684), sttt.transactionTime) >= 1 \n" +
                         "and datediff(sttt.transactionTime, stt.transactionTime) != 0\n";
 
         List<Integer> trsHaveToCopy = this.jdbcTemplate.query(findDelistedStock, (rs, rowNum) -> rs.getInt("stockTransactionIdx"));
@@ -208,14 +215,14 @@ public class StockUploadDao {
         if (trsHaveToCopy.isEmpty()) return;
 
         // 복사 및 s2LastTr 업데이트
-        String copyToTrTable = "insert into StockTransaction (stockIdx, price, transactionTime, tradingVolume, createdAt, updatedAt) " +
+        String copyToTrTable = "insert into StockTransactionEmpty (stockIdx, price, transactionTime, tradingVolume, createdAt, updatedAt) " +
                 "select stockIdx, price, transactionTime, tradingVolume, createdAt, updatedAt " +
-                "from StockTodayTrans " +
+                "from StockTodayTransTest " +
                 "where stockTransactionIdx = ?";
 
         String updateS2Last =
-                "update Stock set s2LastTransactionIdx = ( \n" +
-                        "select stockTransactionIdx from StockTransaction \n" +
+                "update StockTest set s2LastTransactionIdx = ( \n" +
+                        "select stockTransactionIdx from StockTransactionTest \n" +
                         "where stockIdx = ? order by transactionTime desc limit 1 \n" +
                         ") where stockIdx = ?";
 
@@ -230,7 +237,7 @@ public class StockUploadDao {
      * @param stockInfos
      */
     public void uploadDomesticInfo(List<StockInfo> stockInfos) {
-        StringBuilder sb = new StringBuilder("insert into Stock(name, stockCode, issuedShares) values");
+        StringBuilder sb = new StringBuilder("insert into StockTest(name, stockCode, issuedShares) values");
 
         Object[] params = new Object[stockInfos.size()*3];
         int idx = 0;
@@ -249,7 +256,7 @@ public class StockUploadDao {
     }
 
     public List<StockInfo> getUrlsAndIdxs() {
-        String query = "select stockIdx, url from Stock where url is not null limit 10000";
+        String query = "select stockIdx, url from StockTest where url is not null limit 10000";
 
         return this.jdbcTemplate.query(query, (rs, rowNum) -> StockInfo.builder()
                 .url(rs.getString("url"))
@@ -258,13 +265,13 @@ public class StockUploadDao {
     }
 
     public void uploadKoreanStockUrl(StockInfo stockInfo) {
-        String query = "update Stock set url = ? where stockCode = ?";
+        String query = "update StockTest set url = ? where stockCode = ?";
 
         this.jdbcTemplate.update(query, stockInfo.getUrl(), stockInfo.getStockCode());
     }
 
     public void uploadSNPInfos(List<StockInfo> stockInfos) {
-        StringBuilder queryBuilder = new StringBuilder("insert into Stock(name, url) values");
+        StringBuilder queryBuilder = new StringBuilder("insert into StockTest(name, url) values");
         Object[] params = new Object[stockInfos.size() * 2];
         int paramsIndex = 0;
 
@@ -281,7 +288,7 @@ public class StockUploadDao {
     }
 
     public void uploadSNP500Details(StockInfo detail) {
-        String query = "update Stock set stockCode = ? , issuedShares = ? where url = ?";
+        String query = "update StockTest set stockCode = ? , issuedShares = ? where url = ?";
 //        String query = "update Stock set stockCode = ? where url = ?";
 
         this.jdbcTemplate.update(query, detail.getStockCode(), detail.getIssuedShares(), detail.getUrl());
@@ -290,20 +297,20 @@ public class StockUploadDao {
 
     public List<String> getAmericanStockUrls() {
 //        String query = "select url from Stock where LENGTH(stockCode) <= 5";
-        String query = "select url from Stock where issuedShares is null";
+        String query = "select url from StockTest where issuedShares is null";
 
         return this.jdbcTemplate.query(query, (rs, rowNum) -> rs.getString("url"));
     }
 
     public List<StockInfo> getNotServicedStockInfos() {
-        String query = "select stockIdx, stockCode from Stock where length(stockCode) >= 6 and url is null";
+        String query = "select stockIdx, stockCode from StockTest where length(stockCode) >= 6 and url is null";
 //        String query = "select stockIdx, stockCode from Stock where length(stockCode) >= 6";
 
         return this.jdbcTemplate.query(query, (rs, rowNum) -> StockInfo.builder()
-                .stockIdx(rs.getInt("stockIdx"))
-                .stockCode(rs.getString("stockCode"))
+                        .stockIdx(rs.getInt("stockIdx"))
+                        .stockCode(rs.getString("stockCode"))
 //                .issuedShares(rs.getLong("issuedShares"))
-                .build()
+                        .build()
         );
     }
 
@@ -315,7 +322,7 @@ public class StockUploadDao {
     public List<Integer> getStockIdxs(boolean isDomestic) {
 //        String condition = (isDomestic) ? "stockIdx <= 3684 and url is not null" : "stockIdx > 3684";
         String condition = (isDomestic) ? "length(stockCode) >= 6 and url is not null" : "length(stockCode) <= 5";
-        String query = "select stockIdx from Stock where " + condition;
+        String query = "select stockIdx from StockTest where " + condition;
 
         return this.jdbcTemplate.query(query, (rs, rowNum) -> rs.getInt("stockIdx"));
     }
@@ -323,7 +330,7 @@ public class StockUploadDao {
 
 
     public List<StockInfo> getSNPStockInfos() {
-        String query = "select stockIdx, stockCode from Stock where length(stockCode) <= 5";
+        String query = "select stockIdx, stockCode from StockTest where length(stockCode) <= 5";
 
         return this.jdbcTemplate.query(query, (rs, rowNum) -> StockInfo.builder()
                 .stockIdx(rs.getInt("stockIdx"))
