@@ -41,30 +41,19 @@ public class StockUploadDao {
             insert.append("(?,?,?,?),");
         }
 
-        String lastTrTime = params[2].toString();
 
         this.jdbcTemplate.update(insert.substring(0, insert.length()-1), params);
 
         // update lastTrs
-        // 쿼리
-        String createTempTb = "create temporary table lastTrs select stockTransactionIdx, stockIdx from StockTodayTrans limit 0";
-        String collectLastTrs =
-                "insert into lastTrs(stockTransactionIdx, stockIdx)\n" +
-                "(select StockTransactionIdx, stockIdx from StockTodayTrans where transactionTime = ?)";
-        String updateTrs =
-                "update Stock set lastTransactionIdx = \n" +
-                "(select stockTransactionIdx from lastTrs where stockIdx = ?) where stockIdx = ?";
-        String dropTempTb = "drop table lastTrs";
+        String updateLastTr =
+                "update Stock ST set ST.lastTransactionIdx = (\n" +
+                        "   select STTT.stockTransactionIdx from StockTodayTrans STTT\n" +
+                        "   where ST.stockIdx = STTT.stockIdx\n" +
+                        "   order by STTT.transactionTime desc\n" +
+                        "   limit 1\n" +
+                        ") where url is not null";
 
-        // 실행
-        this.jdbcTemplate.update(createTempTb);
-        this.jdbcTemplate.update(collectLastTrs, lastTrTime);
-
-        for (int stockIdx : stockIdxs) {
-            this.jdbcTemplate.update(updateTrs, stockIdx, stockIdx);
-        }
-
-        this.jdbcTemplate.update(dropTempTb);
+        this.jdbcTemplate.update(updateLastTr);
     }
 
     /**
@@ -282,16 +271,13 @@ public class StockUploadDao {
 
     public void uploadSNP500Details(StockInfo detail) {
         String query = "update Stock set stockCode = ? , issuedShares = ? where url = ?";
-//        String query = "update Stock set stockCode = ? where url = ?";
 
         this.jdbcTemplate.update(query, detail.getStockCode(), detail.getIssuedShares(), detail.getUrl());
     }
 
 
     public List<String> getAmericanStockUrls() {
-//        String query = "select url from Stock where LENGTH(stockCode) <= 5";
-        String query = "select url from Stock where issuedShares is null";
-
+        String query = "select url from Stock where LENGTH(stockCode) <= 5";
         return this.jdbcTemplate.query(query, (rs, rowNum) -> rs.getString("url"));
     }
 
@@ -302,7 +288,6 @@ public class StockUploadDao {
         return this.jdbcTemplate.query(query, (rs, rowNum) -> StockInfo.builder()
                 .stockIdx(rs.getInt("stockIdx"))
                 .stockCode(rs.getString("stockCode"))
-//                .issuedShares(rs.getLong("issuedShares"))
                 .build()
         );
     }
@@ -331,10 +316,74 @@ public class StockUploadDao {
                 .build());
     }
 
-//    public List<Integer> getUpdatedStockIdxs() {
-//        String query = "select st.stockIdx from Stock st INNER JOIN StockTransaction tr on st.stockIdx = tr.stockIdx\n" +
-//                "where DATEDIFF(tr.createdAt, now()) = 0 group by st.stockIdx having count(*) > 1 limit 10000";
+    public List<Integer> getUpdatedStockIdxs() {
+        String query = "select st.stockIdx from Stock st INNER JOIN StockTransaction tr on st.stockIdx = tr.stockIdx\n" +
+                "where DATEDIFF(tr.createdAt, now()) = 0 group by st.stockIdx having count(*) > 1 limit 10000";
+
+        return new ArrayList<>(this.jdbcTemplate.query(query, (rs, rowNum) -> rs.getInt("stockIdx")));
+    }
+
+    /**
+     * issuedShares 업로드에 사용
+     */
+//    public void setIssuedShares(StockInfo issuedShares) {
+//        String query = "update Stock set issuedShares = ? where url = ?";
 //
-//        return new ArrayList<>(this.jdbcTemplate.query(query, (rs, rowNum) -> rs.getInt("stockIdx")));
+//        this.jdbcTemplate.update(query, issuedShares.getIssuedShares(), issuedShares.getUrl());
+//    }
+
+//    public void updateLastTrs_NEW() {
+//        // idxs 가져오기
+//        String getIdxs = "select stockIdx from Stock where lastTransactionIdx is null limit 5000";
+//        List<Integer> stockIdxs = this.jdbcTemplate.query(getIdxs, (rs, rowNum) -> rs.getInt("stockIdx"));
+//
+//        System.out.println("주식 ID 가져오기 완료, " + LocalDateTime.now());
+//
+////        List<Integer> lastTrIdxs = new ArrayList<>(stockIdxs.size());
+//        String getlastTrIdx = "";
+//
+//        // lastTr Idx 얻기
+//        for (Integer idx : stockIdxs) {
+//            getlastTrIdx =
+//                    "select stockTransactionIdx from StockTransaction where stockIdx = " + idx + "\n" +
+//                            "order by transactionTime desc limit 2";
+////            lastTrIdxs.add(this.jdbcTemplate.queryForObject(getlastTrIdx, int.class));
+//            List<Integer> lastTrs = this.jdbcTemplate.query(getlastTrIdx, (rs, rowNum) -> rs.getInt("stockTransactionIdx"));
+//
+//            if (lastTrs.size() == 0) { // 오류 있는 데이터
+//                System.out.println(idx);
+//                continue;
+//            }
+//
+//            int lastTrIdx = lastTrs.get(0);
+//            // move lastTr
+//            String insert =
+//                    "insert into StockTodayTrans(stockIdx, price, transactionTime, tradingVolume, createdAt, updatedAt) " +
+//                    "select stockIdx, price, transactionTime, tradingVolume, createdAt, updatedAt from StockTransaction " +
+//                    "where StockTransactionIdx = " + lastTrIdx;
+//
+//            String delete = "delete from StockTransaction where stockTransactionIdx = " + lastTrIdx;
+//
+//            // update Stock
+//            String setLastTr =
+//                    "update Stock set lastTransactionIdx = " +
+//                            "(select stockTransactionIdx from StockTodayTrans order by stockTransactionIdx desc limit 1) " +
+//                            "where stockIdx = " + idx;
+//
+//            // 실행
+//            this.jdbcTemplate.update(insert);
+//            this.jdbcTemplate.update(delete);
+//            this.jdbcTemplate.update(setLastTr);
+//
+//            if (lastTrs.size() == 2) {
+//                // set S2LastTrIdx
+//                int s2Last = lastTrs.get(1);
+//                String setS2Last =
+//                        "update Stock set s2LastTransactionIdx = " + s2Last + " " +
+//                                "where stockIdx = " + idx;
+//
+//                this.jdbcTemplate.update(setS2Last);
+//            }
+//        }
 //    }
 }

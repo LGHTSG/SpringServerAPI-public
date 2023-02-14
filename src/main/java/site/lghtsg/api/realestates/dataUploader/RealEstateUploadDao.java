@@ -111,9 +111,6 @@ public class RealEstateUploadDao {
                 "where RE.realEstateIdx = RET.realEstateIdx " +
                 "order by RET.transactionTime desc limit 1, 1)";
 
-//        String updates2Last = "update RealEstate " +
-//                "set s2LastTransactionIdx = lastTransactionIdx";
-
         this.jdbcTemplate.update(setLastTrs);
         this.jdbcTemplate.update(setS2LastTrs);
     }

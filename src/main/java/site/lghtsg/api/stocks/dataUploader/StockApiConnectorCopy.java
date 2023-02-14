@@ -47,8 +47,8 @@ public class StockApiConnectorCopy {
     /**
      * 테스트 Table에 업로드
      */
-    @Async
-    @Scheduled(cron = "0 0 17 ? * MON-FRI") // UTC 기준. 한국시간 기준 TUE-SAT 2AM
+//    @Async
+//    @Scheduled(cron = "0 0 17 ? * MON-FRI") // UTC 기준. 한국시간 기준 TUE-SAT 2AM
     public void getClosePricesOfDomestic() {
         try {
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -96,8 +96,8 @@ public class StockApiConnectorCopy {
         // 조회기간
 //        List<List<String>> periods = getPeriods(yesterday, LocalDate.of(2018, 1, 1));
 
-        LocalDate tempDate = LocalDate.of(2023, 2, 11);
-        List<List<String>> periods = getPeriods(tempDate, tempDate);
+//        LocalDate tempDate = LocalDate.of(2023, 2, 11);
+        List<List<String>> periods = getPeriods(LocalDate.now(), LocalDate.now());
 
         List<String> startDates = periods.get(0);
         List<String> endDates = periods.get(1);

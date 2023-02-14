@@ -1,5 +1,9 @@
 package site.lghtsg.api.stocks.dataUploader;
 
+import org.jsoup.Connection;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.select.Elements;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
@@ -13,6 +17,7 @@ import org.springframework.stereotype.Service;
 import site.lghtsg.api.stocks.dataUploader.model.StockInfo;
 import site.lghtsg.api.stocks.dataUploader.model.StockTransaction;
 
+import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -38,77 +43,68 @@ public class StockScraper {
     /**
      * S&P 500 실시간 스크래핑
      */
-//    @Async
-//    @Scheduled(cron = "10 0/5,59 0-5,23 ? * MON-SAT")
+    @Async
+//    @Scheduled(cron = "10 0/5,59 14-20 ? * MON-FRI") // UTC 기준
+    @Scheduled(cron = "10 0/5,59 16 ? * TUE") // UTC 기준
     public void scrapeSNP500() {
         // 실행시간 체크
         LocalDateTime now = LocalDateTime.now();
         int hour = now.getHour();
         int minute = now.getMinute();
-        int dayOfWeek = now.getDayOfWeek().getValue();
 
-        if (minute == 59 && hour != 05) return; // 06시 빼고 제외
-        else if (hour == 23 && minute < 29) return; // 개장 전 제외
-        else if (dayOfWeek == 1 && hour != 23) return; //월요일 오전 제외
-        else if (dayOfWeek == 6 && hour == 23) return; // 토요일 밤 제외
+        if (minute == 59 && hour != 20) return; // 06시 빼고 제외
+        else if (hour == 14 && minute < 29) return; // 개장 전 제외
 
-        WebDriver driver = setDriver();
-
+        // 실행
         try {
-            scrapeAmericanStock(driver);
+            scrapeAmericanStock();
         } catch (Exception e) {
             e.printStackTrace();
             System.out.println("S&P500 스크래핑 실패");
-        } finally {
-            driver.quit();
         }
+
     }
 
     /**
      * 국내주식 실시간 스크래핑
      */
 //    @Async
-//    @Scheduled(cron = "10 0/5,59 9-15 ? * MON-FRI")
+//    @Scheduled(cron = "10 0/5,59 0-6 ? * MON-FRI")
     public void scrapeDomesticStocks() {
         // 실행시간 체크
         LocalDateTime now = LocalDateTime.now();
 
         // 16시 데이터 수집용 (스케줄러 적용시)
-        if (now.getMinute() == 59 && now.getHour() != 15) return;
-
-        WebDriver driver = setDriver();
+        if (now.getMinute() == 59 && now.getHour() != 6) return;
 
         try {
-            scrapeKoreanStocks(driver);
-        } catch (Exception e) { // 간격이 5분이므로, 한번 실패하면 pass
+            scrapeKoreanStock();
+        } catch (Exception e) {
             e.printStackTrace();
             System.out.println("국내주식 스크래핑 실패");
-        } finally {
-            driver.quit();
         }
     }
 
-    // TodayTrans 정리 및 lastTrs 업데이트
+    // TodayTrans 정리 및 lastTrs 업데이트(일단 수동)
 
 //    @Async
 //    @Scheduled(cron = "0 30 8 ? * MON-FRI")
     public void updateTrsOfDomestic() {
-        updateTrs(true);
+        updateTrsOfRealTime(true);
     }
 
 //    @Async
 //    @Scheduled(cron = "0 0 23 ? * MON-FRI")
     public void updateTrsOfAmerican() {
-        updateTrs(false);
+        updateTrsOfRealTime(false);
     }
 
     // 세팅 관련 메소드
-
     /**
      * 실시간 데이터 업로드 시 url-Idx 매핑에 사용될 Map 세팅
      */
     @Async
-    @Scheduled(cron = "0 0 8 ? * MON-FRI")
+    @Scheduled(cron = "0 0 23 * * ?") // UTC 기준
     public void setMapper() {
         List<StockInfo> urlsAndIdxs = stockUploadDao.getUrlsAndIdxs();
         this.stockUrlsAndIdxs = new HashMap<>(urlsAndIdxs.size());
@@ -119,7 +115,6 @@ public class StockScraper {
     }
 
     private WebDriver setDriver() {
-
         ChromeOptions options = new ChromeOptions();
 
         options.addArguments("--disable-popup-blocking"); // 팝업 X
@@ -132,159 +127,139 @@ public class StockScraper {
 
     // 스크래핑 소스코드
 
-    private void scrapeAmericanStock(WebDriver driver) {
+    public void scrapeAmericanStock() {
+        // 소요시간 체크
         long sTime = System.currentTimeMillis();
 
-        LocalDateTime now = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now().plusHours(9); // UTC -> 한국시간
 
         String transactionTime = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:00"));
 
-        // 초기 세팅
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofMillis(15000));
+        String url = "https://kr.investing.com/equities/StocksFilter?noconstruct=1&smlID=595&sid=&tabletype=price&index_id=166";
+        Connection conn = Jsoup.connect(url);
+        try {
+            Document document = conn.get();
+            Elements elements = document.select("table#cross_rate_markets_stocks_1 tbody tr td");
 
-        String url = "https://kr.investing.com/equities/americas";
+            Map<Integer, StockTransaction> transactions = convertElement2(elements, transactionTime,true);
 
-
-        // S&P 500 목록 찾기
-        driver.get(url);
-
-        Select filter = new Select(wait.until(ExpectedConditions.visibilityOfElementLocated
-                (id("stocksFilter"))));
-
-        filter.selectByVisibleText("S&P 500");
-
-
-        List<WebElement> stockElements = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                id("cross_rate_markets_stocks_1"))).findElement(tagName("tbody")).findElements(tagName("tr"));
-
-        int size = stockElements.size();
-
-        List<List<WebElement>> subLists = new ArrayList<>();
-
-        subLists.add(stockElements.subList(0, 250));
-        subLists.add(stockElements.subList(250, size));
-
-        for (List<WebElement> subList : subLists) {
-            Map<Integer, StockTransaction> transactions = convertElement(subList, transactionTime, true);
             stockUploadDao.uploadPrices(transactions);
+
+            long eTime = System.currentTimeMillis();
+            System.out.println("스크래핑 완료, 소요 시간 = " + (eTime - sTime) + " ms");
+        } catch (IOException e) {
+           e.printStackTrace();
         }
-
-        long eTime = System.currentTimeMillis();
-
-        System.out.println("스크래핑 소요 시간 : " + (eTime - sTime));
-
-        System.out.println(stockElements.size());
-
     }
 
-    private void scrapeKoreanStocks(WebDriver driver) {
+    public void scrapeKoreanStock() {
+        // 소요시간 체크용
         long sTime = System.currentTimeMillis();
 
-        LocalDateTime now = LocalDateTime.now();
+        // 거래시간
+        LocalDateTime now = LocalDateTime.now().plusHours(9); // UTC -> 한국시간으로
 
         String transactionTime = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:00"));
 
-        // 초기 세팅
-        WebDriverWait wait = new WebDriverWait(driver, Duration.ofMillis(15000));
+        String url = "https://kr.investing.com/equities/StocksFilter?noconstruct=1&smlID=694&sid=&tabletype=price&index_id=all";
+        Connection conn = Jsoup.connect(url)
+                .header("x-requested-with", "XMLHttpRequest");
 
-        String url = "https://kr.investing.com/equities/south-korea";
+        try {
+            Document doc = conn.get();
+            Elements elements = doc.select("table#cross_rate_markets_stocks_1 tbody tr td");
 
-        // 주식 목록 찾기
-        driver.get(url);
+            Map<Integer, StockTransaction> transactions = convertElement2(elements, transactionTime, false);
 
-        Select filter = new Select(wait.until(ExpectedConditions.visibilityOfElementLocated
-                (id("stocksFilter"))));
-
-        filter.selectByVisibleText("한국의 모든 주식");
-
-        List<WebElement> stockElements = wait.until(ExpectedConditions.visibilityOfElementLocated(
-                id("cross_rate_markets_stocks_1"))).findElement(tagName("tbody")).findElements(tagName("tr"));
-
-
-        System.out.println("stockElements.size() = " + stockElements.size());
-
-        int size = stockElements.size();
-
-        List<List<WebElement>> subLists = new ArrayList<>();
-
-        subLists.add(stockElements.subList(0, 300));
-        subLists.add(stockElements.subList(300, 600));
-        subLists.add(stockElements.subList(600, size));
-
-        for (List<WebElement> subList : subLists) {
-            Map<Integer, StockTransaction> transactions = convertElement(subList, transactionTime, false);
             stockUploadDao.uploadPrices(transactions);
+
+            long eTime = System.currentTimeMillis();
+            System.out.println("스크래핑 완료, 소요 시간 = " + (eTime - sTime) + " ms");
+        } catch (IOException ie) {
+            ie.printStackTrace();
+            System.out.println("국내 실시간 스크래핑 실패");
         }
 
-        System.out.println(stockElements.size());
-
-        long eTime = System.currentTimeMillis();
-
-        System.out.println("스크래핑 소요 시간 : " + (eTime - sTime));
     }
 
     /**
-     * WebElement tbody -> Map(stockIdx, transaction) transactions
+     * Elements stockAttrs -> Map(stockIdx, transaction) transactions
      * @param elements
      * @param transactionTime
      * @param isDollerData
      * @return
      */
-    private Map<Integer, StockTransaction> convertElement(List<WebElement> elements, String transactionTime, boolean isDollerData) {
+    private Map<Integer, StockTransaction> convertElement2(Elements elements, String transactionTime, boolean isDollerData) {
         int exchangeRate = 1230;
 
-        Map<Integer, StockTransaction> transactions = new HashMap<>(elements.size());
+        Elements links = elements.select("a");
 
-        for (WebElement element : elements) {
-            List<WebElement> info = element.findElements(tagName("td")); // 주식 정보 element
+        Map<Integer, StockTransaction> transactions = new HashMap<>(links.size());
+        System.out.println(links.size());
 
-            String url = info.get(1).findElement(tagName("a")).getAttribute("href");
+        for (int i = 0; i < links.size(); i++) {
+
+            int priceCnt = 2 + i * 10;
+            int tradeVolCnt = 7 + i * 10;
+
+            String http = "https://kr.investing.com";
+
+            String url = http + links.get(i).attr("href");
             Integer idx = stockUrlsAndIdxs.get(url);
 
             if (idx == null) continue;
 
-            String priceSrc = info.get(2).getText().replaceAll(",","");
+            String priceSrc = elements.get(priceCnt).text().replaceAll(",","");
             int price = (isDollerData) ? (int) (Float.parseFloat(priceSrc) * exchangeRate)
                     : Integer.parseInt(priceSrc);
 
+            if (isDollerData) {
+                price = Math.round((float) price / 10) * 10; // 환율 계산에서 발생하는 1의 자리 금액 반올림
+            }
+
             // 거래량 : 0, 123, 83.2K, 14.4M 등
-            String tradeVol = info.get(7).getText();
+            String tradeVol = elements.get(tradeVolCnt).text();
 
             if (tradeVol.equals("0")) {
-                transactions.put(idx, new StockTransaction(idx, transactionTime,0, price));
+                transactions.put(idx, new StockTransaction(idx, transactionTime, 0, price));
                 continue;
             }
 
             int tradingVol = 0;
             int length = tradeVol.length();
-            String lastChar = tradeVol.substring(length-1);
+            String lastChar = tradeVol.substring(length - 1);
 
             if (lastChar.equals("M") || lastChar.equals("K")) {
-                float num = Float.parseFloat(tradeVol.substring(0, length-1));
+                float num = Float.parseFloat(tradeVol.substring(0, length - 1));
                 int unit = (lastChar.equals("M")) ? 1000000 : 1000;
 
-                tradingVol = (int) num * unit;
+                tradingVol = (int) (num * unit);
             } else {
                 tradingVol = Integer.parseInt(tradeVol);
             }
-
             transactions.put(idx, new StockTransaction(idx, transactionTime, tradingVol, price));
         }
         return transactions;
     }
 
+
     /**
      * updateTrs 소스코드
      * @param isDomestic
      */
-    public void updateTrsOfRealTime(boolean isDomestic) {
-        List<Integer> stockIdxs = stockUploadDao.getStockIdxs(isDomestic);
-        System.out.println(stockIdxs.size() + " " + ((isDomestic)? "korean" : "SNP500"));
-        // 압축
-        stockUploadDao.clearTodayTrans(stockIdxs);
+    private void updateTrsOfRealTime(boolean isDomestic) {
+        try {
+            List<Integer> stockIdxs = stockUploadDao.getStockIdxs(isDomestic);
+            System.out.println(stockIdxs.size() + " " + ((isDomestic)? "korean" : "SNP500"));
+            // 압축
+            stockUploadDao.clearTodayTrans(stockIdxs);
 
-        // 전일 종가 복사(TodayTrans -> Transaction)
-        stockUploadDao.copyOldestTr(stockIdxs, isDomestic);
+            // 전일 종가 복사(TodayTrans -> Transaction)
+            stockUploadDao.copyOldestTr(stockIdxs, isDomestic);
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("StockTodayTrans 정리 실패");
+        }
     }
 
 
@@ -406,7 +381,6 @@ public class StockScraper {
 
         try {
             List<String> stockUrls = stockUploadDao.getAmericanStockUrls(); // 탐색할 종목의 url
-            List<StockInfo> details = new ArrayList<>(stockUrls.size());
 
             for (String url : stockUrls) {
                 driver.get(url);
@@ -439,12 +413,6 @@ public class StockScraper {
                         .stockCode(code)
                         .issuedShares(issuedShares)
                         .build());
-
-                // issuedShares 업로드에 사용
-//                stockUploadDao.setIssuedShares(StockInfo.builder()
-//                        .issuedShares(issuedShares)
-//                        .url(url)
-//                        .build());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -455,20 +423,53 @@ public class StockScraper {
     }
 
     /**
-     * updateTrsOfRealTime 실행 및 예외처리, 재실행
-     * @param isDomestic
-     */
-    private void updateTrs(boolean isDomestic) {
-        try {
-            updateTrsOfRealTime(isDomestic);
-        } catch (Exception e) { // DB 연결 실패
-            try {
-                updateTrsOfRealTime(isDomestic);
-            } catch (Exception secondE) {
-                secondE.printStackTrace();
-                System.out.println("StockTodayTrans 정리 실패");
-            }
-        }
-    }
+     //     * 셀레니움 사용시
+     //     * @param elements
+     //     * @param transactionTime
+     //     * @param isDollerData
+     //     * @return
+     //     */
+//    private Map<Integer, StockTransaction> convertElement(List<WebElement> elements, String transactionTime, boolean isDollerData) {
+//        int exchangeRate = 1230;
+//
+//        Map<Integer, StockTransaction> transactions = new HashMap<>(elements.size());
+//
+//        for (WebElement element : elements) {
+//            List<WebElement> info = element.findElements(tagName("td")); // 주식 정보 element
+//
+//            String url = info.get(1).findElement(tagName("a")).getAttribute("href");
+//            Integer idx = stockUrlsAndIdxs.get(url);
+//
+//            if (idx == null) continue;
+//
+//            String priceSrc = info.get(2).getText().replaceAll(",","");
+//            int price = (isDollerData) ? (int) (Float.parseFloat(priceSrc) * exchangeRate)
+//                    : Integer.parseInt(priceSrc);
+//
+//            // 거래량 : 0, 123, 83.2K, 14.4M 등
+//            String tradeVol = info.get(7).getText();
+//
+//            if (tradeVol.equals("0")) {
+//                transactions.put(idx, new StockTransaction(idx, transactionTime,0, price));
+//                continue;
+//            }
+//
+//            int tradingVol = 0;
+//            int length = tradeVol.length();
+//            String lastChar = tradeVol.substring(length-1);
+//
+//            if (lastChar.equals("M") || lastChar.equals("K")) {
+//                float num = Float.parseFloat(tradeVol.substring(0, length-1));
+//                int unit = (lastChar.equals("M")) ? 1000000 : 1000;
+//
+//                tradingVol = (int) num * unit;
+//            } else {
+//                tradingVol = Integer.parseInt(tradeVol);
+//            }
+//
+//            transactions.put(idx, new StockTransaction(idx, transactionTime, tradingVol, price));
+//        }
+//        return transactions;
+//    }
 
 }
