@@ -9,21 +9,13 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
 
     private final StockApiConnector apiConnector;
-    private final StockApiConnectorCopy apiConnectorCopy;
     private final StockInfoUploader stockInfoUploader;
     private final StockScraper stockScraper;
 
-    public TestController(StockApiConnector apiConnector, StockApiConnectorCopy apiConnectorCopy, StockInfoUploader stockInfoUploader, StockScraper stockScraper) {
+    public TestController(StockApiConnector apiConnector, StockInfoUploader stockInfoUploader, StockScraper stockScraper) {
         this.apiConnector = apiConnector;
-        this.apiConnectorCopy = apiConnectorCopy;
         this.stockInfoUploader = stockInfoUploader;
         this.stockScraper = stockScraper;
-    }
-
-    // 자동 업로드 테스트
-    @GetMapping("/test")
-    public void uploadDomesticTest() {
-        apiConnectorCopy.getClosePricesOfDomestic();
     }
 
     // Stock 테이블 정보수집 관련
@@ -48,18 +40,28 @@ public class TestController {
         stockScraper.scrapeKoreanStockUrls();
     }
 
-    // 자동화 및 스크래핑 완료 후, Stock 정보 수집 제외하고 삭제 예정
+    // 자동화 및 완료 후, Stock 정보 수집 제외하고 삭제 예정
 
     // 실시간 데이터 관련
 
     @GetMapping("/domestic")
     public void getKoreanStocks()  {
-        stockScraper.scrapeDomesticStocks();
+        stockScraper.scrapeKoreanStock();
     }
 
     @GetMapping("/american")
     public void getAmericanStocks()  {
-        stockScraper.scrapeSNP500();
+        stockScraper.scrapeAmericanStock();
+    }
+
+    @GetMapping("domestic/trs")
+    public void updateTrsDomestic() {
+        stockScraper.updateTrsOfDomestic();
+    }
+
+    @GetMapping("american/trs")
+    public void updateTrsAmerican() {
+        stockScraper.updateTrsOfAmerican();
     }
 
     // 세팅 관련
@@ -69,6 +71,7 @@ public class TestController {
     }
 
     // KIS api
+
     @GetMapping("/domesticprices")
     public void getPricesOfDomestic() {
         try {
@@ -77,65 +80,14 @@ public class TestController {
             e.printStackTrace();
         }
     }
-//
-    // 스크래핑 완성 시 삭제 예정
+
     @GetMapping("/americanprices")
     public void getPricesOfAmerican() {
         try {
             apiConnector.getClosePricesOfAmerican();
         } catch (Exception e) {
             e.printStackTrace();
+            System.out.println("해외종목 업데이트 실패");
         }
     }
-
-//    @GetMapping("/set_driver")
-//    public void setDriver() {
-//        stockScraper.setDriver();
-//    }
-
-//
-//
-
-//    @GetMapping("/cleardomestictrans")
-//    public void clearDomesticTrans() {
-//        stockScraper.clearDomesticTrans();
-//    }
-//
-//    @GetMapping("/clearamericantrans")
-//    public void clearAmericanTrans() {
-//        stockScraper.clearAmericanTrans();
-//    }
-
-
-//    @GetMapping("/lasttrs_new")
-//    public String updateLastTrs_NEW() {
-//        return apiConnector.updateLastTrs_NEW();
-//    }
-//
-//    @GetMapping("/token")
-//    public void updateToken() {
-//        try {
-//            apiConnector.updateAccessToken();
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-//
-//    @GetMapping("/trs_korean")
-//    public void updateTrsDomestic() {
-//        try {
-//            stockScraper.updateTrsOfRealTime(true);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
-//
-//    @GetMapping("/trs_american")
-//    public void updateTrsAmerican() {
-//        try {
-//            stockScraper.updateTrsOfRealTime(false);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
-//    }
 }

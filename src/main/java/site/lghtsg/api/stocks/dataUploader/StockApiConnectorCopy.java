@@ -96,8 +96,8 @@ public class StockApiConnectorCopy {
         // 조회기간
 //        List<List<String>> periods = getPeriods(yesterday, LocalDate.of(2018, 1, 1));
 
-        LocalDate tempDate = LocalDate.of(2023, 2, 11);
-        List<List<String>> periods = getPeriods(tempDate, tempDate);
+//        LocalDate tempDate = LocalDate.of(2023, 2, 11);
+        List<List<String>> periods = getPeriods(LocalDate.now(), LocalDate.now());
 
         List<String> startDates = periods.get(0);
         List<String> endDates = periods.get(1);
