@@ -66,8 +66,9 @@ public class TestController {
 
     // 세팅 관련
     @GetMapping("/set_mapper")
-    public void setMapper() {
+    public String setMapper() {
         stockScraper.setMapper();
+        return "setMapper 실행 완료";
     }
 
     // KIS api

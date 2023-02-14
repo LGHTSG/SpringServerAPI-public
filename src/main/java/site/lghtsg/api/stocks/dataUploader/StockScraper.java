@@ -104,7 +104,7 @@ public class StockScraper {
      * 실시간 데이터 업로드 시 url-Idx 매핑에 사용될 Map 세팅
      */
     @Async
-    @Scheduled(cron = "0 0 23 * * ?") // UTC 기준
+    @Scheduled(cron = "0 50 23 * * ?") // UTC 기준
     public void setMapper() {
         List<StockInfo> urlsAndIdxs = stockUploadDao.getUrlsAndIdxs();
         this.stockUrlsAndIdxs = new HashMap<>(urlsAndIdxs.size());
@@ -112,6 +112,7 @@ public class StockScraper {
         for (StockInfo urlAndIdx : urlsAndIdxs) {
             this.stockUrlsAndIdxs.put(urlAndIdx.getUrl(), urlAndIdx.getStockIdx());
         }
+        System.out.println("setMapper 완료");
     }
 
     private WebDriver setDriver() {
