@@ -91,7 +91,7 @@
 //            userService.sellMyAsset(userIdx, postMyAssetReq);
 //        }
 //        catch(BaseException e){
-//            System.out.println(e.getStatus());
+//            e.printStackTrace();
 //        }
 //    }
 //

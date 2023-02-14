@@ -1,11 +1,7 @@
 package site.lghtsg.api.utils;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.Jwts;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.data.redis.core.ValueOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,5 +33,4 @@ public class RedisService {
     public void deleteValues(String key) {
         redisTemplate.delete(key);
     }
-
 }

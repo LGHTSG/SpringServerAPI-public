@@ -9,13 +9,21 @@ import org.springframework.web.bind.annotation.RestController;
 public class TestController {
 
     private final StockApiConnector apiConnector;
+    private final StockApiConnectorCopy apiConnectorCopy;
     private final StockInfoUploader stockInfoUploader;
     private final StockScraper stockScraper;
 
-    public TestController(StockApiConnector apiConnector, StockInfoUploader stockInfoUploader, StockScraper stockScraper) {
+    public TestController(StockApiConnector apiConnector, StockApiConnectorCopy apiConnectorCopy, StockInfoUploader stockInfoUploader, StockScraper stockScraper) {
         this.apiConnector = apiConnector;
+        this.apiConnectorCopy = apiConnectorCopy;
         this.stockInfoUploader = stockInfoUploader;
         this.stockScraper = stockScraper;
+    }
+
+    // 자동 업로드 테스트
+    @GetMapping("/test")
+    public void uploadDomesticTest() {
+        apiConnectorCopy.getClosePricesOfDomestic();
     }
 
     // Stock 테이블 정보수집 관련
@@ -66,11 +74,7 @@ public class TestController {
         try {
             apiConnector.getClosePricesOfDomestic();
         } catch (Exception e) {
-            try {
-                apiConnector.getClosePricesOfDomestic();
-            } catch (Exception e2) { // 여러번 실패하면 (일시적인 게 아니면) 중지
-                e.printStackTrace();
-            }
+            e.printStackTrace();
         }
     }
 //
@@ -81,11 +85,6 @@ public class TestController {
             apiConnector.getClosePricesOfAmerican();
         } catch (Exception e) {
             e.printStackTrace();
-            try {
-                apiConnector.getClosePricesOfAmerican();
-            } catch (Exception e2) { // 여러번 실패하면 중지
-                e.printStackTrace();
-            }
         }
     }
 
