@@ -47,8 +47,8 @@ public class StockApiConnectorCopy {
     /**
      * 테스트 Table에 업로드
      */
-    @Async
-    @Scheduled(cron = "0 0 17 ? * MON-FRI") // UTC 기준. 한국시간 기준 TUE-SAT 2AM
+//    @Async
+//    @Scheduled(cron = "0 0 17 ? * MON-FRI") // UTC 기준. 한국시간 기준 TUE-SAT 2AM
     public void getClosePricesOfDomestic() {
         try {
             SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
