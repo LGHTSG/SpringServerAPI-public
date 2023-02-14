@@ -52,6 +52,9 @@ dependencies {
 	// [라이언] : 주식 openApi 관련 (json 데이터 받아오기)
 	implementation group: 'com.googlecode.json-simple', name: 'json-simple', version: '1.1.1'
 
+	// [진] : 주식 스크래핑 관련
+	implementation 'org.jsoup:jsoup:1.15.3'
+
 	implementation group: 'org.seleniumhq.selenium', name: 'selenium-java', version: '4.7.2'
 
 }
