@@ -48,7 +48,7 @@ public class ApiConnector {
         List<String> regionCodes = realEstateUploadDao.getSigunguCodes();
         String link = "http://openapi.molit.go.kr/OpenAPI_ToolInstallPackage/service/rest/RTMSOBJSvc/getRTMSDataSvcAptTradeDev";
 
-        String currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM"));
+        String currentMonth = LocalDate.now().format(DateTimeFormatter.ofPattern("yyyyMM")); // 자동 업로드 적용 시 체크
 
         for (String regionCode : regionCodes) {
             // url build
