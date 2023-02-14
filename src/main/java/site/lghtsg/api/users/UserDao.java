@@ -2,9 +2,11 @@ package site.lghtsg.api.users;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import site.lghtsg.api.event.model.GetUserInfoForRank;
 import site.lghtsg.api.users.model.*;
 
 import javax.sql.DataSource;
@@ -21,6 +23,71 @@ public class UserDao {
 
     @Autowired
     public void setDataSource(DataSource dataSource) {this.jdbcTemplate = new JdbcTemplate(dataSource);}
+
+    // 보유주식 현재가 조회
+    public long getStockAssetPrices(int userIdx) {
+        String getPricesQuery =
+                "select sum(STTT.price)\n" +
+                        "from StockUserTransaction SUT\n" +
+                        "   join Stock ST on SUT.stockIdx = ST.stockIdx and SUT.userIdx = ? and SUT.transactionStatus = 1 and SUT.sellCheck = 0\n" +
+                        "   join StockTodayTrans STTT on ST.lastTransactionIdx = STTT.stockTransactionIdx";
+
+        Long totalPrice = this.jdbcTemplate.queryForObject(getPricesQuery, long.class, userIdx);
+        return (totalPrice == null) ? 0L : totalPrice;
+    }
+
+    // 보유 리셀 현재가 조회
+    public long getResellAssetPrices(int userIdx) {
+        String getPricesQuery =
+                "select sum(RTT.price)\n" +
+                        "from ResellUserTransaction RUT\n" +
+                        "   join Resell R on RUT.resellIdx = R.resellIdx and RUT.userIdx = ? and RUT.transactionStatus = 1 and RUT.sellCheck = 0\n" +
+                        "   join ResellTodayTrans RTT on R.lastTransactionIdx = RTT.resellTransactionIdx";
+
+        Long totalPrice = this.jdbcTemplate.queryForObject(getPricesQuery, long.class, userIdx);
+        return (totalPrice == null) ? 0L : totalPrice;
+    }
+
+    // 보유 부동산 현재가 조회
+    public long getRealEstateAssetPrices(int userIdx) {
+        String getPricesQuery =
+                "select sum(RETT.price)\n" +
+                        "from RealEstateUserTransaction REUT\n" +
+                        "   join RealEstate RE on REUT.realEstateIdx = RE.realEstateIdx and REUT.userIdx = ? and REUT.transactionStatus = 1 and REUT.sellCheck = 0\n" +
+                        "   join RealEstateTransaction RETT on RE.lastTransactionIdx = RETT.realEstateTransactionIdx";
+
+        Long totalPrice = this.jdbcTemplate.queryForObject(getPricesQuery, long.class, userIdx);
+        return (totalPrice == null) ? 0L : totalPrice;
+    }
+
+    // 보유 현금 조회
+    public long getCurrentCash(int userIdx) {
+        String getTotalCashQuery = "select currentCash from Sales where userIdx = ?";
+
+        try {
+            Long cash =  this.jdbcTemplate.queryForObject(getTotalCashQuery, long.class, userIdx);
+            return (cash == null) ? 0L : cash;
+        } catch (EmptyResultDataAccessException e) {
+            return 0L;
+        }
+    }
+
+    //자산 구매 시 자산 감소
+    public int updateBuyMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
+        String updateMyAssetQuery = "update Sales set currentCash = currentCash - ? where userIdx = ?";
+
+        Object[] updateMyAssetParams = new Object[]{postMyAssetReq.getPrice(), userIdx};
+        return this.jdbcTemplate.update(updateMyAssetQuery, updateMyAssetParams);
+    }
+
+    //자산 판매 시 자산 증가
+    public int updateSellMyAsset(int userIdx, double thisTransProfit) {
+        String updateMyAssetQuery = "update Sales as S set S.currentCash = S.currentCash * ? / 100 where userIdx = ?;";
+
+        Object[] updateMyAssetParams = new Object[]{thisTransProfit, userIdx};
+        return this.jdbcTemplate.update(updateMyAssetQuery, updateMyAssetParams);
+    }
+
 
     // 회원가입
     public int createUser(PostUserReq postUserReq) {
@@ -363,6 +430,42 @@ public class UserDao {
                 (rs, row) -> new GetUserInfoRes(rs.getString("userName"), rs.getString("email")));
     }
 
+    public int countUserPreviousTransOnCategory(int userIdx, PostMyAssetReq postMyAssetReq){
+        String category = postMyAssetReq.getCategory();
+        int assetIdx = postMyAssetReq.getAssetIdx();
+        String query;
+        if(category.equals(ASSET_CATEGORY_STOCK)){
+            query = "select count(*) / 2 from StockUserTransaction where userIdx = ? and stockIdx = ?;";
+        }
+        else if(category.equals(ASSET_CATEGORY_REALESTATE)){
+            query = "select count(*) / 2 from RealEstateUserTransaction where userIdx = ? and realEstateIdx = ?";
+        }
+        else {
+            query = "select count(*) / 2 from ResellUserTransaction where userIdx = ? and resellIdx = ?;";
+        }
+        Object[] params = new Object[]{userIdx, assetIdx};
+        return this.jdbcTemplate.queryForObject(query, int.class, params);
+    }
+
+    public List<GetUserInfoForRank> getUserInfoForRankList(){
+        String query = "select U.userIdx, U.userName, U.profileImg, S.currentCash as userAsset from User as U, Sales as S where U.userIdx = S.userIdx;";
+        return this.jdbcTemplate.query(query, userRankRowMapper());
+    }
+
+    private RowMapper<GetUserInfoForRank> userRankRowMapper(){
+        return new RowMapper<GetUserInfoForRank>() {
+            @Override
+            public GetUserInfoForRank mapRow(ResultSet rs, int rowNum) throws SQLException {
+                GetUserInfoForRank getUserInfoForRank = new GetUserInfoForRank();
+                getUserInfoForRank.setUserIdx(rs.getInt("userIdx"));
+                getUserInfoForRank.setUserName(rs.getString("userName"));
+                getUserInfoForRank.setProfileImg(rs.getString("profileImg"));
+                getUserInfoForRank.setUserAsset(rs.getLong("userAsset"));
+                return getUserInfoForRank;
+            }
+        };
+    }
+
     private RowMapper<Asset> assetRowMapper(){
         return new RowMapper<Asset>() {
             @Override
@@ -377,7 +480,6 @@ public class UserDao {
             }
         };
     }
-
 
     private RowMapper<GetMyAssetRes> getMyAssetRowMapper(){
         return new RowMapper<GetMyAssetRes>() {

@@ -84,7 +84,7 @@
 //        PostMyAssetReq postMyAssetReq = new PostMyAssetReq();
 //        postMyAssetReq.setAssetIdx(1);
 //        postMyAssetReq.setPrice(2000);
-//        postMyAssetReq.setCategory("realestate");
+//        postMyAssetReq.setCategory("stock");
 //        postMyAssetReq.setTransactionTime("2023-01-30 18:02:31");
 //
 //        try{
@@ -142,8 +142,6 @@
 //            e.printStackTrace();
 //        }
 //    }
-//
-//
 //
 //}
 //
