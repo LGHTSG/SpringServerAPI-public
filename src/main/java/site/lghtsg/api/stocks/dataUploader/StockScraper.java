@@ -43,8 +43,9 @@ public class StockScraper {
     /**
      * S&P 500 실시간 스크래핑
      */
-//    @Async
-//    @Scheduled(cron = "10 0/5,59 14-20 ? * MON-FRI") // UTC 기준    *** 데이터 복구랑 꼬일 수 있으므로 일단 제외
+    @Async
+//    @Scheduled(cron = "10 0/5,59 14-20 ? * MON-FRI") // UTC 기준
+    @Scheduled(cron = "10 0/5,59 16 ? * TUE") // UTC 기준
     public void scrapeSNP500() {
         // 실행시간 체크
         LocalDateTime now = LocalDateTime.now();
@@ -67,8 +68,8 @@ public class StockScraper {
     /**
      * 국내주식 실시간 스크래핑
      */
-    @Async
-    @Scheduled(cron = "10 0/5,59 0-6 ? * MON-FRI")
+//    @Async
+//    @Scheduled(cron = "10 0/5,59 0-6 ? * MON-FRI")
     public void scrapeDomesticStocks() {
         // 실행시간 체크
         LocalDateTime now = LocalDateTime.now();
