@@ -2,9 +2,11 @@ package site.lghtsg.api.users;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.dao.IncorrectResultSizeDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import site.lghtsg.api.event.model.GetUserInfoForRank;
 import site.lghtsg.api.users.model.*;
 
 import javax.sql.DataSource;
@@ -79,12 +81,13 @@ public class UserDao {
     }
 
     //자산 판매 시 자산 증가
-    public int updateSellMyAsset(int userIdx, PostMyAssetReq postMyAssetReq) {
-        String updateMyAssetQuery = "update Sales set currentCash = currentCash + ? where userIdx = ?";
+    public int updateSellMyAsset(int userIdx, double thisTransProfit) {
+        String updateMyAssetQuery = "update Sales as S set S.currentCash = S.currentCash * ? / 100 where userIdx = ?;";
 
-        Object[] updateMyAssetParams = new Object[]{postMyAssetReq.getPrice(), userIdx};
+        Object[] updateMyAssetParams = new Object[]{thisTransProfit, userIdx};
         return this.jdbcTemplate.update(updateMyAssetQuery, updateMyAssetParams);
     }
+
 
     // 회원가입
     public int createUser(PostUserReq postUserReq) {
@@ -421,6 +424,42 @@ public class UserDao {
                 (rs, row) -> new GetUserInfoRes(rs.getString("userName"), rs.getString("email")));
     }
 
+    public int countUserPreviousTransOnCategory(int userIdx, PostMyAssetReq postMyAssetReq){
+        String category = postMyAssetReq.getCategory();
+        int assetIdx = postMyAssetReq.getAssetIdx();
+        String query;
+        if(category.equals(ASSET_CATEGORY_STOCK)){
+            query = "select count(*) / 2 from StockUserTransaction where userIdx = ? and stockIdx = ?;";
+        }
+        else if(category.equals(ASSET_CATEGORY_REALESTATE)){
+            query = "select count(*) / 2 from RealEstateUserTransaction where userIdx = ? and realEstateIdx = ?";
+        }
+        else {
+            query = "select count(*) / 2 from ResellUserTransaction where userIdx = ? and resellIdx = ?;";
+        }
+        Object[] params = new Object[]{userIdx, assetIdx};
+        return this.jdbcTemplate.queryForObject(query, int.class, params);
+    }
+
+    public List<GetUserInfoForRank> getUserInfoForRankList(){
+        String query = "select U.userIdx, U.userName, U.profileImg, S.currentCash as userAsset from User as U, Sales as S where U.userIdx = S.userIdx;";
+        return this.jdbcTemplate.query(query, userRankRowMapper());
+    }
+
+    private RowMapper<GetUserInfoForRank> userRankRowMapper(){
+        return new RowMapper<GetUserInfoForRank>() {
+            @Override
+            public GetUserInfoForRank mapRow(ResultSet rs, int rowNum) throws SQLException {
+                GetUserInfoForRank getUserInfoForRank = new GetUserInfoForRank();
+                getUserInfoForRank.setUserIdx(rs.getInt("userIdx"));
+                getUserInfoForRank.setUserName(rs.getString("userName"));
+                getUserInfoForRank.setProfileImg(rs.getString("profileImg"));
+                getUserInfoForRank.setUserAsset(rs.getLong("userAsset"));
+                return getUserInfoForRank;
+            }
+        };
+    }
+
     private RowMapper<Asset> assetRowMapper(){
         return new RowMapper<Asset>() {
             @Override
@@ -435,7 +474,6 @@ public class UserDao {
             }
         };
     }
-
 
     private RowMapper<GetMyAssetRes> getMyAssetRowMapper(){
         return new RowMapper<GetMyAssetRes>() {

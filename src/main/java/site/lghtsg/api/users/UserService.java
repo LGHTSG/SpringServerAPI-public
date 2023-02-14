@@ -173,8 +173,11 @@ public class UserService {
 
             // 자산 구매 Dao
             result = userDao.buyMyAsset(userIdx, postMyAssetReq);
-            // 자산 구매 시 자산 감소
-            userDao.updateBuyMyAsset(userIdx, postMyAssetReq);
+
+            // TODO : [이벤트] 사용자는 자신의 자산에서 해당 자산에 대해 구매 가능한만큼 전부 산다는 가정으로 거래가 진행되므로,
+            // TODO : 구매시 자산가격을 감소시키지 않고 판매시에 계산된 수익율을 사용자의 자산에 반영하는 식으로 계산하려고 한다.
+//            // 자산 구매 시 자산 감소
+//            userDao.updateBuyMyAsset(userIdx, postMyAssetReq);
             // 구매 실패
             if (result == 0) throw new BaseException(PURCHASE_FAIL_ASSET);
         } catch (BaseException be){
@@ -195,8 +198,13 @@ public class UserService {
         try {
             // 리스트 상태 변경 Dao
             userDao.changeMyAssetList(userIdx, postMyAssetReq);
-            // 자산 구매 시 자산 감소
-            userDao.updateSellMyAsset(userIdx, postMyAssetReq);
+            // 수익율 계산
+            double thisTransProfit = updateTableSales(userIdx, postMyAssetReq, previousTransaction);
+            // TODO : [EVENT] 수익율 기준으로 사용자 자산계산 - 해당 파트 (주식, 부동산, 리셀) 의 거래가 총 2번 이하인 경우에만 자산 반영
+            int limit = userDao.countUserPreviousTransOnCategory(userIdx, postMyAssetReq);
+            System.out.println("limit : " + limit);
+            // 계산된 수익율을 기반으로 사용자 자산 변경
+            if(limit < 2) userDao.updateSellMyAsset(userIdx, thisTransProfit);
             // 자산 판매 Dao
             userDao.sellMyAsset(userIdx, postMyAssetReq);
         } catch (Exception exception) {
@@ -208,17 +216,20 @@ public class UserService {
 
     public void buyValidation(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException{
         Asset previousTransaction;
-        // 구매는 이전 거래가 없는 경우 허용
+        // 구매는 이전 거래가 없는 경우만 허용(이벤트)
         try {
             previousTransaction = userProvider.getPreviousTransaction(userIdx, postMyAssetReq);
         } catch(BaseException e){
             if(e.getStatus().equals(NO_PREVIOUS_USER_TRANSACTION)) return; // 과거 거래 기록이 없는 경우도 구매는 허용
             else throw e;
         }
-        // 이전 거래가 구매라면 구매 불가
-        if(previousTransaction.getSellCheck() == 0) {
-            throw new BaseException(PURCHASE_FAIL_ASSET);
-        }
+
+        // 이전 거래가 존재한다면 구매 불가
+        throw new BaseException(EVENT_ERROR_DUPLICATE_PURCHASE);
+//        // 이전 거래가 구매라면 구매 불가
+//        if(previousTransaction.getSellCheck() == 0) {
+//            throw new BaseException(PURCHASE_FAIL_ASSET);
+//        }
     }
 
     public void sellValidation(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {
@@ -236,16 +247,18 @@ public class UserService {
     }
 
     // Sales 갱신
-    public void updateTableSales(int userIdx, PostMyAssetReq postMyAssetReq, Asset previousTransaction) throws BaseException {
+    public double updateTableSales(int userIdx, PostMyAssetReq postMyAssetReq, Asset previousTransaction) throws BaseException {
+        double profitRatio;
         try {
             // 이번 거래 손익율
-            double profitRatio = Math.round((double)(postMyAssetReq.getPrice() - previousTransaction.getPrice()) / previousTransaction.getPrice() * 1000) / 10.0;
+            profitRatio = Math.round((double)(postMyAssetReq.getPrice() - previousTransaction.getPrice()) / previousTransaction.getPrice() * 1000) / 10.0;
             // 출력
             System.out.println(profitRatio);
             userDao.updateTableSales(userIdx, profitRatio);
         } catch (Exception exception) {
             throw new BaseException(FAIL_TO_INSERT_SALES);
         }
+        return profitRatio;
     }
 
     // 자산 리스트에서 제거
@@ -274,5 +287,6 @@ public class UserService {
             throw new BaseException(LOGOUT_REDIS_SERVICE_ERROR);
         }
     }
+
 
 }

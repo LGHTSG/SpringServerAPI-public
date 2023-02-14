@@ -13,6 +13,7 @@ import static site.lghtsg.api.realestates.RealEstateProvider.processDateDiffOutp
 
 import site.lghtsg.api.config.BaseResponse;
 import site.lghtsg.api.config.Secret.Secret;
+import site.lghtsg.api.event.model.GetUserInfoForRank;
 import site.lghtsg.api.utils.AES128;
 import site.lghtsg.api.utils.JwtService;
 import site.lghtsg.api.users.model.*;
@@ -322,6 +323,22 @@ public class UserProvider {
     public List<GetUserInfoRes> getUserList() throws BaseException {
         try{
             return userDao.getUserInfoList();
+        }
+        catch(Exception e){
+            throw new BaseException(DATABASE_ERROR);
+        }
+    }
+
+    /**
+     * 사용자들의 자산 반환
+     */
+
+    public List<GetUserInfoForRank> getUserInfoForRank() throws BaseException{
+        List<GetUserInfoForRank> list;
+        try{
+            list = userDao.getUserInfoForRankList();
+            Collections.sort(list);
+            return list;
         }
         catch(Exception e){
             throw new BaseException(DATABASE_ERROR);
