@@ -44,8 +44,7 @@ public class StockScraper {
      * S&P 500 실시간 스크래핑
      */
     @Async
-//    @Scheduled(cron = "10 0/5,59 14-20 ? * MON-FRI") // UTC 기준
-    @Scheduled(cron = "10 0/5,59 16 ? * TUE") // UTC 기준
+    @Scheduled(cron = "10 0/5,59 14-20 ? * MON-FRI") // UTC 기준
     public void scrapeSNP500() {
         // 실행시간 체크
         LocalDateTime now = LocalDateTime.now();
@@ -68,8 +67,8 @@ public class StockScraper {
     /**
      * 국내주식 실시간 스크래핑
      */
-//    @Async
-//    @Scheduled(cron = "10 0/5,59 0-6 ? * MON-FRI")
+    @Async
+    @Scheduled(cron = "10 0/5,59 0-6 ? * MON-FRI")
     public void scrapeDomesticStocks() {
         // 실행시간 체크
         LocalDateTime now = LocalDateTime.now();
@@ -100,6 +99,7 @@ public class StockScraper {
     }
 
     // 세팅 관련 메소드
+
     /**
      * 실시간 데이터 업로드 시 url-Idx 매핑에 사용될 Map 세팅
      */
@@ -141,7 +141,7 @@ public class StockScraper {
             Document document = conn.get();
             Elements elements = document.select("table#cross_rate_markets_stocks_1 tbody tr td");
 
-            Map<Integer, StockTransaction> transactions = convertElement2(elements, transactionTime,true);
+            Map<Integer, StockTransaction> transactions = convertElement(elements, transactionTime,true);
 
             stockUploadDao.uploadPrices(transactions);
 
@@ -169,7 +169,7 @@ public class StockScraper {
             Document doc = conn.get();
             Elements elements = doc.select("table#cross_rate_markets_stocks_1 tbody tr td");
 
-            Map<Integer, StockTransaction> transactions = convertElement2(elements, transactionTime, false);
+            Map<Integer, StockTransaction> transactions = convertElement(elements, transactionTime, false);
 
             stockUploadDao.uploadPrices(transactions);
 
@@ -189,7 +189,7 @@ public class StockScraper {
      * @param isDollerData
      * @return
      */
-    private Map<Integer, StockTransaction> convertElement2(Elements elements, String transactionTime, boolean isDollerData) {
+    private Map<Integer, StockTransaction> convertElement(Elements elements, String transactionTime, boolean isDollerData) {
         int exchangeRate = 1230;
 
         Elements links = elements.select("a");
@@ -421,55 +421,5 @@ public class StockScraper {
             driver.quit();
         }
     }
-
-    /**
-     //     * 셀레니움 사용시
-     //     * @param elements
-     //     * @param transactionTime
-     //     * @param isDollerData
-     //     * @return
-     //     */
-//    private Map<Integer, StockTransaction> convertElement(List<WebElement> elements, String transactionTime, boolean isDollerData) {
-//        int exchangeRate = 1230;
-//
-//        Map<Integer, StockTransaction> transactions = new HashMap<>(elements.size());
-//
-//        for (WebElement element : elements) {
-//            List<WebElement> info = element.findElements(tagName("td")); // 주식 정보 element
-//
-//            String url = info.get(1).findElement(tagName("a")).getAttribute("href");
-//            Integer idx = stockUrlsAndIdxs.get(url);
-//
-//            if (idx == null) continue;
-//
-//            String priceSrc = info.get(2).getText().replaceAll(",","");
-//            int price = (isDollerData) ? (int) (Float.parseFloat(priceSrc) * exchangeRate)
-//                    : Integer.parseInt(priceSrc);
-//
-//            // 거래량 : 0, 123, 83.2K, 14.4M 등
-//            String tradeVol = info.get(7).getText();
-//
-//            if (tradeVol.equals("0")) {
-//                transactions.put(idx, new StockTransaction(idx, transactionTime,0, price));
-//                continue;
-//            }
-//
-//            int tradingVol = 0;
-//            int length = tradeVol.length();
-//            String lastChar = tradeVol.substring(length-1);
-//
-//            if (lastChar.equals("M") || lastChar.equals("K")) {
-//                float num = Float.parseFloat(tradeVol.substring(0, length-1));
-//                int unit = (lastChar.equals("M")) ? 1000000 : 1000;
-//
-//                tradingVol = (int) num * unit;
-//            } else {
-//                tradingVol = Integer.parseInt(tradeVol);
-//            }
-//
-//            transactions.put(idx, new StockTransaction(idx, transactionTime, tradingVol, price));
-//        }
-//        return transactions;
-//    }
 
 }
