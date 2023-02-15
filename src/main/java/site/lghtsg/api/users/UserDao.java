@@ -230,13 +230,12 @@ public class UserDao {
                         "       RT.transactionTime as s2TransactionTime,\n" +
                         "       RUT.sellCheck,\n" +
                         "       RUT.updatedAt,\n" +
-                        "       R.image1\n" +
+                        "       R.image1 as iconImage\n" +
                         "from Resell as R\n" +
                         "         join ResellUserTransaction RUT\n" +
                         "              on R.resellIdx = RUT.resellIdx and RUT.userIdx = ? and RUT.transactionStatus = 1\n" +
                         "         join ResellTodayTrans RTT on R.lastTransactionIdx = RTT.resellTransactionIdx\n" +
-                        "         join ResellTodayTrans RT on R.s2LastTransactionIdx = RT.resellTransactionIdx\n" +
-                        "         join IconImage II on R.iconImageIdx = II.iconImageIdx;";
+                        "         join ResellTodayTrans RT on R.s2LastTransactionIdx = RT.resellTransactionIdx;";
 
         return this.jdbcTemplate.query(getResellAssetQuery, getMyAssetRowMapper(), userIdx);
     }
