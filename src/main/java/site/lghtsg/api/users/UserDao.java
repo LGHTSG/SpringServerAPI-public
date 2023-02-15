@@ -82,7 +82,7 @@ public class UserDao {
 
     //자산 판매 시 자산 증가
     public int updateSellMyAsset(int userIdx, double thisTransProfit) {
-        String updateMyAssetQuery = "update Sales as S set S.currentCash = S.currentCash * ? / 100 where userIdx = ?;";
+        String updateMyAssetQuery = "update Sales as S set S.currentCash = S.currentCash * (? + 100) / 100 where userIdx = ?;";
 
         Object[] updateMyAssetParams = new Object[]{thisTransProfit, userIdx};
         return this.jdbcTemplate.update(updateMyAssetQuery, updateMyAssetParams);
@@ -230,7 +230,7 @@ public class UserDao {
                         "       RT.transactionTime as s2TransactionTime,\n" +
                         "       RUT.sellCheck,\n" +
                         "       RUT.updatedAt,\n" +
-                        "       II.iconImage\n" +
+                        "       R.image1\n" +
                         "from Resell as R\n" +
                         "         join ResellUserTransaction RUT\n" +
                         "              on R.resellIdx = RUT.resellIdx and RUT.userIdx = ? and RUT.transactionStatus = 1\n" +
