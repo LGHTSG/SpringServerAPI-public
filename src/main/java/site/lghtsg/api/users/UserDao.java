@@ -448,7 +448,7 @@ public class UserDao {
     }
 
     public List<GetUserInfoForRank> getUserInfoForRankList(){
-        String query = "select U.userIdx, U.userName, U.profileImg, S.currentCash as userAsset from User as U, Sales as S where U.userIdx = S.userIdx;";
+        String query = "select U.userIdx, U.userName, U.profileImg, S.currentCash as userAsset from User as U, Sales as S where U.userIdx = S.userIdx order by currentCash desc;";
         return this.jdbcTemplate.query(query, userRankRowMapper());
     }
 
