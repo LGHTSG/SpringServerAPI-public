@@ -230,7 +230,7 @@ public class UserDao {
                         "       RT.transactionTime as s2TransactionTime,\n" +
                         "       RUT.sellCheck,\n" +
                         "       RUT.updatedAt,\n" +
-                        "       II.iconImage\n" +
+                        "       R.image1\n" +
                         "from Resell as R\n" +
                         "         join ResellUserTransaction RUT\n" +
                         "              on R.resellIdx = RUT.resellIdx and RUT.userIdx = ? and RUT.transactionStatus = 1\n" +
