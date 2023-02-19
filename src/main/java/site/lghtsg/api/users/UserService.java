@@ -217,20 +217,21 @@ public class UserService {
 
     public void buyValidation(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException{
         Asset previousTransaction;
-        // 구매는 이전 거래가 없는 경우만 허용(이벤트)
+        // 이전 거래가 존재한다면 구매 불가
+
         try {
             previousTransaction = userProvider.getPreviousTransaction(userIdx, postMyAssetReq);
         } catch(BaseException e){
             if(e.getStatus().equals(NO_PREVIOUS_USER_TRANSACTION)) return; // 과거 거래 기록이 없는 경우도 구매는 허용
             else throw e;
         }
+        // 구매는 이전 거래가 없는 경우만 허용(이벤트)
+        // throw new BaseException(EVENT_ERROR_DUPLICATE_PURCHASE);
 
-        // 이전 거래가 존재한다면 구매 불가
-        throw new BaseException(EVENT_ERROR_DUPLICATE_PURCHASE);
-//        // 이전 거래가 구매라면 구매 불가
-//        if(previousTransaction.getSellCheck() == 0) {
-//            throw new BaseException(PURCHASE_FAIL_ASSET);
-//        }
+        // 이전 거래가 구매라면 구매 불가
+        if(previousTransaction.getSellCheck() == 0) {
+            throw new BaseException(PURCHASE_FAIL_ASSET);
+        }
     }
 
     public void sellValidation(int userIdx, PostMyAssetReq postMyAssetReq) throws BaseException {

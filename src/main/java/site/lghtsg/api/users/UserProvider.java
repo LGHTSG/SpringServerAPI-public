@@ -5,6 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import site.lghtsg.api.common.model.CompareByAsset;
 import site.lghtsg.api.config.BaseException;
 import static site.lghtsg.api.config.BaseResponseStatus.*;
 import static site.lghtsg.api.config.Constant.*;
@@ -337,7 +338,7 @@ public class UserProvider {
         List<GetUserInfoForRank> list;
         try{
             list = userDao.getUserInfoForRankList();
-            Collections.sort(list);
+            list.sort(new CompareByAsset());
             return list;
         }
         catch(Exception e){

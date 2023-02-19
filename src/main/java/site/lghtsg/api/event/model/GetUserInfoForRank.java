@@ -10,16 +10,11 @@ import org.checkerframework.checker.units.qual.A;
 @Getter
 @Setter
 @NoArgsConstructor
-public class GetUserInfoForRank implements Comparable<GetUserInfoForRank> {
+public class GetUserInfoForRank{
     private int userIdx;
     private String userName;
     private long userAsset;
     private String profileImg;
     private int remainingTransCnt;
 
-
-    @Override
-    public int compareTo(GetUserInfoForRank o) {
-       return (int)(o.getUserAsset() - userAsset);
-    }
 }
